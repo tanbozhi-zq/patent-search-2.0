@@ -29,3 +29,6 @@ class OpenSearchRepository:
             ssl_show_warn=self.verify_certs,
             timeout=self.timeout,
         )
+
+    def search(self, body: dict) -> dict:
+        return self.client.search(index=self.index_name, body=body)
