@@ -1,13 +1,13 @@
 from typing import Optional
 
-from fastapi import Header, HTTPException
+from fastapi import Depends, Header, HTTPException
 
 from app.core.config import Settings, get_settings
 
 
 def require_api_key(
     x_api_key: Optional[str] = Header(default=None, alias="X-API-Key"),
-    settings: Settings = get_settings(),
+    settings: Settings = Depends(get_settings),
 ) -> None:
     if not settings.enable_auth:
         return None
