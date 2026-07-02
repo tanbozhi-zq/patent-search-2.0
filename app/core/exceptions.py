@@ -1,6 +1,10 @@
 from fastapi import HTTPException
 
 
+class QuerySyntaxError(ValueError):
+    pass
+
+
 def service_error(status_code: int, code: int, message: str) -> HTTPException:
     return HTTPException(
         status_code=status_code,
