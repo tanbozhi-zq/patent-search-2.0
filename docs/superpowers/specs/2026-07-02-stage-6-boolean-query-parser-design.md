@@ -204,7 +204,19 @@ IPCSmallGroup
 
 如果查询值不是这三类，则对 `LatestLegalStatus` 和 `LegalStatus` 做普通文本匹配。
 
-### 7.6 布尔节点
+### 7.6 专利类型
+
+`type:(发明专利)` 使用实际存在的 OpenSearch 字段做 `multi_match`：
+
+```text
+Type
+PatentTypeCode
+Kind
+```
+
+其中 `Type` 是专利类型文本字段，`PatentTypeCode` 和 `Kind` 作为补充字段参与匹配。不得使用不存在的 `PatentType` 字段。
+
+### 7.7 布尔节点
 
 AST 到 OpenSearch：
 

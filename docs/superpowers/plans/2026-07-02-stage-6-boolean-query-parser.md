@@ -15,6 +15,7 @@
 - `NOT` is required stage 6 syntax and must map to OpenSearch `bool.must_not`.
 - Invalid query syntax must raise `QuerySyntaxError`, return API code `40001`, and must not call real OpenSearch.
 - Date validation must use real calendar parsing, not only a `YYYY-MM-DD` regex.
+- The `type` query field must map to existing OpenSearch fields `Type`, `PatentTypeCode`, and `Kind`; do not use nonexistent field `PatentType`.
 - Preserve stage 5 behavior for plain keyword, `title`, `ab`, `ipc`, `ad`, pagination, sorting, and `ds=cn/all`.
 - Commit after each task.
 
@@ -588,7 +589,7 @@ def test_text_field_mapping_contains_stage_six_fields():
     assert TEXT_FIELD_MAPPING["tscd"] == ["Title", "Abstract", "MainClaim", "Requirement", "Instructions"]
     assert TEXT_FIELD_MAPPING["applicant"] == ["Applicant", "ApplicantNormalized", "FirstApplicant"]
     assert TEXT_FIELD_MAPPING["currentAssignee"] == ["Assignee", "AssigneeNormalized"]
-    assert TEXT_FIELD_MAPPING["type"] == ["PatentType"]
+    assert TEXT_FIELD_MAPPING["type"] == ["Type", "PatentTypeCode", "Kind"]
 
 
 def test_effective_patent_legal_status_mapping():
@@ -630,7 +631,7 @@ TEXT_FIELD_MAPPING = {
     "tscd": ["Title", "Abstract", "MainClaim", "Requirement", "Instructions"],
     "applicant": ["Applicant", "ApplicantNormalized", "FirstApplicant"],
     "currentAssignee": ["Assignee", "AssigneeNormalized"],
-    "type": ["PatentType"],
+    "type": ["Type", "PatentTypeCode", "Kind"],
 }
 
 IPC_FIELDS = ["IPC", "IPCList", "IPCSmallCategory", "IPCLargeGroup", "IPCSmallGroup"]
@@ -770,7 +771,7 @@ def test_applicant_current_assignee_and_type_fields():
         "Assignee",
         "AssigneeNormalized",
     ]
-    assert query_clause("type:(发明专利)")["multi_match"]["fields"] == ["PatentType"]
+    assert query_clause("type:(发明专利)")["multi_match"]["fields"] == ["Type", "PatentTypeCode", "Kind"]
 
 
 def test_document_year_maps_to_publication_date_range():
@@ -1183,7 +1184,7 @@ Add to `docs/field_mapping.md`:
 | `applicant` | `Applicant`, `ApplicantNormalized`, `FirstApplicant` |
 | `currentAssignee` | `Assignee`, `AssigneeNormalized` |
 | `legalStatus` | `LatestLegalStatus`, `LegalStatus` |
-| `type` | `PatentType` |
+| `type` | `Type`, `PatentTypeCode`, `Kind` |
 | `ad` | `ApplicationDate` |
 | `documentYear` | `PublicationDate` |
 ```

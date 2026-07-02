@@ -135,6 +135,6 @@ RelatedDocuments
 | `applicant` | `Applicant`, `ApplicantNormalized`, `FirstApplicant` |
 | `currentAssignee` | `Assignee`, `AssigneeNormalized` |
 | `legalStatus` | `LatestLegalStatus`, `LegalStatus` |
-| `type` | `PatentType` |
+| `type` | `Type`, `PatentTypeCode`, `Kind` |
 | `ad` | `ApplicationDate` |
 | `documentYear` | `PublicationDate` |

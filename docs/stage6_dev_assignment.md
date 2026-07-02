@@ -39,6 +39,7 @@ SearchRequest.q -> Tokenizer -> Parser -> AST -> DSL Builder -> OpenSearch
 - `NOT` 是必须实现的正式能力，映射为 `bool.must_not`。
 - `NOT title:(外观)` 和 `ipc:H02M AND NOT tscd:(均衡)` 必须是合法查询。
 - `NOT` 和 `tscd:(均衡) NOT` 必须是非法查询。
+- `type` 必须映射到实际存在的 OpenSearch 字段：`Type`、`PatentTypeCode`、`Kind`。
 - 日期必须真实解析，`2020-13-01` 不能通过。
 - `ad:[2021-01-01 TO 2020-12-31]` 和 `documentYear:[2024 TO 2020]` 必须返回 `40001`。
 - `SearchService` 保持编排层，不直接处理 token 和 AST 细节。
