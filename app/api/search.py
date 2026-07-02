@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 
+from app.core.exceptions import QuerySyntaxError
 from app.core.security import require_api_key
-from app.query.dsl_builder import UnsupportedQuerySyntax
 from app.schemas.search import SearchRequest
 from app.services.search_service import SearchService
 
@@ -20,7 +20,7 @@ def search_patents(
 ):
     try:
         return service.search(request)
-    except UnsupportedQuerySyntax as exc:
+    except QuerySyntaxError as exc:
         raise HTTPException(
             status_code=400,
             detail={

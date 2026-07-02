@@ -1,6 +1,7 @@
 import pytest
 
-from app.query.dsl_builder import UnsupportedQuerySyntax, build_search_dsl
+from app.core.exceptions import QuerySyntaxError
+from app.query.dsl_builder import build_search_dsl
 from app.schemas.search import SearchRequest
 
 
@@ -35,6 +36,9 @@ def test_application_date_range_query():
     }
 
 
-def test_rejects_stage_six_syntax():
-    with pytest.raises(UnsupportedQuerySyntax):
-        build_search_dsl(SearchRequest(q="tscd:(均衡)"))
+def test_tscd_query_searches_title_abstract_claim_and_instructions():
+    dsl = build_search_dsl(SearchRequest(q="tscd:(均衡)"))
+
+    multi_match = dsl["query"]["bool"]["must"][0]["multi_match"]
+    assert multi_match["query"] == "均衡"
+    assert multi_match["fields"] == ["Title", "Abstract", "MainClaim", "Requirement", "Instructions"]
