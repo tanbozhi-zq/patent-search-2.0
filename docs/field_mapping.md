@@ -123,3 +123,18 @@ RelatedDocuments
 2. `实质审查的生效` 是否统一归为在审。
 3. `未缴年费专利权终止` 是否统一归为失效。
 4. 法律状态是否需要输出三分类字段。
+
+## 阶段六查询字段映射
+
+| q 字段 | OpenSearch 字段 |
+|---|---|
+| `title` | `Title`, `TitleCN`, `TitleEN` |
+| `ab` | `Abstract`, `AbstractCN`, `AbstractEN` |
+| `tscd` | `Title`, `Abstract`, `MainClaim`, `Requirement`, `Instructions` |
+| `ipc` | `IPC`, `IPCList`, `IPCSmallCategory`, `IPCLargeGroup`, `IPCSmallGroup` |
+| `applicant` | `Applicant`, `ApplicantNormalized`, `FirstApplicant` |
+| `currentAssignee` | `Assignee`, `AssigneeNormalized` |
+| `legalStatus` | `LatestLegalStatus`, `LegalStatus` |
+| `type` | `PatentType` |
+| `ad` | `ApplicationDate` |
+| `documentYear` | `PublicationDate` |

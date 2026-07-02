@@ -211,3 +211,13 @@ legalStatus:(有效专利)
 documentYear:[2020 TO 2024]
 type:(发明专利)
 ```
+
+## 阶段六已支持语法
+
+- 字段查询：`title`、`ab`、`tscd`、`ipc`、`applicant`、`currentAssignee`、`legalStatus`、`type`
+- 日期范围：`ad:[YYYY-MM-DD TO YYYY-MM-DD]`
+- 公开年范围：`documentYear:[YYYY TO YYYY]`
+- 布尔运算：`AND`、`OR`、`NOT`
+- 括号分组：`(title:(均衡) OR title:(平衡)) AND ipc:H02M`
+- 短语：`tscd:("均衡" OR "平衡")`
+- 非法查询语法返回 `40001`，且不会访问 OpenSearch
