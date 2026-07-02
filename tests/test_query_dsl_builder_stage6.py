@@ -56,7 +56,7 @@ def test_applicant_current_assignee_and_type_fields():
         "Assignee",
         "AssigneeNormalized",
     ]
-    assert query_clause("type:(发明专利)")["multi_match"]["fields"] == ["PatentType"]
+    assert query_clause("type:(发明专利)")["multi_match"]["fields"] == ["Type", "PatentTypeCode", "Kind"]
 
 
 def test_document_year_maps_to_publication_date_range():

@@ -4,7 +4,7 @@ TEXT_FIELD_MAPPING = {
     "tscd": ["Title", "Abstract", "MainClaim", "Requirement", "Instructions"],
     "applicant": ["Applicant", "ApplicantNormalized", "FirstApplicant"],
     "currentAssignee": ["Assignee", "AssigneeNormalized"],
-    "type": ["PatentType"],
+    "type": ["Type", "PatentTypeCode", "Kind"],
 }
 
 IPC_FIELDS = ["IPC", "IPCList", "IPCSmallCategory", "IPCLargeGroup", "IPCSmallGroup"]

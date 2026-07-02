@@ -6,7 +6,7 @@ def test_text_field_mapping_contains_stage_six_fields():
     assert TEXT_FIELD_MAPPING["tscd"] == ["Title", "Abstract", "MainClaim", "Requirement", "Instructions"]
     assert TEXT_FIELD_MAPPING["applicant"] == ["Applicant", "ApplicantNormalized", "FirstApplicant"]
     assert TEXT_FIELD_MAPPING["currentAssignee"] == ["Assignee", "AssigneeNormalized"]
-    assert TEXT_FIELD_MAPPING["type"] == ["PatentType"]
+    assert TEXT_FIELD_MAPPING["type"] == ["Type", "PatentTypeCode", "Kind"]
 
 
 def test_effective_patent_legal_status_mapping():
