@@ -4,3 +4,7 @@
 .env
 .env.*
 !.env.example
+
+# Python artifacts
+.venv/
+__pycache__/
