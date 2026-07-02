@@ -35,6 +35,11 @@ def test_parses_not_before_field_query():
     assert ast.right.child == FieldQuery(field="tscd", value=WordNode(value="均衡"))
 
 
+def test_parses_standalone_not_field_query():
+    ast = parse_query("NOT title:(外观)")
+    assert ast == NotNode(child=FieldQuery(field="title", value=WordNode(value="外观")))
+
+
 def test_parses_date_range():
     assert parse_query("ad:[2020-01-01 TO 2020-12-31]") == RangeQuery(
         field="ad",

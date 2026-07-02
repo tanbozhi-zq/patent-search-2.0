@@ -43,6 +43,16 @@ def test_search_endpoint_returns_vendor_like_shape(client):
     assert response.json() == {"total": 0, "page": 1, "page_size": 50, "records": []}
 
 
+def test_standalone_not_query_returns_200(client):
+    app.dependency_overrides[get_search_service] = lambda: FakeSearchService()
+    app.dependency_overrides[require_api_key] = lambda: None
+    try:
+        response = client().post("/api/patent/search", json={"q": "NOT title:(外观)"})
+    finally:
+        app.dependency_overrides.clear()
+    assert response.status_code == 200
+
+
 class ExplodingRepository:
     def search(self, body):
         raise AssertionError("OpenSearch must not be called for invalid query syntax")

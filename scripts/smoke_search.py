@@ -11,6 +11,7 @@ STAGE_6_QUERIES = [
     "legalStatus:(有效专利)",
     "documentYear:[2020 TO 2024]",
     "ipc:H02M AND NOT tscd:(均衡)",
+    "NOT title:(外观)",
 ]
 
 

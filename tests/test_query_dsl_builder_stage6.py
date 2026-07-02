@@ -32,6 +32,20 @@ def test_not_query_maps_to_bool_must_not():
     assert clause["bool"]["must"][1]["bool"]["must_not"][0]["multi_match"]["query"] == "均衡"
 
 
+def test_standalone_not_maps_to_bool_must_not_at_root():
+    clause = query_clause("NOT title:(外观)")
+    assert "must_not" in clause["bool"]
+    assert clause["bool"]["must_not"][0]["multi_match"]["query"] == "外观"
+
+
+def test_parenthesized_grouping_combines_with_and():
+    clause = query_clause("(title:(均衡) OR title:(平衡)) AND ipc:H02M")
+    assert "must" in clause["bool"]
+    assert len(clause["bool"]["must"]) == 2
+    assert clause["bool"]["must"][0]["bool"]["minimum_should_match"] == 1
+    assert clause["bool"]["must"][1]["bool"]["minimum_should_match"] == 1
+
+
 def test_applicant_current_assignee_and_type_fields():
     assert query_clause("applicant:(华为技术有限公司)")["multi_match"]["fields"] == [
         "Applicant",

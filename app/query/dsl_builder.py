@@ -2,7 +2,7 @@ from datetime import date
 
 from app.core.exceptions import QuerySyntaxError
 from app.mappings.legal_status_mapping import build_legal_status_clause
-from app.mappings.query_field_mapping import IPC_FIELDS, LEGAL_STATUS_FIELD, SUPPORTED_FIELDS, TEXT_FIELD_MAPPING
+from app.mappings.query_field_mapping import LEGAL_STATUS_FIELD, SUPPORTED_FIELDS, TEXT_FIELD_MAPPING
 from app.query.ast import AndNode, FieldQuery, NotNode, OrNode, PhraseNode, QueryNode, RangeQuery, WordNode
 from app.query.parser import parse_query
 from app.schemas.search import SearchRequest
