@@ -23,6 +23,7 @@ def test_search_request_rejects_invalid_page_size():
 from app.api.search import get_search_service
 from app.core.security import require_api_key
 from app.main import app
+from app.services.search_service import SearchService
 
 
 class FakeSearchService:
@@ -40,3 +41,40 @@ def test_search_endpoint_returns_vendor_like_shape(client):
 
     assert response.status_code == 200
     assert response.json() == {"total": 0, "page": 1, "page_size": 50, "records": []}
+
+
+class ExplodingRepository:
+    def search(self, body):
+        raise AssertionError("OpenSearch must not be called for invalid query syntax")
+
+
+@pytest.mark.parametrize(
+    "q",
+    [
+        "ipc:H02M AND AND tscd:(均衡)",
+        "AND tscd:(均衡)",
+        "tscd:(均衡) OR",
+        'tscd:("均衡)',
+        "tscd:()",
+        "ipc:",
+        "foo:(均衡)",
+        "ad:[2020-01-01 2020-12-31]",
+        "ad:[2020-13-01 TO 2020-12-31]",
+        "ad:[2021-01-01 TO 2020-12-31]",
+        "documentYear:[2024 TO 2020]",
+        "NOT",
+        "tscd:(均衡) NOT",
+    ],
+)
+def test_invalid_stage_six_queries_return_40001_without_repository_call(client, q):
+    app.dependency_overrides[get_search_service] = lambda: SearchService(repository=ExplodingRepository())
+    app.dependency_overrides[require_api_key] = lambda: None
+    try:
+        response = client().post("/api/patent/search", json={"q": q})
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 400
+    assert response.json()["detail"]["success"] is False
+    assert response.json()["detail"]["code"] == 40001
+    assert response.json()["detail"]["data"] is None
