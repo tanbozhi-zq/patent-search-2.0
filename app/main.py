@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 
 from app.api.citations import router as citations_router
 from app.api.detail import router as detail_router
@@ -18,6 +19,8 @@ app = FastAPI(
 app.include_router(search_router)
 app.include_router(detail_router)
 app.include_router(citations_router)
+
+app.mount("/test", StaticFiles(directory="frontend", html=True), name="frontend")
 
 
 @app.get("/health")
