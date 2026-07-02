@@ -1,5 +1,12 @@
 from fastapi import FastAPI
 
+from app.api.citations import router as citations_router
+from app.api.detail import router as detail_router
+from app.api.search import router as search_router
+from app.core.logging import configure_logging
+
+
+configure_logging()
 
 app = FastAPI(
     title="patent-search-service",
@@ -7,6 +14,10 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
 )
+
+app.include_router(search_router)
+app.include_router(detail_router)
+app.include_router(citations_router)
 
 
 @app.get("/health")
