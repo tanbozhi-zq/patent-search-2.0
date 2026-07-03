@@ -30,5 +30,5 @@
 - 阶段六能力是否回退：基于自动化测试（79/79 通过）判断，无回退。
 - `compat` 是否降低典型问题字段误召回：本次因无可用 `API_TOKEN`，未能获取真实 OpenSearch 命中量对比，结论待凭据就绪后补测验证。
 - 是否修改索引：否。本阶段仅新增 `index_analyzer_mode` 参数与 phrase DSL 查询构造，未对 OpenSearch 索引或 mapping 做任何变更。
-- `_analyzer_mode` 默认值：`compat`（已在任务 1-4 实现并通过测试）。
+- `index_analyzer_mode` 默认值：`compat`（已在任务 1-4 实现并通过测试）。
 - 是否建议进入阶段七：建议在凭据验证、analyzer smoke 取得 200 命中后进入阶段七；在 pytest 全绿、健康检查通过的前提下，代码层面已具备进入阶段七的条件。
