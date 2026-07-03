@@ -88,3 +88,20 @@ def test_invalid_stage_six_queries_return_40001_without_repository_call(client, 
     assert response.json()["detail"]["success"] is False
     assert response.json()["detail"]["code"] == 40001
     assert response.json()["detail"]["data"] is None
+
+
+def test_search_request_defaults_to_index_analyzer_compat_mode():
+    request = SearchRequest(q="阀门")
+
+    assert request.index_analyzer_mode == "compat"
+
+
+def test_search_request_accepts_normal_index_analyzer_mode():
+    request = SearchRequest(q="阀门", index_analyzer_mode="normal")
+
+    assert request.index_analyzer_mode == "normal"
+
+
+def test_search_request_rejects_invalid_index_analyzer_mode():
+    with pytest.raises(ValidationError):
+        SearchRequest(q="阀门", index_analyzer_mode="broken")
