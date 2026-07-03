@@ -212,6 +212,13 @@ documentYear:[2020 TO 2024]
 type:(发明专利)
 ```
 
+## 阶段 6.5 索引 analyzer 兼容参数
+
+`index_analyzer_mode` 控制当前索引分词缺陷的查询兼容策略：
+
+- `compat`：默认，对 `TitleCN`、`AbstractCN`、`MainClaim`、`Requirement`、`Instructions`、`Type` 等问题字段使用 phrase 查询降低误召回。
+- `normal`：保留阶段六普通匹配逻辑，用于对比测试和未来索引修复后的切换。
+
 ## 阶段六已支持语法
 
 - 字段查询：`title`、`ab`、`tscd`、`ipc`、`applicant`、`currentAssignee`、`legalStatus`、`type`

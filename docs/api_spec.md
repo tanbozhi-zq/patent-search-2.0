@@ -73,6 +73,7 @@ POST /api/patent/search
 | `page` | integer | 否 | `1` | 页码，从 1 开始 |
 | `page_size` | integer | 否 | `50` | 每页数量 |
 | `highlight` | integer | 否 | `0` | 是否高亮，支持 `0`、`1` |
+| `index_analyzer_mode` | string | 否 | `compat` | `compat` / `normal` | 索引 analyzer 兼容模式；当前默认 `compat` |
 
 ### 3.2 参数限制
 
