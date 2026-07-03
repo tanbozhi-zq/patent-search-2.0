@@ -187,6 +187,13 @@
                     <option value="1">1（开启）</option>
                 </select>
             </div>
+            <div class="form-group">
+                <label for="indexAnalyzerMode">Analyzer 模式</label>
+                <select id="indexAnalyzerMode">
+                    <option value="compat" selected>compat（兼容 phrase）</option>
+                    <option value="normal">normal（普通 multi_match）</option>
+                </select>
+            </div>
         </div>
         <div class="actions">
             <button class="btn-primary" onclick="doSearch()">搜索</button>
@@ -214,6 +221,7 @@
             const page = parseInt(document.getElementById('page').value, 10);
             const pageSize = parseInt(document.getElementById('pageSize').value, 10);
             const highlight = parseInt(document.getElementById('highlight').value, 10);
+            const indexAnalyzerMode = document.getElementById('indexAnalyzerMode').value;
 
             if (!q) {
                 statusEl.innerHTML = '<div class="error">查询式 q 不能为空</div>';
@@ -223,7 +231,7 @@
             statusEl.innerHTML = '<div class="loading">查询中...</div>';
             resultCard.style.display = 'none';
 
-            const payload = { q, ds, sort, page, page_size: pageSize, highlight };
+            const payload = { q, ds, sort, page, page_size: pageSize, highlight, index_analyzer_mode: indexAnalyzerMode };
             const headers = { 'Content-Type': 'application/json' };
             if (apiToken) {
                 headers['X-API-Key'] = apiToken;
