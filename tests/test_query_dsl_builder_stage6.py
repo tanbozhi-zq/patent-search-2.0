@@ -6,7 +6,7 @@ from app.schemas.search import SearchRequest
 
 
 def query_clause(q: str) -> dict:
-    return build_search_dsl(SearchRequest(q=q))["query"]["bool"]["must"][0]
+    return build_search_dsl(SearchRequest(q=q, index_analyzer_mode="normal"))["query"]["bool"]["must"][0]
 
 
 def test_and_query_maps_to_bool_must():
