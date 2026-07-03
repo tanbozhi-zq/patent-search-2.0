@@ -25,3 +25,28 @@ def test_unknown_legal_status_falls_back_to_text_match():
             "fields": ["LatestLegalStatus", "LegalStatus"],
         }
     }
+
+
+from app.mappings.query_field_mapping import get_normal_analyzer_fields, get_risky_analyzer_fields
+
+
+def test_stage_6_5_splits_tscd_normal_and_risky_fields():
+    assert get_normal_analyzer_fields("tscd") == ["Title", "Abstract"]
+    assert get_risky_analyzer_fields("tscd") == ["MainClaim", "Requirement", "Instructions"]
+
+
+def test_stage_6_5_splits_title_and_abstract_cn_fields():
+    assert get_normal_analyzer_fields("title") == ["Title", "TitleEN"]
+    assert get_risky_analyzer_fields("title") == ["TitleCN"]
+    assert get_normal_analyzer_fields("ab") == ["Abstract", "AbstractEN"]
+    assert get_risky_analyzer_fields("ab") == ["AbstractCN"]
+
+
+def test_stage_6_5_splits_type_fields():
+    assert get_normal_analyzer_fields("type") == ["PatentTypeCode", "Kind"]
+    assert get_risky_analyzer_fields("type") == ["Type"]
+
+
+def test_stage_6_5_keeps_applicant_fields_normal():
+    assert get_normal_analyzer_fields("applicant") == ["Applicant", "ApplicantNormalized", "FirstApplicant"]
+    assert get_risky_analyzer_fields("applicant") == []
