@@ -212,9 +212,9 @@ SaaS 适配层 smoke：
 |---|---|
 | Base URL | `http://host:8000` 或网关地址 |
 | API Key | 通过安全渠道单独提供 |
-| API 契约 | `docs/delivery/patent_search_api_contract.md` |
-| 查询语法 | `docs/delivery/patent_search_query_syntax.md` |
-| 验收清单 | `docs/delivery/patent_search_acceptance_checklist.md` |
+| 接口契约 | `对外交付文档/专利检索服务接口契约.md` |
+| 查询语法 | `对外交付文档/专利检索服务查询语法说明.md` |
+| 验收清单 | `对外交付文档/专利检索服务上线验收清单.md` |
 
 ## 11. 回滚方案
 
@@ -280,4 +280,3 @@ curl -k -u "$OPENSEARCH_USER:$OPENSEARCH_PASS" "https://$OPENSEARCH_HOST:$OPENSE
 - 服务端 `.env` 中 `ENABLE_AUTH=true`。
 - 接入方请求头是否传入 `X-API-Key`。
 - 请求头值是否与服务器 `API_TOKEN` 一致。
-

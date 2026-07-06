@@ -18,10 +18,10 @@
 
 | 类型 | 文件 | 用途 |
 |---|---|---|
-| 对外 | `docs/delivery/patent_search_api_integration_confirmation.md` | 给需求方确认交付形式、接口范围和边界 |
-| 对外 | `docs/delivery/patent_search_api_contract.md` | 给接入开发按契约调用 |
-| 对外 | `docs/delivery/patent_search_query_syntax.md` | 给产品、运营和开发理解 q 查询语法 |
-| 对外 | `docs/delivery/patent_search_acceptance_checklist.md` | 给需求方和接入方做上线验收 |
+| 对外 | `对外交付文档/专利检索服务接口对接确认书.md` | 给需求方确认交付形式、接口范围和边界 |
+| 对外 | `对外交付文档/专利检索服务接口契约.md` | 给接入开发按契约调用 |
+| 对外 | `对外交付文档/专利检索服务查询语法说明.md` | 给产品、运营和开发理解 q 查询语法 |
+| 对外 | `对外交付文档/专利检索服务上线验收清单.md` | 给需求方和接入方做上线验收 |
 | 内部 | `docs/ops/deployment_runbook.md` | 给部署和运维执行 |
 | 内部 | `docs/internal/stage11_delivery_plan.md` | 给项目总控维护节奏和边界 |
 
@@ -89,4 +89,3 @@
 - 鉴权和错误码验证通过。
 - 需求方验收清单签收或明确确认。
 - 部署报告和运维交接文档已归档。
-
