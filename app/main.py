@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from app.api.citations import router as citations_router
 from app.api.detail import router as detail_router
 from app.api.search import router as search_router
+from app.core.error_handlers import register_error_handlers
 from app.core.logging import configure_logging
 
 
@@ -15,6 +16,8 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
 )
+
+register_error_handlers(app)
 
 app.include_router(search_router)
 app.include_router(detail_router)

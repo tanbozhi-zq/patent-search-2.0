@@ -85,9 +85,9 @@ def test_invalid_stage_six_queries_return_40001_without_repository_call(client, 
         app.dependency_overrides.clear()
 
     assert response.status_code == 400
-    assert response.json()["detail"]["success"] is False
-    assert response.json()["detail"]["code"] == 40001
-    assert response.json()["detail"]["data"] is None
+    assert response.json()["success"] is False
+    assert response.json()["code"] == 40001
+    assert response.json()["data"] is None
 
 
 def test_search_request_defaults_to_index_analyzer_compat_mode():

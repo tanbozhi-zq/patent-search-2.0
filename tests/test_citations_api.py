@@ -52,7 +52,7 @@ def test_citations_api_returns_40401_when_not_found():
     response = client.get("/api/patent/citations/missing")
 
     assert response.status_code == 404
-    assert response.json()["detail"]["code"] == 40401
+    assert response.json()["code"] == 40401
 
 
 def test_citations_api_returns_50001_on_opensearch_error():
@@ -61,4 +61,4 @@ def test_citations_api_returns_50001_on_opensearch_error():
     response = client.get("/api/patent/citations/cn-1")
 
     assert response.status_code == 502
-    assert response.json()["detail"]["code"] == 50001
+    assert response.json()["code"] == 50001

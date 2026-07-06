@@ -52,8 +52,8 @@ def test_detail_api_returns_40401_when_not_found():
     response = client.get("/api/patent/detail/missing")
 
     assert response.status_code == 404
-    assert response.json()["detail"]["code"] == 40401
-    assert response.json()["detail"]["message"] == "patent not found"
+    assert response.json()["code"] == 40401
+    assert response.json()["message"] == "patent not found"
 
 
 def test_detail_api_returns_50001_on_opensearch_error():
@@ -62,4 +62,4 @@ def test_detail_api_returns_50001_on_opensearch_error():
     response = client.get("/api/patent/detail/cn-1")
 
     assert response.status_code == 502
-    assert response.json()["detail"]["code"] == 50001
+    assert response.json()["code"] == 50001
