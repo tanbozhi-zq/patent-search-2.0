@@ -4,7 +4,7 @@ Self-hosted patent search backend service based on FastAPI and OpenSearch.
 
 ## Stage
 
-Current status: Stage 10 accepted, Stage 11 deployment and delivery preparation.
+Current status: Stage 10 accepted, Stage 10.5 fine-grained text query preparation before Stage 11.
 
 Implemented so far:
 
@@ -28,7 +28,8 @@ Implemented so far:
 
 Next stage:
 
-- Stage 11 deployment, operations handoff, and delivery documentation.
+- Stage 10.5 fine-grained text query enhancement.
+- Then Stage 11 deployment, operations handoff, and delivery documentation.
 - Stage 11 starts with deployment design, deploy assignment, smoke validation, rollback, and handoff.
 
 Project boundaries:
