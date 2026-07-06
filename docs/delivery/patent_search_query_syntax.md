@@ -1,0 +1,188 @@
+# 专利检索服务 q 查询语法说明
+
+## 1. 基本规则
+
+检索接口通过 `q` 参数表达查询条件：
+
+```http
+POST /api/patent/search
+```
+
+请求示例：
+
+```json
+{
+  "q": "ipc:H02M AND tscd:(\"均衡\" OR \"平衡\")",
+  "page": 1,
+  "page_size": 10
+}
+```
+
+## 2. 支持字段
+
+| 字段 | 含义 | 示例 |
+|---|---|---|
+| `title` | 标题 | `title:(阀门)` |
+| `ab` | 摘要 | `ab:(缓冲)` |
+| `tscd` | 标题、摘要、首权、完整权利要求书、说明书综合检索 | `tscd:(均衡)` |
+| `mainClaim` | 首权或主权利要求 | `mainClaim:(均衡)` |
+| `claims` | 完整权利要求书 | `claims:(均衡)` |
+| `description` | 说明书 | `description:(均衡)` |
+| `ipc` | IPC 分类 | `ipc:H02M` |
+| `applicant` | 申请人 | `applicant:(华为技术有限公司)` |
+| `currentAssignee` | 当前权利人 | `currentAssignee:(华为技术有限公司)` |
+| `legalStatus` | 法律状态 | `legalStatus:(有效专利)` |
+| `type` | 专利类型 | `type:(发明专利)` |
+| `ad` | 申请日范围 | `ad:[2020-01-01 TO 2020-12-31]` |
+| `documentYear` | 公开年范围 | `documentYear:[2020 TO 2024]` |
+
+## 3. 文本检索
+
+### 3.1 标题和摘要
+
+```text
+title:(阀门)
+title:("电液比例阀")
+ab:(缓冲)
+ab:("压力控制")
+```
+
+### 3.2 综合全文
+
+`tscd` 覆盖以下文本范围：
+
+```text
+Title
+Abstract
+MainClaim
+Requirement
+Instructions
+```
+
+示例：
+
+```text
+tscd:(均衡)
+tscd:("均衡" OR "平衡")
+ipc:H02M AND tscd:(均衡)
+```
+
+### 3.3 细粒度文本字段
+
+| 查询字段 | 检索范围 |
+|---|---|
+| `mainClaim` | 首权或主权利要求 |
+| `claims` | 完整权利要求书 |
+| `description` | 说明书 |
+
+示例：
+
+```text
+mainClaim:(均衡)
+claims:(均衡)
+description:(均衡)
+mainClaim:("均衡" OR "平衡")
+claims:("均衡" OR "平衡")
+description:("均衡" OR "平衡")
+ipc:H02M AND claims:(均衡)
+mainClaim:(电路) AND NOT description:(外观)
+```
+
+注意：`description:(关键词)` 表示检索说明书字段；详情接口是否返回说明书正文由 `include_description=true` 控制。
+
+## 4. 布尔查询
+
+支持 `AND`、`OR`、`NOT`：
+
+```text
+ipc:H02M AND tscd:(均衡)
+title:(均衡) OR title:(平衡)
+NOT title:(外观)
+mainClaim:(电路) AND NOT description:(外观)
+```
+
+支持基础括号分组：
+
+```text
+(title:(均衡) OR title:(平衡)) AND ipc:H02M
+```
+
+## 5. 范围查询
+
+申请日范围：
+
+```text
+ad:[2020-01-01 TO 2020-12-31]
+```
+
+公开年范围：
+
+```text
+documentYear:[2020 TO 2024]
+```
+
+## 6. 辅助参数
+
+### 6.1 `ds`
+
+| 值 | 说明 |
+|---|---|
+| `cn` | 中国专利 |
+| `all` | 全部数据范围 |
+
+### 6.2 `sort`
+
+| 值 | 说明 |
+|---|---|
+| `relation` | 按相关性排序 |
+| `!applicationDate` | 按申请日倒序 |
+
+### 6.3 `highlight`
+
+| 值 | 说明 |
+|---|---|
+| `0` | 不启用高亮 |
+| `1` | 兼容接收高亮参数 |
+
+当前 `highlight=1` 不返回高亮片段。
+
+### 6.4 `index_analyzer_mode`
+
+| 值 | 说明 |
+|---|---|
+| `compat` | 默认值，对部分中文长文本字段使用 phrase 查询，降低误召回 |
+| `normal` | 普通匹配模式，主要用于对比测试或后续索引修复后的切换 |
+
+## 7. 非法语法示例
+
+| 示例 | 错误原因 |
+|---|---|
+| `mainClaim:` | 字段值为空 |
+| `claims:()` | 字段值为空 |
+| `description:(均衡) AND AND ipc:H02M` | 布尔运算符缺少查询条件 |
+| `foo:(均衡)` | 不支持字段 |
+| `ad:[2021-01-01 TO 2020-12-31]` | 范围起始值晚于结束值 |
+| `documentYear:[2024 TO 2020]` | 范围起始值晚于结束值 |
+
+查询语法错误返回：
+
+```json
+{
+  "success": false,
+  "code": 40001,
+  "message": "q 查询语法错误：字段 claims 的值不能为空",
+  "data": null
+}
+```
+
+## 8. 暂不支持语法
+
+当前暂不支持：
+
+- 任意深度复杂嵌套括号
+- 通配符查询
+- 模糊匹配操作符
+- 邻近词检索
+- 字段级 boost 语法
+- 外部服务私有语法的完全复刻
+
