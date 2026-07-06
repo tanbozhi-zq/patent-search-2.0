@@ -216,3 +216,91 @@ git diff --stat HEAD
 数据层观察（非阻塞）：本地抽样两条专利的 `description` 字段内容均为空字符串，建议总控在 SaaS 联调阶段复核一条已知有 description 落库的发明专利，确认内容可正确回填。
 
 是否建议进入阶段 8：**是**。阶段 7 API 契约层与字段映射层均已通过自动化与真实 OpenSearch smoke 验收，未触发任何 SaaS 联调或 mapping 变更边界，符合阶段边界约束，可进入阶段 8。
+
+---
+
+## 测试人员独立复核
+
+复核时间：2026-07-06
+
+复核命令：
+
+```bash
+source .venv/bin/activate
+python3 -m pytest -q
+```
+
+复核结果：
+
+```text
+103 passed in 0.06s
+```
+
+真实 OpenSearch 复核：
+
+```bash
+uvicorn app.main:app --host 127.0.0.1 --port 8000
+```
+
+获取 patent_id：
+
+```bash
+curl -s -X POST http://127.0.0.1:8000/api/patent/search \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: test-token" \
+  -d '{"q":"阀门","page":1,"page_size":1}'
+```
+
+实际 patent_id：`cn-4401457edd8060df`
+
+执行 smoke：
+
+```bash
+python3 scripts/smoke_detail_citations.py http://127.0.0.1:8000 cn-4401457edd8060df test-token
+```
+
+结果：
+
+```json
+{"name": "detail", "status": 200, "keys": [...]}
+{"name": "detail_description", "status": 200, "keys": [...]}
+{"name": "citations", "status": 200, "keys": [...]}
+```
+
+退出码：`0`。
+
+补充验证：
+
+| 场景 | HTTP | 结果 |
+|---|---|---|
+| 默认 detail 不含 `description` | 200 | 通过 |
+| `include_description=true` 含 `description` | 200 | 通过 |
+| `GET /api/patent/detail/not-found-id` | 404 / code 40401 | 通过 |
+| citations 返回全部 8 个字段 | 200 | 通过 |
+
+复核结论：阶段 7 测试通过，同意进入阶段 8。
+
+---
+
+## 项目总控收口意见
+
+收口时间：2026-07-06
+
+阶段 7 交付物已具备进入下一阶段的条件：
+
+1. `GET /api/patent/detail/{patent_id}` 与 `GET /api/patent/citations/{patent_id}` 已实现并注册。
+2. 详情接口已同时输出 HTTP API camelCase 字段与 SaaS 工具层 snake_case 关键别名。
+3. 引证接口已同时输出 `cited_by`、`patent_references`、`non_patent_references` 与原始兼容字段。
+4. 自动化测试复核通过：`103 passed`。
+5. 真实 OpenSearch smoke 复核通过。
+6. `patent_harness_base_副本/` 保持只读对照边界，未纳入工程交付修改。
+7. 未修改 OpenSearch mapping，未进入 SaaS 联调。
+
+阶段 7 判定：**通过并收口**。
+
+阶段 8 开工前置事项：
+
+1. README 需同步当前阶段状态，避免继续停留在阶段 4 描述。
+2. 阶段 8 需以“接口兼容与异常处理完善”为主题单独派工。
+3. 阶段 8 应优先处理 FastAPI/Pydantic 参数校验错误仍返回默认 `422 detail` 结构的问题。
+4. 阶段 8 应对照 SaaS PatentHub 工具契约确认 search 工具层字段、分页、排序和高亮兼容边界。

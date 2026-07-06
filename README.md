@@ -4,24 +4,37 @@ Self-hosted patent search backend service based on FastAPI and OpenSearch.
 
 ## Stage
 
-Current stage: Stage 4 service skeleton.
+Current status: Stage 7 accepted, Stage 8 preparation.
 
-Implemented in this stage:
+Implemented so far:
 
 - FastAPI app
 - `GET /health`
 - `.env` configuration loading
 - `X-API-Key` auth dependency
 - OpenSearch client construction
-- pytest test scaffold
+- `POST /api/patent/search`
+- Boolean `q` parser and OpenSearch DSL builder
+- analyzer compatibility mode through `index_analyzer_mode`
+- `GET /api/patent/detail/{patent_id}`
+- `GET /api/patent/detail/{patent_id}?include_description=true`
+- `GET /api/patent/citations/{patent_id}`
+- static manual test page under `/test/`
+- pytest test suite
 - systemd deployment template
 
-Not implemented in this stage:
+Next stage:
 
-- Patent search query parsing
-- OpenSearch search DSL
-- Patent detail lookup
-- Citation lookup
+- Stage 8: interface compatibility and exception handling hardening.
+- Unify parameter validation errors into `{success, code, message, data}`.
+- Audit remaining PatentHub/SaaS tool contract gaps against `patent_harness_base_副本/`.
+- Confirm or document compatibility boundaries for `highlight`, `sort`, and pagination.
+
+Project boundaries:
+
+- `patent_harness_base_副本/` is a local read-only SaaS contract reference.
+- Do not modify OpenSearch mapping or rebuild the index in the current stage.
+- Do not enter SaaS integration or gray release before the corresponding stage documents are accepted.
 
 ## Local Setup
 
