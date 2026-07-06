@@ -59,6 +59,33 @@ def test_applicant_current_assignee_and_type_fields():
     assert query_clause("type:(发明专利)")["multi_match"]["fields"] == ["Type", "PatentTypeCode", "Kind"]
 
 
+def test_stage_10_5_fine_grained_text_fields_in_normal_mode():
+    assert query_clause("mainClaim:(均衡)")["multi_match"]["fields"] == ["MainClaim"]
+    assert query_clause("claims:(均衡)")["multi_match"]["fields"] == ["Requirement"]
+    assert query_clause("description:(均衡)")["multi_match"]["fields"] == ["Instructions"]
+
+
+def test_stage_10_5_or_phrase_queries_in_normal_mode():
+    clause = query_clause('claims:("均衡" OR "平衡")')
+
+    assert clause["bool"]["minimum_should_match"] == 1
+    assert clause["bool"]["should"] == [
+        {"multi_match": {"query": "均衡", "fields": ["Requirement"]}},
+        {"multi_match": {"query": "平衡", "fields": ["Requirement"]}},
+    ]
+
+
+def test_stage_10_5_combines_with_ipc_and_not_in_normal_mode():
+    ipc_claims = query_clause("ipc:H02M AND claims:(均衡)")
+    assert ipc_claims["bool"]["must"][1]["multi_match"]["fields"] == ["Requirement"]
+
+    main_claim_not_description = query_clause("mainClaim:(电路) AND NOT description:(外观)")
+    assert main_claim_not_description["bool"]["must"][0]["multi_match"]["fields"] == ["MainClaim"]
+    assert main_claim_not_description["bool"]["must"][1]["bool"]["must_not"][0]["multi_match"]["fields"] == [
+        "Instructions"
+    ]
+
+
 def test_document_year_maps_to_publication_date_range():
     assert query_clause("documentYear:[2020 TO 2024]") == {
         "range": {
@@ -74,6 +101,9 @@ def test_document_year_maps_to_publication_date_range():
     "q,error",
     [
         ("foo:(均衡)", "不支持字段 foo"),
+        ("mainClaim:", "字段 mainClaim 的值不能为空"),
+        ("claims:()", "字段 claims 的值不能为空"),
+        ("description:(均衡) AND AND ipc:H02M", "AND 后缺少查询条件"),
         ("ad:[2020-13-01 TO 2020-12-31]", "日期格式非法"),
         ("ad:[2021-01-01 TO 2020-12-31]", "范围起始值不能晚于结束值"),
         ("documentYear:[2024 TO 2020]", "范围起始值不能晚于结束值"),

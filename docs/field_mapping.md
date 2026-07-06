@@ -21,6 +21,9 @@ patent_index
 | `title` | 标题 | `Title`, `TitleCN`, `TitleEN`, `TitleOriginal` | 支持 |
 | `ab` | 摘要 | `Abstract`, `AbstractCN`, `AbstractEN`, `AbstractOriginal` | 支持 |
 | `tscd` | 标题+摘要+权利要求+说明书 | `Title`, `Abstract`, `MainClaim`, `Requirement`, `Instructions` | 支持 |
+| `mainClaim` | 首权/主权利要求 | `MainClaim` | 阶段 10.5 支持 |
+| `claims` | 完整权利要求书 | `Requirement` | 阶段 10.5 支持 |
+| `description` | 说明书 | `Instructions` | 阶段 10.5 支持 |
 | `ipc` | IPC 分类 | `IPC`, `IPCList`, `IPCSmallCategory`, `IPCLargeGroup`, `IPCSmallGroup` | 支持 |
 | `applicant` | 申请人 | `Applicant`, `ApplicantNormalized`, `FirstApplicant` | 支持 |
 | `currentAssignee` | 当前权利人 | `Assignee`, `AssigneeNormalized` | 支持 |
@@ -139,6 +142,16 @@ RelatedDocuments
 | `type` | `Type`, `PatentTypeCode`, `Kind` |
 | `ad` | `ApplicationDate` |
 | `documentYear` | `PublicationDate` |
+
+## 阶段 10.5 细粒度文本查询字段映射
+
+阶段 10.5 新增 `mainClaim`、`claims`、`description` 三个 q 字段，不修改 OpenSearch mapping，不改变 `tscd` 既有范围。
+
+| q 字段 | OpenSearch 字段 | `compat` 模式 | `normal` 模式 |
+|---|---|---|---|
+| `mainClaim` | `MainClaim` | phrase `multi_match` | 普通 `multi_match` |
+| `claims` | `Requirement` | phrase `multi_match` | 普通 `multi_match` |
+| `description` | `Instructions` | phrase `multi_match` | 普通 `multi_match` |
 
 ## 阶段七详情与引证字段映射
 

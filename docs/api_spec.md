@@ -99,6 +99,8 @@ POST /api/patent/search
 }
 ```
 
+`q` 当前支持字段查询：`title`、`ab`、`tscd`、`mainClaim`、`claims`、`description`、`ipc`、`applicant`、`currentAssignee`、`legalStatus`、`type`，以及 `ad`、`documentYear` 范围查询。阶段 10.5 起，`mainClaim` 映射 `MainClaim`，`claims` 映射 `Requirement`，`description` 映射 `Instructions`；`index_analyzer_mode=compat` 下这三个字段使用 phrase 查询，`normal` 下使用普通 `multi_match`。
+
 ### 3.4 响应示例
 
 ```json

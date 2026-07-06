@@ -4,6 +4,9 @@ from app.mappings.query_field_mapping import TEXT_FIELD_MAPPING
 
 def test_text_field_mapping_contains_stage_six_fields():
     assert TEXT_FIELD_MAPPING["tscd"] == ["Title", "Abstract", "MainClaim", "Requirement", "Instructions"]
+    assert TEXT_FIELD_MAPPING["mainClaim"] == ["MainClaim"]
+    assert TEXT_FIELD_MAPPING["claims"] == ["Requirement"]
+    assert TEXT_FIELD_MAPPING["description"] == ["Instructions"]
     assert TEXT_FIELD_MAPPING["applicant"] == ["Applicant", "ApplicantNormalized", "FirstApplicant"]
     assert TEXT_FIELD_MAPPING["currentAssignee"] == ["Assignee", "AssigneeNormalized"]
     assert TEXT_FIELD_MAPPING["type"] == ["Type", "PatentTypeCode", "Kind"]
@@ -33,6 +36,15 @@ from app.mappings.query_field_mapping import get_normal_analyzer_fields, get_ris
 def test_stage_6_5_splits_tscd_normal_and_risky_fields():
     assert get_normal_analyzer_fields("tscd") == ["Title", "Abstract"]
     assert get_risky_analyzer_fields("tscd") == ["MainClaim", "Requirement", "Instructions"]
+
+
+def test_stage_10_5_fine_grained_fields_are_risky_only():
+    assert get_normal_analyzer_fields("mainClaim") == []
+    assert get_risky_analyzer_fields("mainClaim") == ["MainClaim"]
+    assert get_normal_analyzer_fields("claims") == []
+    assert get_risky_analyzer_fields("claims") == ["Requirement"]
+    assert get_normal_analyzer_fields("description") == []
+    assert get_risky_analyzer_fields("description") == ["Instructions"]
 
 
 def test_stage_6_5_splits_title_and_abstract_cn_fields():

@@ -37,6 +37,28 @@ def test_normal_mode_preserves_stage_6_tscd_multi_match():
     }
 
 
+def test_stage_10_5_fine_grained_fields_use_phrase_in_compat_mode():
+    assert query_clause("mainClaim:(均衡)") == {
+        "multi_match": {"query": "均衡", "fields": ["MainClaim"], "type": "phrase"}
+    }
+    assert query_clause("claims:(均衡)") == {
+        "multi_match": {"query": "均衡", "fields": ["Requirement"], "type": "phrase"}
+    }
+    assert query_clause("description:(均衡)") == {
+        "multi_match": {"query": "均衡", "fields": ["Instructions"], "type": "phrase"}
+    }
+
+
+def test_stage_10_5_or_phrase_queries_use_phrase_in_compat_mode():
+    clause = query_clause('description:("均衡" OR "平衡")')
+
+    assert clause["bool"]["minimum_should_match"] == 1
+    assert clause["bool"]["should"] == [
+        {"multi_match": {"query": "均衡", "fields": ["Instructions"], "type": "phrase"}},
+        {"multi_match": {"query": "平衡", "fields": ["Instructions"], "type": "phrase"}},
+    ]
+
+
 def test_title_and_abstract_compat_use_cn_phrase_fields():
     title_clause = query_clause("title:(口腔数字印模仪)")
     abstract_clause = query_clause("ab:(口腔数字印模仪)")

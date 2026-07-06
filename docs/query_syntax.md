@@ -86,7 +86,32 @@ tscd:(均衡)
 tscd:("均衡" OR "平衡")
 ```
 
-### 4.4 IPC
+### 4.4 细粒度文本字段
+
+阶段 10.5 起支持对首权、完整权利要求书和说明书做单字段检索，且不改变 `tscd` 既有覆盖范围。
+
+| 查询字段 | 含义 | OpenSearch 字段 |
+|---|---|---|
+| `mainClaim` | 首权/主权利要求 | `MainClaim` |
+| `claims` | 完整权利要求书 | `Requirement` |
+| `description` | 说明书 | `Instructions` |
+
+示例：
+
+```text
+mainClaim:(均衡)
+claims:(均衡)
+description:(均衡)
+mainClaim:("均衡" OR "平衡")
+claims:("均衡" OR "平衡")
+description:("均衡" OR "平衡")
+ipc:H02M AND claims:(均衡)
+mainClaim:(电路) AND NOT description:(外观)
+```
+
+`index_analyzer_mode=compat` 下，`mainClaim`、`claims`、`description` 使用 phrase 查询；`index_analyzer_mode=normal` 下使用普通 `multi_match`。
+
+### 4.5 IPC
 
 ```text
 ipc:H02M
@@ -104,7 +129,7 @@ IPCLargeGroup
 IPCSmallGroup
 ```
 
-### 4.5 申请人和当前权利人
+### 4.6 申请人和当前权利人
 
 ```text
 applicant:(华为技术有限公司)
@@ -112,7 +137,7 @@ currentAssignee:(华为技术有限公司)
 currentAssignee:(华为技术有限公司) OR currentAssignee:(杭州华为数字技术有限公司)
 ```
 
-### 4.6 日期范围
+### 4.7 日期范围
 
 申请日：
 
@@ -126,7 +151,7 @@ ad:[2020-01-01 TO 2020-12-31]
 documentYear:[2020 TO 2024]
 ```
 
-### 4.7 法律状态
+### 4.8 法律状态
 
 ```text
 legalStatus:(有效专利)
@@ -136,7 +161,7 @@ legalStatus:(失效)
 
 第一版法律状态使用基础映射，详见 `docs/field_mapping.md`。
 
-### 4.8 专利类型
+### 4.9 专利类型
 
 ```text
 type:(发明专利)
@@ -210,6 +235,11 @@ ad:[2020-01-01 TO 2020-12-31]
 legalStatus:(有效专利)
 documentYear:[2020 TO 2024]
 type:(发明专利)
+mainClaim:(均衡)
+claims:("均衡" OR "平衡")
+description:(均衡)
+ipc:H02M AND claims:(均衡)
+mainClaim:(电路) AND NOT description:(外观)
 ```
 
 ## 阶段 6.5 索引 analyzer 兼容参数
@@ -221,7 +251,7 @@ type:(发明专利)
 
 ## 阶段六已支持语法
 
-- 字段查询：`title`、`ab`、`tscd`、`ipc`、`applicant`、`currentAssignee`、`legalStatus`、`type`
+- 字段查询：`title`、`ab`、`tscd`、`mainClaim`、`claims`、`description`、`ipc`、`applicant`、`currentAssignee`、`legalStatus`、`type`
 - 日期范围：`ad:[YYYY-MM-DD TO YYYY-MM-DD]`
 - 公开年范围：`documentYear:[YYYY TO YYYY]`
 - 布尔运算：`AND`、`OR`、`NOT`
