@@ -168,10 +168,110 @@ GET /api/patent/detail/cn-xxx?include_description=true
 4. IPC 分类。
 5. 法律状态。
 6. 权利要求。
-7. 说明书。
+7. 说明书（受 `include_description` 控制）。
 8. 附图信息。
 9. 同族信息。
 10. 引证/相关文献信息。
+
+#### 4.4.1 双兼容字段（阶段七）
+
+阶段七起，详情接口对核心关键字段同时输出 HTTP API 风格的 camelCase 字段与 SaaS PatentHub 工具层实际消费的 snake_case 别名，保证两套消费方均无需自行改写。设计依据见 `docs/superpowers/specs/2026-07-06-stage-7-detail-citations-design.md` §7.2。
+
+基础著录字段（camelCase + snake_case 别名）：
+
+| camelCase 字段 | snake_case 别名 | OpenSearch 来源 |
+|---|---|---|
+| `applicationNumber` | `application_number` | `ApplicationNumber` |
+| `documentNumber` | `document_number` | `PublicationNumber` |
+| `applicationDate` | `application_date` | `ApplicationDate` |
+| `documentDate` | `document_date` | `PublicationDate` |
+| `legalStatus` | `legal_status` | `LatestLegalStatus` 命中后回退 `LegalStatus` |
+| `currentStatus` | `current_status` | `LatestLegalStatus` |
+| `currentAssignee` | `current_assignee` | `Assignee` 命中后回退 `Applicant` |
+| `mainIpc` | `main_ipc` | `IPC` |
+| `ipcMainList` | `ipc_main_list` | `IPCList` |
+| `firstApplicant` | `first_applicant` | `FirstApplicant` |
+| `firstInventor` | `first_inventor` | `FirstInventor` |
+| `applicantAddress` | `applicant_address` | `ApplicantAddress` |
+| `priorityNumber` | `priority_number` | `PriorityNumber` |
+| `fullPriorityNumber` | `full_priority_number` | `FullPriorityNumber` |
+| `pctDate` | `pct_date` | `PCTDate` |
+| `pctApplicationData` | `pct_application_data` | `PCTApplicationData` |
+| `pctPublicationData` | `pct_publication_data` | `PCTPublicationData` |
+| `imagePath` | `image_path` | `AbstractFigureUrl` / `ImagePath` |
+| `pdfList` | `pdf_list` | `PDFList` |
+| `legalStatusHistory` | `legal_status_history` | `LegalStatusHistory`，回退 `LegalStatus` |
+
+文本字段（保持现有别名，部分字段不设 snake_case 别名）：
+
+| 字段 | 别名 | OpenSearch 来源 |
+|---|---|---|
+| `title` | `ti` | `Title` |
+| `abstract` | `ab` / `summary` | `Abstract` |
+| `mainClaim` | `main_claim` | `MainClaim` |
+| `claims` | 无 | `Requirement` |
+| `description` | 无 | `Instructions`，仅在 `include_description=true` 时返回 |
+
+主体字段：
+
+| camelCase 字段 | snake_case 别名 | OpenSearch 来源 |
+|---|---|---|
+| `applicant` | 无 | `Applicant` |
+| `assignee` | 无 | `Assignee` |
+| `inventor` | 无 | `Inventor` |
+| `agency` | 无 | `Agency` |
+| `agent` | 无 | `Agent` |
+
+分类与扩展字段：
+
+| 字段 | OpenSearch 来源 |
+|---|---|
+| `ipc` | `IPC` |
+| `loc` | `LOC` |
+| `family` | `Family`, `SimpleFamily`, `ExtendedFamily`, `DocDBFamily` |
+| `drawings` | `Drawings`, `DescriptionImages` |
+
+空值规则沿用 `docs/field_mapping.md` 第 6 节；`legalStatus` 优先 `LatestLegalStatus`，缺失回退 `LegalStatus`；`currentAssignee` 优先 `Assignee`，缺失回退 `Applicant`。
+
+#### 4.4.2 响应示例（阶段七）
+
+```json
+{
+  "id": "cn-xxx",
+  "patent_id": "cn-xxx",
+  "title": "一种轴承座壳体的加工工艺",
+  "ti": "一种轴承座壳体的加工工艺",
+  "abstract": "本发明公开了一种...",
+  "ab": "本发明公开了一种...",
+  "summary": "本发明公开了一种...",
+  "applicationNumber": "CN202411108082.1",
+  "application_number": "CN202411108082.1",
+  "documentNumber": "CN119188170B",
+  "document_number": "CN119188170B",
+  "applicationDate": "2024-08-13",
+  "application_date": "2024-08-13",
+  "documentDate": "2026-06-12",
+  "document_date": "2026-06-12",
+  "applicant": "某某公司",
+  "currentAssignee": "某某公司",
+  "current_assignee": "某某公司",
+  "inventor": "张三;李四",
+  "mainIpc": "B23P15/00",
+  "main_ipc": "B23P15/00",
+  "ipcMainList": ["B23P15/00", "B23Q3/00"],
+  "ipc_main_list": ["B23P15/00", "B23Q3/00"],
+  "legalStatus": "授权",
+  "legal_status": "授权",
+  "currentStatus": "授权",
+  "current_status": "授权",
+  "type": "发明专利",
+  "mainClaim": "一种轴承座壳体的加工工艺，其特征在于...",
+  "main_claim": "一种轴承座壳体的加工工艺，其特征在于...",
+  "claims": "1. 一种轴承座壳体的加工工艺..."
+}
+```
+
+`include_description=true` 时在上述结构上追加 `description` 字段；缺省时不返回该字段，避免长文本默认进入响应。
 
 ## 5. 引证/相关文献
 
@@ -187,15 +287,48 @@ GET /api/patent/citations/{patent_id}
 
 ### 5.2 响应内容
 
+阶段七起，引证接口同时输出 SaaS PatentHub 工具层字段与本项目原始兼容字段。设计依据见 `docs/superpowers/specs/2026-07-06-stage-7-detail-citations-design.md` §8.2。
+
 ```json
 {
   "patent_id": "cn-xxx",
+  "cited_by": [],
+  "patent_references": [],
+  "non_patent_references": [],
   "referencesCited": [],
   "referencesCitedRaw": "",
   "referencesCitedText": "",
   "relatedDocuments": []
 }
 ```
+
+字段含义：
+
+| 字段 | OpenSearch 来源 | 说明 |
+|---|---|---|
+| `patent_id` | request / `_source.patent_id` | 专利稳定 ID |
+| `cited_by` | `RelatedDocuments` 尽力归一化 | 被引专利摘要列表 |
+| `patent_references` | `ReferencesCited` 尽力归一化 | 引用专利摘要列表 |
+| `non_patent_references` | `ReferencesCitedRaw` / `ReferencesCitedText` | 非专利文献或原始引用文本 |
+| `referencesCited` | `ReferencesCited` | 原始结构化引证字段 |
+| `referencesCitedRaw` | `ReferencesCitedRaw` | 原始引证文本 |
+| `referencesCitedText` | `ReferencesCitedText` | 文本化引证列表 |
+| `relatedDocuments` | `RelatedDocuments` | 原始相关文献 |
+
+`cited_by` 与 `patent_references` 在能结构化时输出 SaaS 工具层格式摘要：
+
+| 字段 | 说明 |
+|---|---|
+| `id` | 引用专利 ID |
+| `title` | 标题 |
+| `applicant` | 申请人 |
+| `application_date` | 申请日 |
+| `application_number` | 申请号 |
+| `type` | 专利类型 |
+| `legal_status` | 法律状态 |
+| `main_ipc` | 主 IPC |
+
+若 OpenSearch 中 `ReferencesCited` / `RelatedDocuments` 已为结构化数组，mapper 尽量归一化到上述摘要字段；如为字符串或未知结构，则保留原始值到兼容字段，`patent_references` / `cited_by` 返回空数组 `[]`。
 
 ## 6. 错误码
 

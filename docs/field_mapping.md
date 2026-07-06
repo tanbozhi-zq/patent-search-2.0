@@ -138,3 +138,50 @@ RelatedDocuments
 | `type` | `Type`, `PatentTypeCode`, `Kind` |
 | `ad` | `ApplicationDate` |
 | `documentYear` | `PublicationDate` |
+
+## 阶段七详情与引证字段映射
+
+阶段七新增 `GET /api/patent/detail/{patent_id}` 与 `GET /api/patent/citations/{patent_id}` 两个接口，详情接口对核心关键字段同时输出 camelCase 与 snake_case 别名，引证接口同时输出 SaaS PatentHub 工具层字段与原始兼容字段。设计依据见 `docs/superpowers/specs/2026-07-06-stage-7-detail-citations-design.md` §7.2、§8.2。
+
+### 详情字段映射
+
+| 对外字段（camelCase / snake_case） | OpenSearch 字段 | 回退规则 |
+|---|---|---|
+| `applicationNumber` / `application_number` | `ApplicationNumber` | 无 |
+| `documentNumber` / `document_number` | `PublicationNumber` | 无 |
+| `applicationDate` / `application_date` | `ApplicationDate` | 无 |
+| `documentDate` / `document_date` | `PublicationDate` | 无 |
+| `legalStatus` / `legal_status` | `LatestLegalStatus` | 缺失时回退 `LegalStatus`，仍缺失返回 `""` |
+| `currentStatus` / `current_status` | `LatestLegalStatus` | 缺失返回 `""` |
+| `currentAssignee` / `current_assignee` | `Assignee` | 缺失时回退 `Applicant` |
+| `mainIpc` / `main_ipc` | `IPC` | 无 |
+| `ipcMainList` / `ipc_main_list` | `IPCList` | 缺失返回 `[]` |
+| `firstApplicant` / `first_applicant` | `FirstApplicant` | 无 |
+| `firstInventor` / `first_inventor` | `FirstInventor` | 无 |
+| `priorityNumber` / `priority_number` | `PriorityNumber` | 无 |
+| `fullPriorityNumber` / `full_priority_number` | `FullPriorityNumber` | 无 |
+| `pctDate` / `pct_date` | `PCTDate` | 无 |
+| `pctApplicationData` / `pct_application_data` | `PCTApplicationData` | 无 |
+| `pctPublicationData` / `pct_publication_data` | `PCTPublicationData` | 无 |
+| `imagePath` / `image_path` | `AbstractFigureUrl` / `ImagePath` | 无 |
+| `pdfList` / `pdf_list` | `PDFList` | 无 |
+| `legalStatusHistory` / `legal_status_history` | `LegalStatusHistory` | 缺失时回退 `LegalStatus` |
+| `claims` | `Requirement` | 缺失返回 `""` |
+| `mainClaim` / `main_claim` | `MainClaim` | 缺失返回 `""` |
+| `description` | `Instructions` | 仅 `include_description=true` 时返回 |
+
+### 引证字段映射
+
+| 对外字段 | OpenSearch 字段 | 处理规则 |
+|---|---|---|
+| `cited_by` | `RelatedDocuments` | 尽力归一化为被引专利摘要数组；无法结构化时返回 `[]` |
+| `patent_references` | `ReferencesCited` | 尽力归一化为引用专利摘要数组；无法结构化时返回 `[]` |
+| `non_patent_references` | `ReferencesCitedRaw` / `ReferencesCitedText` | 非专利文献或原始引用文本，缺失返回 `""` 或 `[]` |
+| `referencesCited` | `ReferencesCited` | 原始结构化引证字段，保持原始结构 |
+| `referencesCitedRaw` | `ReferencesCitedRaw` | 原始引证文本，缺失返回 `""` |
+| `referencesCitedText` | `ReferencesCitedText` | 文本化引证列表，缺失返回 `""` |
+| `relatedDocuments` | `RelatedDocuments` | 原始相关文献，缺失返回 `[]` |
+
+引证摘要对象（`cited_by`、`patent_references` 结构化条目）字段：`id`、`title`、`applicant`、`application_date`、`application_number`、`type`、`legal_status`、`main_ipc`。
+
+空值规则沿用本文件第 6 节：字符串缺失返回 `""`，数组缺失返回 `[]`，对象缺失按字段语义返回 `[]` 或 `{}`。
