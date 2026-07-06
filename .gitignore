@@ -8,3 +8,6 @@
 # Python artifacts
 .venv/
 __pycache__/
+
+# Local read-only SaaS source copy for contract audit
+patent_harness_base_副本/
