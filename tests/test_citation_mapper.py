@@ -68,3 +68,66 @@ def test_map_citations_response_handles_missing_fields():
         "referencesCitedText": "",
         "relatedDocuments": [],
     }
+
+
+def test_map_citations_response_summarizes_raw_references_cited_doc_number():
+    hit = {
+        "_source": {
+            "patent_id": "cn-490997baf50c646d",
+            "ReferencesCited": [
+                {
+                    "DocNumber": "112501955",
+                    "Kind": "A",
+                    "Country": "CN",
+                    "Date": "2021-03-16",
+                },
+                {
+                    "DocNumber": "112501955",
+                    "Kind": "A",
+                    "Country": "CN",
+                    "Date": "2021-03-16",
+                },
+                {
+                    "Unknown": "value",
+                },
+            ],
+        }
+    }
+
+    mapped = map_citations_response(hit)
+
+    assert mapped["referencesCited"] == hit["_source"]["ReferencesCited"]
+    assert mapped["patent_references"] == [
+        {
+            "id": "CN112501955A",
+            "title": "",
+            "applicant": "",
+            "application_date": "2021-03-16",
+            "application_number": "",
+            "type": "",
+            "legal_status": "",
+            "main_ipc": "",
+        }
+    ]
+
+
+def test_map_citations_response_summarizes_related_documents_doc_number():
+    hit = {
+        "_source": {
+            "patent_id": "cn-1",
+            "RelatedDocuments": [
+                {
+                    "DocNumber": "115629104",
+                    "Kind": "A",
+                    "Country": "CN",
+                    "Date": "2023-01-20",
+                }
+            ],
+        }
+    }
+
+    mapped = map_citations_response(hit)
+
+    assert mapped["relatedDocuments"] == hit["_source"]["RelatedDocuments"]
+    assert mapped["cited_by"][0]["id"] == "CN115629104A"
+    assert mapped["cited_by"][0]["application_date"] == "2023-01-20"

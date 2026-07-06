@@ -7,10 +7,8 @@ def map_citations_response(hit: dict) -> dict:
 
     return {
         "patent_id": _string(source.get("patent_id")),
-        "cited_by": [_summarize_patent(item) for item in related_documents if isinstance(item, dict)],
-        "patent_references": [
-            _summarize_patent(item) for item in references_cited if isinstance(item, dict)
-        ],
+        "cited_by": _summarize_patents(related_documents),
+        "patent_references": _summarize_patents(references_cited),
         "non_patent_references": _non_patent_references(raw, text),
         "referencesCited": references_cited,
         "referencesCitedRaw": raw,
@@ -19,16 +17,41 @@ def map_citations_response(hit: dict) -> dict:
     }
 
 
+def _summarize_patents(items: list) -> list:
+    summaries = []
+    seen = set()
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        summary = _summarize_patent(item)
+        if not any(summary.values()):
+            continue
+        key = tuple(summary.values())
+        if key in seen:
+            continue
+        seen.add(key)
+        summaries.append(summary)
+    return summaries
+
+
 def _summarize_patent(item: dict) -> dict:
+    document_number = _document_number(item)
     return {
-        "id": _string(item.get("id") or item.get("patent_id")),
-        "title": _string(item.get("title") or item.get("Title")),
-        "applicant": _string(item.get("applicant") or item.get("Applicant")),
-        "application_date": _string(item.get("applicationDate") or item.get("ApplicationDate")),
-        "application_number": _string(item.get("applicationNumber") or item.get("ApplicationNumber")),
-        "type": _string(item.get("type") or item.get("Type")),
-        "legal_status": _string(item.get("legalStatus") or item.get("LatestLegalStatus") or item.get("LegalStatus")),
-        "main_ipc": _string(item.get("mainIpc") or item.get("IPC")),
+        "id": _string(
+            _first_value(item, ("id", "patent_id", "patentId", "PatentID"))
+            or document_number
+        ),
+        "title": _string(_first_value(item, ("title", "Title"))),
+        "applicant": _string(_first_value(item, ("applicant", "Applicant"))),
+        "application_date": _string(
+            _first_value(item, ("applicationDate", "ApplicationDate", "Date", "date"))
+        ),
+        "application_number": _string(_first_value(item, ("applicationNumber", "ApplicationNumber"))),
+        "type": _string(_first_value(item, ("type", "Type"))),
+        "legal_status": _string(
+            _first_value(item, ("legalStatus", "LatestLegalStatus", "LegalStatus"))
+        ),
+        "main_ipc": _string(_first_value(item, ("mainIpc", "IPC", "ipc"))),
     }
 
 
@@ -45,6 +68,40 @@ def _string(value) -> str:
     if value is None:
         return ""
     return str(value)
+
+
+def _first_value(item: dict, keys: tuple):
+    for key in keys:
+        value = item.get(key)
+        if value:
+            return value
+    return None
+
+
+def _document_number(item: dict) -> str:
+    value = _first_value(
+        item,
+        (
+            "documentNumber",
+            "DocumentNumber",
+            "PublicationNumber",
+            "publicationNumber",
+            "DocNumber",
+            "docNumber",
+        ),
+    )
+    if not value:
+        return ""
+
+    document_number = str(value)
+    country = _string(_first_value(item, ("Country", "country")))
+    kind = _string(_first_value(item, ("Kind", "kind")))
+
+    if country and not document_number.upper().startswith(country.upper()):
+        document_number = f"{country}{document_number}"
+    if kind and not document_number.upper().endswith(kind.upper()):
+        document_number = f"{document_number}{kind}"
+    return document_number
 
 
 def _array(value) -> list:

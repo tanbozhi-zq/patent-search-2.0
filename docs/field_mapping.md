@@ -184,4 +184,12 @@ RelatedDocuments
 
 引证摘要对象（`cited_by`、`patent_references` 结构化条目）字段：`id`、`title`、`applicant`、`application_date`、`application_number`、`type`、`legal_status`、`main_ipc`。
 
+当 OpenSearch 原始引用条目使用 `DocNumber`、`Country`、`Kind`、`Date` 结构时，mapper 采用以下兼容规则：
+
+1. `id` 使用 `Country + DocNumber + Kind` 合成，例如 `CN112501955A`。
+2. `application_date` 在缺少 `ApplicationDate` 时使用 `Date`。
+3. 其他缺失摘要字段按空值规则返回 `""`。
+4. 归一化摘要会跳过完全无法识别的空摘要，并对完全相同的摘要条目去重。
+5. 原始结构仍保留在 `referencesCited` 或 `relatedDocuments`。
+
 空值规则沿用本文件第 6 节：字符串缺失返回 `""`，数组缺失返回 `[]`，对象缺失按字段语义返回 `[]` 或 `{}`。

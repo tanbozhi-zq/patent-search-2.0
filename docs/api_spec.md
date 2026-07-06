@@ -330,6 +330,13 @@ GET /api/patent/citations/{patent_id}
 
 若 OpenSearch 中 `ReferencesCited` / `RelatedDocuments` 已为结构化数组，mapper 尽量归一化到上述摘要字段；如为字符串或未知结构，则保留原始值到兼容字段，`patent_references` / `cited_by` 返回空数组 `[]`。
 
+兼容 OpenSearch 原始引文字段：
+
+1. 当引用条目仅包含 `DocNumber`、`Country`、`Kind` 时，摘要 `id` 按 `Country + DocNumber + Kind` 合成，例如 `{"Country":"CN","DocNumber":"112501955","Kind":"A"}` 输出 `id="CN112501955A"`。
+2. 当引用条目包含 `Date` 且缺少 `ApplicationDate` 时，摘要 `application_date` 使用 `Date`。
+3. 归一化摘要会跳过完全无法识别的空摘要，并对完全相同的摘要条目去重。
+4. 原始引用对象仍完整保留在 `referencesCited` 或 `relatedDocuments`，归一化摘要仅用于 SaaS 工具层兼容展示与后续追查。
+
 ## 6. 错误码
 
 | 错误码 | 含义 | HTTP 状态码建议 |
