@@ -41,6 +41,7 @@ patent_index
 | `ti` | `Title` | string | 标题别名 |
 | `abstract` | `Abstract` | string | 摘要 |
 | `ab` | `Abstract` | string | 摘要别名 |
+| `summary` | `Abstract` | string | SaaS 工具层摘要别名 |
 | `applicant` | `Applicant` | string | 申请人 |
 | `pa` | `Applicant` | string | 申请人别名 |
 | `currentAssignee` | `Assignee` | string | 当前权利人 |

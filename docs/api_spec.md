@@ -118,6 +118,7 @@ POST /api/patent/search
       "ti": "一种轴承座壳体的加工工艺",
       "abstract": "本发明公开了一种...",
       "ab": "本发明公开了一种...",
+      "summary": "本发明公开了一种...",
       "applicant": "某某公司",
       "pa": "某某公司",
       "currentAssignee": "某某公司",
@@ -140,7 +141,7 @@ POST /api/patent/search
 }
 ```
 
-阶段 8 起，搜索记录在保留既有 camelCase 字段的同时补充 SaaS 工具层常用 snake_case 别名：`application_number`、`document_number`、`application_date`、`document_date`、`legal_status`、`main_ipc`。当前 HTTP API 顶层继续返回 `records`，不改为 PatentHub 工具层的 `patents`。
+阶段 9 起，搜索记录在保留既有 camelCase 字段的同时补充 SaaS 工具层常用字段：`summary`、`application_number`、`document_number`、`application_date`、`document_date`、`legal_status`、`main_ipc`。`summary` 来源为 `Abstract`，与 `abstract` 同值。当前 HTTP API 顶层继续返回 `records`，不改为 PatentHub 工具层的 `patents`。
 
 ## 4. 专利详情
 

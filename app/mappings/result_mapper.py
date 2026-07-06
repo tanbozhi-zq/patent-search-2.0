@@ -39,6 +39,7 @@ def _map_record(hit: dict) -> dict:
         "ti": title,
         "abstract": abstract,
         "ab": abstract,
+        "summary": abstract,
         "applicant": applicant,
         "pa": applicant,
         "currentAssignee": _string(source.get("Assignee") or source.get("Applicant")),
