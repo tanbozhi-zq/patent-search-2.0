@@ -49,7 +49,7 @@ POST /api/patent/search
 | 公开年 | `documentYear:[2020 TO 2024]` | 支持 |
 | 简单 AND | `ipc:H02M AND tscd:(均衡)` | 支持 |
 | 简单 OR | `title:(均衡) OR title:(平衡)` | 支持 |
-| 基础括号分组 | `(title:(均衡) OR title:(平衡)) AND ipc:H02M` | 支持 |
+| 常规多级括号分组 | `(title:(均衡) OR (title:(平衡) AND ipc:H02M))` | 支持 |
 
 ## 4. 字段语法
 
@@ -199,11 +199,11 @@ type:(外观设计)
 
 阶段 8 固定为兼容接收：`highlight=1` 不报错，但当前搜索响应不返回高亮片段或额外高亮字段。
 
-## 6. 不支持或暂缓语法
+## 6. 不支持或不承诺语法
 
-第一版暂缓：
+当前不支持或不承诺：
 
-1. 任意深度嵌套括号。
+1. 极端深度括号嵌套或明显不可读的超长表达式。
 2. 复杂 NOT 组合。
 3. 通配符查询。
 4. 模糊匹配操作符。
@@ -240,6 +240,8 @@ claims:("均衡" OR "平衡")
 description:(均衡)
 ipc:H02M AND claims:(均衡)
 mainClaim:(电路) AND NOT description:(外观)
+(title:(均衡) OR (title:(平衡) AND ipc:H02M))
+((title:(均衡) OR title:(平衡)) AND (ipc:H02M OR ipc:F16K))
 ```
 
 ## 阶段 6.5 索引 analyzer 兼容参数
@@ -255,6 +257,6 @@ mainClaim:(电路) AND NOT description:(外观)
 - 日期范围：`ad:[YYYY-MM-DD TO YYYY-MM-DD]`
 - 公开年范围：`documentYear:[YYYY TO YYYY]`
 - 布尔运算：`AND`、`OR`、`NOT`
-- 括号分组：`(title:(均衡) OR title:(平衡)) AND ipc:H02M`
+- 常规多级括号分组：`(title:(均衡) OR (title:(平衡) AND ipc:H02M))`
 - 短语：`tscd:("均衡" OR "平衡")`
 - 非法查询语法返回 `40001`，且不会访问 OpenSearch
