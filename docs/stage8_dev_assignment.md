@@ -55,7 +55,7 @@
 |---|---:|---:|
 | 查询语法错误 | 400 | `40001` |
 | 参数非法 | 400 | `40002` |
-| 分页参数非法 | 400 | `40003` 或统一归入 `40002`，需在文档中固定 |
+| 分页参数非法 | 400 | `40003` |
 | 专利不存在 | 404 | `40401` |
 | 鉴权缺失或错误 | 401 | `40101` |
 | OpenSearch 查询异常 | 502 | `50001` |
@@ -90,10 +90,10 @@
 对照 `docs/saas_patent_contract_audit.md` 与 `patent_harness_base_副本/backend/packages/harness/deerflow/community/patenthub/tools.py`，确认阶段八对 search 的兼容边界：
 
 1. 当前 HTTP API 响应继续保留 `records`，不强行改成 PatentHub 工具层 `patents`。
-2. 搜索记录是否补充 snake_case 别名：`application_number`、`document_number`、`application_date`、`document_date`、`legal_status`、`main_ipc`。
-3. `page_size` 当前最大 100；PatentHub 工具层文档为最大 50。阶段八需明确是否继续保持 100，或为工具层适配另行限制。
+2. 搜索记录补充 snake_case 别名：`application_number`、`document_number`、`application_date`、`document_date`、`legal_status`、`main_ipc`。
+3. `page_size` 最大值固定为 100；PatentHub 工具层文档为最大 50，阶段八不收窄 HTTP API 上限。
 4. `sort` 当前支持 `relation`、`!applicationDate`；PatentHub 支持更多排序。阶段八只允许补充文档明确的排序，不做无文档扩展。
-5. `highlight=1` 当前如仅兼容接收，需在 API 文档中明确返回结构；如实现基础高亮，必须补测试。
+5. `highlight=1` 当前仅兼容接收，成功响应结构与 `highlight=0` 一致，不返回高亮片段。
 
 ### 4. OpenSearch 异常包装
 

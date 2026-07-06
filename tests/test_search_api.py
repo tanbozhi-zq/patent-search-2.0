@@ -21,6 +21,7 @@ def test_search_request_rejects_invalid_page_size():
 
 
 from app.api.search import get_search_service
+from app.core.exceptions import OpenSearchQueryError
 from app.core.security import require_api_key
 from app.main import app
 from app.services.search_service import SearchService
@@ -29,6 +30,11 @@ from app.services.search_service import SearchService
 class FakeSearchService:
     def search(self, request):
         return {"total": 0, "page": request.page, "page_size": request.page_size, "records": []}
+
+
+class OpenSearchFailingService:
+    def search(self, request):
+        raise OpenSearchQueryError("OpenSearch 查询异常")
 
 
 def test_search_endpoint_returns_vendor_like_shape(client):
@@ -41,6 +47,22 @@ def test_search_endpoint_returns_vendor_like_shape(client):
 
     assert response.status_code == 200
     assert response.json() == {"total": 0, "page": 1, "page_size": 50, "records": []}
+
+
+def test_search_api_returns_50001_on_opensearch_failure(client):
+    app.dependency_overrides[get_search_service] = lambda: OpenSearchFailingService()
+    app.dependency_overrides[require_api_key] = lambda: None
+    try:
+        response = client().post("/api/patent/search", json={"q": "阀门"})
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 502
+    assert response.json()["success"] is False
+    assert response.json()["code"] == 50001
+    assert "OpenSearch 查询异常" == response.json()["message"]
+    assert response.json()["data"] is None
+    assert "connection refused" not in response.text
 
 
 def test_standalone_not_query_returns_200(client):

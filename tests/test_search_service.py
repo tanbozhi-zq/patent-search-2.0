@@ -1,3 +1,6 @@
+import pytest
+
+from app.core.exceptions import OpenSearchQueryError
 from app.schemas.search import SearchRequest
 from app.services.search_service import SearchService
 
@@ -19,3 +22,15 @@ def test_search_service_builds_dsl_and_maps_response():
 
     assert repository.body["size"] == 50
     assert result == {"total": 0, "page": 1, "page_size": 50, "records": []}
+
+
+class FailingRepository:
+    def search(self, body):
+        raise RuntimeError("opensearch connection refused")
+
+
+def test_search_service_wraps_repository_failure():
+    service = SearchService(repository=FailingRepository())
+
+    with pytest.raises(OpenSearchQueryError):
+        service.search(SearchRequest(q="阀门"))

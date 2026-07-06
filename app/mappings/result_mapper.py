@@ -20,16 +20,21 @@ def _extract_total(total):
 def _map_record(hit: dict) -> dict:
     source = hit.get("_source", {})
     patent_id = _string(source.get("patent_id"))
+    application_number = _string(source.get("ApplicationNumber"))
+    document_number = _string(source.get("PublicationNumber"))
     title = _string(source.get("Title"))
     abstract = _string(source.get("Abstract"))
     applicant = _string(source.get("Applicant"))
+    main_ipc = _string(source.get("IPC"))
+    application_date = _string(source.get("ApplicationDate"))
+    document_date = _string(source.get("PublicationDate"))
     legal_status = _string(source.get("LatestLegalStatus") or source.get("LegalStatus"))
 
     return {
         "id": patent_id,
         "patent_id": patent_id,
-        "applicationNumber": _string(source.get("ApplicationNumber")),
-        "documentNumber": _string(source.get("PublicationNumber")),
+        "applicationNumber": application_number,
+        "documentNumber": document_number,
         "title": title,
         "ti": title,
         "abstract": abstract,
@@ -38,12 +43,18 @@ def _map_record(hit: dict) -> dict:
         "pa": applicant,
         "currentAssignee": _string(source.get("Assignee") or source.get("Applicant")),
         "inventor": _string(source.get("Inventor")),
-        "mainIpc": _string(source.get("IPC")),
+        "mainIpc": main_ipc,
         "ipcMainList": _array(source.get("IPCList")),
-        "applicationDate": _string(source.get("ApplicationDate")),
-        "ad": _string(source.get("ApplicationDate")),
-        "documentDate": _string(source.get("PublicationDate")),
+        "applicationDate": application_date,
+        "ad": application_date,
+        "documentDate": document_date,
         "legalStatus": legal_status,
+        "application_number": application_number,
+        "document_number": document_number,
+        "application_date": application_date,
+        "document_date": document_date,
+        "legal_status": legal_status,
+        "main_ipc": main_ipc,
         "currentStatus": _string(source.get("LatestLegalStatus")),
         "type": _string(source.get("Type")),
         "score": hit.get("_score"),

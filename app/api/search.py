@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 
-from app.core.exceptions import QuerySyntaxError
+from app.core.exceptions import OpenSearchQueryError, QuerySyntaxError, service_error
 from app.core.security import require_api_key
 from app.schemas.search import SearchRequest
 from app.services.search_service import SearchService
@@ -21,12 +21,6 @@ def search_patents(
     try:
         return service.search(request)
     except QuerySyntaxError as exc:
-        raise HTTPException(
-            status_code=400,
-            detail={
-                "success": False,
-                "code": 40001,
-                "message": str(exc),
-                "data": None,
-            },
-        )
+        raise service_error(400, 40001, str(exc))
+    except OpenSearchQueryError as exc:
+        raise service_error(502, 50001, str(exc))

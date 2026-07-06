@@ -49,8 +49,8 @@
 | q too long | `{"q": "<1001 chars>"}` | HTTP 400，code `40002` |
 | invalid ds | `{"q":"阀门","ds":"xx"}` | HTTP 400，code `40002` |
 | invalid sort | `{"q":"阀门","sort":"rank"}` | HTTP 400，code `40002` 或文档固定后的 code |
-| invalid page | `{"q":"阀门","page":0}` | HTTP 400，code `40002` 或 `40003`，必须与文档一致 |
-| invalid page_size | `{"q":"阀门","page_size":101}` | HTTP 400，code `40002` 或 `40003`，必须与文档一致 |
+| invalid page | `{"q":"阀门","page":0}` | HTTP 400，code `40003` |
+| invalid page_size | `{"q":"阀门","page_size":101}` | HTTP 400，code `40003` |
 | invalid highlight | `{"q":"阀门","highlight":2}` | HTTP 400，code `40002` |
 | invalid analyzer mode | `{"q":"阀门","index_analyzer_mode":"broken"}` | HTTP 400，code `40002` |
 
@@ -106,6 +106,16 @@ NOT
 | `GET /api/patent/citations/{patent_id}` | HTTP 502，code `50001` |
 
 响应体必须直接为 `{success, code, message, data}`，且不得包含 OpenSearch 密码、内部连接串中的账号密码或 Python traceback。
+
+## 内部异常验收
+
+通过测试路由或 mock 服务验证未分类异常：
+
+| Case | Expected |
+|---|---|
+| 未捕获服务异常 | HTTP 500，code `50002` |
+
+响应体必须直接为 `{success, code, message, data}`，且不得包含内部异常消息、连接串、账号密码或 Python traceback。
 
 ## 成功响应回归
 

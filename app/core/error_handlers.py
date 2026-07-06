@@ -1,28 +1,26 @@
-from typing import Any
+import logging
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 
 _PAGINATION_FIELDS = {"page", "page_size"}
+logger = logging.getLogger(__name__)
 
 
 def register_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(HTTPException)
     async def _http_exception_handler(_: Request, exc: HTTPException) -> JSONResponse:
-        detail = exc.detail
-        if isinstance(detail, dict) and {"success", "code", "message", "data"} <= detail.keys():
-            return JSONResponse(status_code=exc.status_code, content=detail)
-        return JSONResponse(
-            status_code=exc.status_code,
-            content={
-                "success": False,
-                "code": exc.status_code * 100,
-                "message": detail if isinstance(detail, str) else "internal error",
-                "data": None,
-            },
-        )
+        return _http_exception_response(exc)
+
+    @app.exception_handler(StarletteHTTPException)
+    async def _starlette_http_exception_handler(
+        _: Request,
+        exc: StarletteHTTPException,
+    ) -> JSONResponse:
+        return _http_exception_response(exc)
 
     @app.exception_handler(RequestValidationError)
     async def _validation_exception_handler(_: Request, exc: RequestValidationError) -> JSONResponse:
@@ -37,6 +35,37 @@ def register_error_handlers(app: FastAPI) -> None:
                 "data": None,
             },
         )
+
+    @app.exception_handler(Exception)
+    async def _unexpected_exception_handler(_: Request, exc: Exception) -> JSONResponse:
+        logger.error(
+            "Unhandled service exception",
+            exc_info=(type(exc), exc, exc.__traceback__),
+        )
+        return JSONResponse(
+            status_code=500,
+            content={
+                "success": False,
+                "code": 50002,
+                "message": "服务内部异常",
+                "data": None,
+            },
+        )
+
+
+def _http_exception_response(exc: StarletteHTTPException) -> JSONResponse:
+    detail = exc.detail
+    if isinstance(detail, dict) and {"success", "code", "message", "data"} <= detail.keys():
+        return JSONResponse(status_code=exc.status_code, content=detail)
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "success": False,
+            "code": exc.status_code * 100,
+            "message": detail if isinstance(detail, str) else "internal error",
+            "data": None,
+        },
+    )
 
 
 def _validation_code(exc: RequestValidationError) -> int:

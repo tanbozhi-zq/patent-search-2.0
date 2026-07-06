@@ -26,7 +26,7 @@
 3. 返回字段以 SaaS 当前实际消费字段为优先，不追求外采服务字段 100% 全量保留。
 4. 健康检查、错误响应、内部调试接口可以使用统一结构。
 
-通用失败响应：
+通用失败响应直接返回扁平结构，不再使用 FastAPI 默认 `422 detail` 数组，也不再包裹外层 `detail` 字段：
 
 ```json
 {
@@ -72,7 +72,7 @@ POST /api/patent/search
 | `sort` | string | 否 | `relation` | 排序，支持 `relation`、`!applicationDate` |
 | `page` | integer | 否 | `1` | 页码，从 1 开始 |
 | `page_size` | integer | 否 | `50` | 每页数量 |
-| `highlight` | integer | 否 | `0` | 是否高亮，支持 `0`、`1` |
+| `highlight` | integer | 否 | `0` | 高亮兼容参数，支持 `0`、`1`；阶段 8 仅兼容接收，不返回高亮片段 |
 | `index_analyzer_mode` | string | 否 | `compat` | 索引 analyzer 兼容模式，支持 `compat`、`normal`；当前默认 `compat` |
 
 ### 3.2 参数限制
@@ -81,7 +81,7 @@ POST /api/patent/search
 |---|---|
 | `q` | 非空，最大长度第一版建议 1000 字符 |
 | `page` | 大于等于 1 |
-| `page_size` | 大于等于 1，最大值第一版建议 100 |
+| `page_size` | 大于等于 1，最大值固定为 100 |
 | `ds` | 只能是 `cn` 或 `all` |
 | `sort` | 只能是 `relation` 或 `!applicationDate` |
 | `highlight` | 只能是 `0` 或 `1` |
@@ -111,7 +111,9 @@ POST /api/patent/search
       "id": "cn-xxx",
       "patent_id": "cn-xxx",
       "applicationNumber": "CN202411108082.1",
+      "application_number": "CN202411108082.1",
       "documentNumber": "CN119188170B",
+      "document_number": "CN119188170B",
       "title": "一种轴承座壳体的加工工艺",
       "ti": "一种轴承座壳体的加工工艺",
       "abstract": "本发明公开了一种...",
@@ -121,11 +123,15 @@ POST /api/patent/search
       "currentAssignee": "某某公司",
       "inventor": "张三;李四",
       "mainIpc": "B23P15/00",
+      "main_ipc": "B23P15/00",
       "ipcMainList": ["B23P15/00", "B23Q3/00"],
       "applicationDate": "2024-08-13",
+      "application_date": "2024-08-13",
       "ad": "2024-08-13",
       "documentDate": "2026-06-12",
+      "document_date": "2026-06-12",
       "legalStatus": "授权",
+      "legal_status": "授权",
       "currentStatus": "授权",
       "type": "发明专利",
       "score": 12.45
@@ -133,6 +139,8 @@ POST /api/patent/search
   ]
 }
 ```
+
+阶段 8 起，搜索记录在保留既有 camelCase 字段的同时补充 SaaS 工具层常用 snake_case 别名：`application_number`、`document_number`、`application_date`、`document_date`、`legal_status`、`main_ipc`。当前 HTTP API 顶层继续返回 `records`，不改为 PatentHub 工具层的 `patents`。
 
 ## 4. 专利详情
 
@@ -345,13 +353,14 @@ GET /api/patent/citations/{patent_id}
 | `40001` | 查询语法错误 | 400 |
 | `40002` | 参数非法 | 400 |
 | `40003` | `page` 或 `page_size` 非法 | 400 |
+| `40101` | 鉴权缺失或错误 | 401 |
 | `40401` | 专利不存在 | 404 |
 | `50001` | OpenSearch 查询异常 | 502 |
 | `50002` | 服务内部异常 | 500 |
 
-## 7. 待确认项
+## 7. 错误响应策略
 
-1. `highlight=1` 的高亮字段名称和标签格式。
-2. `page_size` 最大值是否固定为 100。
-3. OpenSearch 异常是否对 SaaS 暴露细节或只返回统一错误。
-4. 如果接入公司 API 网关，是否仍保留服务内 `X-API-Key` 二次鉴权。
+1. 查询语法错误返回 `40001`，且不会访问 OpenSearch。
+2. Pydantic/FastAPI 参数校验错误统一转为 HTTP 400；普通参数为 `40002`，`page` / `page_size` 为 `40003`。
+3. OpenSearch 查询异常统一返回 `50001`，响应不暴露连接串、账号密码或内部堆栈。
+4. 服务内 `X-API-Key` 鉴权继续保留；若后续接入公司 API 网关，是否关闭二次鉴权由后续阶段确认。

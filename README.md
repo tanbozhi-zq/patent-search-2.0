@@ -4,7 +4,7 @@ Self-hosted patent search backend service based on FastAPI and OpenSearch.
 
 ## Stage
 
-Current status: Stage 7 accepted, Stage 8 preparation.
+Current status: Stage 8 development completed locally, pending test/PM acceptance.
 
 Implemented so far:
 
@@ -19,16 +19,16 @@ Implemented so far:
 - `GET /api/patent/detail/{patent_id}`
 - `GET /api/patent/detail/{patent_id}?include_description=true`
 - `GET /api/patent/citations/{patent_id}`
+- flat error responses for validation, business, auth, and OpenSearch failures
+- search record snake_case compatibility aliases
 - static manual test page under `/test/`
 - pytest test suite
 - systemd deployment template
 
 Next stage:
 
-- Stage 8: interface compatibility and exception handling hardening.
-- Unify parameter validation errors into `{success, code, message, data}`.
-- Audit remaining PatentHub/SaaS tool contract gaps against `patent_harness_base_副本/`.
-- Confirm or document compatibility boundaries for `highlight`, `sort`, and pagination.
+- Stage 8 test/PM acceptance.
+- Stage 9 external PatentHub comparison and SaaS integration preparation.
 
 Project boundaries:
 
@@ -66,3 +66,30 @@ The first deployment uses:
 - `.env` for secrets
 
 OpenSearch credentials must not be committed to Git.
+
+## Error Responses
+
+Business interfaces return successful payloads directly. All errors use the flat envelope below, without an outer `detail` wrapper:
+
+```json
+{
+  "success": false,
+  "code": 40002,
+  "message": "参数非法：...",
+  "data": null
+}
+```
+
+Current codes:
+
+| Code | Scenario | HTTP |
+|---|---|---|
+| `40001` | query syntax error | 400 |
+| `40002` | invalid general parameter | 400 |
+| `40003` | invalid `page` or `page_size` | 400 |
+| `40101` | missing or invalid `X-API-Key` | 401 |
+| `40401` | patent not found | 404 |
+| `50001` | OpenSearch query failure | 502 |
+| `50002` | internal service failure | 500 |
+
+Stage 8 compatibility notes: `page_size` is capped at 100; `highlight=1` is accepted for compatibility but does not return highlight fragments; search records keep `records` and include snake_case aliases for `application_number`, `document_number`, `application_date`, `document_date`, `legal_status`, and `main_ipc`.
