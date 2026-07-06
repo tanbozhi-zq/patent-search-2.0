@@ -4,7 +4,7 @@ Self-hosted patent search backend service based on FastAPI and OpenSearch.
 
 ## Stage
 
-Current status: Stage 8 accepted, Stage 9 vendor comparison preparation.
+Current status: Stage 9 accepted, Stage 10 SaaS integration preparation.
 
 Implemented so far:
 
@@ -27,8 +27,8 @@ Implemented so far:
 
 Next stage:
 
-- Stage 9 external PatentHub comparison and SaaS integration preparation.
-- Stage 9 starts with design, then testing assignment, then vendor comparison report.
+- Stage 10 SaaS integration and gray validation preparation.
+- Stage 10 starts with adapter design, tool integration tasks, test acceptance, and rollback planning.
 
 Project boundaries:
 
