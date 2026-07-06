@@ -32,3 +32,33 @@ class OpenSearchRepository:
 
     def search(self, body: dict) -> dict:
         return self.client.search(index=self.index_name, body=body)
+
+    def get_patent_by_identifier(self, identifier: str) -> Optional[dict]:
+        for field in ("patent_id", "PublicationNumber", "ApplicationNumber"):
+            raw = self.search(
+                {
+                    "size": 1,
+                    "query": self._identifier_query(field, identifier),
+                }
+            )
+            hit = self._first_hit(raw)
+            if hit is not None:
+                return hit
+        return None
+
+    def _identifier_query(self, field: str, identifier: str) -> dict:
+        return {
+            "bool": {
+                "should": [
+                    {"term": {field: identifier}},
+                    {"match_phrase": {field: identifier}},
+                ],
+                "minimum_should_match": 1,
+            }
+        }
+
+    def _first_hit(self, raw: dict) -> Optional[dict]:
+        hits = raw.get("hits", {}).get("hits", [])
+        if not hits:
+            return None
+        return hits[0]
