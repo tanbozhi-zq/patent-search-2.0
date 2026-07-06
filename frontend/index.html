@@ -210,6 +210,38 @@
         <pre id="rawJson"></pre>
     </div>
 
+    <div class="card">
+        <h3>专利详情 / 引用测试</h3>
+        <div class="form-row">
+            <div class="form-group full">
+                <label for="detailPatentId">Patent ID / Publication Number / Application Number</label>
+                <input type="text" id="detailPatentId" placeholder="例如：cn-4401457edd8060df">
+                <div class="hint">支持 patent_id、公开号、申请号三种形式；从上方搜索结果中复制最方便</div>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="includeDescription">包含说明书 description</label>
+                <select id="includeDescription">
+                    <option value="0" selected>否</option>
+                    <option value="1">是</option>
+                </select>
+            </div>
+        </div>
+        <div class="actions">
+            <button class="btn-primary" onclick="doDetail()">获取详情</button>
+            <button class="btn-primary" onclick="doCitations()">获取引用</button>
+            <button class="btn-secondary" onclick="clearDetailResults()">清空</button>
+        </div>
+        <div id="detailStatus"></div>
+    </div>
+
+    <div class="card" id="detailResultCard" style="display: none;">
+        <h3>详情 / 引用 结果</h3>
+        <div id="detailSummary"></div>
+        <pre id="detailRawJson"></pre>
+    </div>
+
     <script>
         async function doSearch() {
             const statusEl = document.getElementById('status');
@@ -298,12 +330,110 @@
             }
         }
 
+        async function doDetail() {
+            const statusEl = document.getElementById('detailStatus');
+            const resultCard = document.getElementById('detailResultCard');
+            const apiToken = document.getElementById('apiToken').value.trim();
+            const patentId = document.getElementById('detailPatentId').value.trim();
+            const includeDescription = parseInt(document.getElementById('includeDescription').value, 10);
+
+            if (!patentId) {
+                statusEl.innerHTML = '<div class="error">Patent ID 不能为空</div>';
+                return;
+            }
+
+            statusEl.innerHTML = '<div class="loading">查询详情中...</div>';
+            resultCard.style.display = 'none';
+
+            const headers = {};
+            if (apiToken) {
+                headers['X-API-Key'] = apiToken;
+            }
+
+            try {
+                const url = `/api/patent/detail/${encodeURIComponent(patentId)}${includeDescription ? '?include_description=true' : ''}`;
+                const response = await fetch(url, { headers });
+                const data = await response.json();
+
+                if (!response.ok) {
+                    const message = data.detail || data.message || JSON.stringify(data);
+                    statusEl.innerHTML = `<div class="error">HTTP ${response.status}\n${typeof message === 'object' ? JSON.stringify(message, null, 2) : message}</div>`;
+                    return;
+                }
+
+                statusEl.innerHTML = '';
+                resultCard.style.display = 'block';
+                document.getElementById('detailSummary').innerHTML = `
+                    <div class="summary">
+                        标题：<strong>${escapeHtml(data.title || '')}</strong> &nbsp;
+                        申请号：<strong>${escapeHtml(data.applicationNumber || '')}</strong> &nbsp;
+                        含说明书：<strong>${'description' in data ? '是' : '否'}</strong>
+                    </div>
+                `;
+                document.getElementById('detailRawJson').textContent = JSON.stringify(data, null, 2);
+            } catch (err) {
+                statusEl.innerHTML = `<div class="error">请求失败：${err.message}</div>`;
+            }
+        }
+
+        async function doCitations() {
+            const statusEl = document.getElementById('detailStatus');
+            const resultCard = document.getElementById('detailResultCard');
+            const apiToken = document.getElementById('apiToken').value.trim();
+            const patentId = document.getElementById('detailPatentId').value.trim();
+
+            if (!patentId) {
+                statusEl.innerHTML = '<div class="error">Patent ID 不能为空</div>';
+                return;
+            }
+
+            statusEl.innerHTML = '<div class="loading">查询引用中...</div>';
+            resultCard.style.display = 'none';
+
+            const headers = {};
+            if (apiToken) {
+                headers['X-API-Key'] = apiToken;
+            }
+
+            try {
+                const response = await fetch(`/api/patent/citations/${encodeURIComponent(patentId)}`, { headers });
+                const data = await response.json();
+
+                if (!response.ok) {
+                    const message = data.detail || data.message || JSON.stringify(data);
+                    statusEl.innerHTML = `<div class="error">HTTP ${response.status}\n${typeof message === 'object' ? JSON.stringify(message, null, 2) : message}</div>`;
+                    return;
+                }
+
+                statusEl.innerHTML = '';
+                resultCard.style.display = 'block';
+                document.getElementById('detailSummary').innerHTML = `
+                    <div class="summary">
+                        patent_id：<strong>${escapeHtml(data.patent_id || '')}</strong> &nbsp;
+                        被引用数量：<strong>${data.cited_by ? data.cited_by.length : 0}</strong> &nbsp;
+                        专利引用数量：<strong>${data.patent_references ? data.patent_references.length : 0}</strong> &nbsp;
+                        非专利引用数量：<strong>${data.non_patent_references ? data.non_patent_references.length : 0}</strong>
+                    </div>
+                `;
+                document.getElementById('detailRawJson').textContent = JSON.stringify(data, null, 2);
+            } catch (err) {
+                statusEl.innerHTML = `<div class="error">请求失败：${err.message}</div>`;
+            }
+        }
+
         function clearResults() {
             document.getElementById('status').innerHTML = '';
             document.getElementById('resultCard').style.display = 'none';
             document.getElementById('summary').innerHTML = '';
             document.getElementById('records').innerHTML = '';
             document.getElementById('rawJson').textContent = '';
+        }
+
+        function clearDetailResults() {
+            document.getElementById('detailStatus').innerHTML = '';
+            document.getElementById('detailResultCard').style.display = 'none';
+            document.getElementById('detailSummary').innerHTML = '';
+            document.getElementById('detailRawJson').textContent = '';
         }
 
         function escapeHtml(text) {
