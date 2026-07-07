@@ -84,3 +84,22 @@ docs/delivery/mcp_integration_guide.md
 7. Streamable HTTP 接入规划。
 8. smoke 自查记录。
 9. 部署和回滚说明。
+
+## 8. 联通结论
+
+日期：2026-07-07
+
+结论：Stage 12.4 MCP stdio 联通成功。
+
+项目负责人已确认 MCP 联通成功。项目总控据此关闭 Stage 12.4 stdio MCP 开发和联通工作，并将该阶段纳入版本管理。
+
+### 8.1 放行边界
+
+1. 本次放行范围为 stdio MCP Server。
+2. MCP Server 通过自研 HTTP API 调用专利检索能力，不直接查询 OpenSearch。
+3. Streamable HTTP MCP 接入不在本次放行范围内，后续按部署条件单独规划。
+4. 若后续交付环境需要 Python 3.9，需先处理 MCP SDK 对 Python `>=3.10` 的运行时要求。
+
+### 8.2 版本结论
+
+Stage 12.4 MCP stdio Server 可作为稳定版本点管理；后续工作进入最终交付说明、部署交接或 Streamable HTTP 扩展规划。

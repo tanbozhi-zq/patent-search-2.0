@@ -4,7 +4,7 @@ Self-hosted patent search backend service based on FastAPI and OpenSearch.
 
 ## Stage
 
-Current status: Stage 12.3 DeerFlow / Flow integration passed; Stage 12.4 MCP Server development may continue separately.
+Current status: Stage 12.4 MCP stdio integration passed. Stage 12 DeerFlow Tool and MCP stdio paths are both available for handoff.
 
 Implemented so far:
 
@@ -23,13 +23,14 @@ Implemented so far:
 - search record snake_case compatibility aliases
 - SaaS PatentHub tool adapter for self-hosted search/detail/citations/legal-history
 - Stage 12.2 DeerFlow Tool wrappers under `deerflow_tool/`
+- Stage 12.4 MCP stdio server under `mcp_server/`
 - legacy static inspection page under `/test/`
 - pytest test suite
 - systemd deployment template
 
 Next stage:
 
-- Stage 12.4 continues with MCP Server packaging on an isolated development branch.
+- Prepare final delivery notes, deployment handoff, and any follow-up Streamable HTTP MCP deployment plan.
 - Stage 12 no longer uses a separate test environment, tester assignment, test acceptance sheet, or test report; quality gates are developer self-check, project-control review, real integration records, and delivery-doc review.
 
 Project boundaries:
@@ -51,6 +52,7 @@ Key Stage 12 documents:
 
 - `docs/delivery/stage12_deerflow_tool_mcp_work_plan.md`
 - `docs/delivery/deerflow_tool_integration_guide.md`
+- `docs/delivery/mcp_integration_guide.md`
 - `docs/internal/stage12_deerflow_tool_dev_assignment.md`
 - `docs/delivery/api_spec.md`
 - `docs/delivery/query_syntax.md`
@@ -133,4 +135,13 @@ Local self-check:
 ```bash
 python3 scripts/smoke_saas_adapter.py http://127.0.0.1:8000 "$API_TOKEN"
 python3 scripts/smoke_deerflow_tool.py http://127.0.0.1:8000 "$API_TOKEN"
+python3 scripts/smoke_mcp_server.py http://127.0.0.1:8000 "$API_TOKEN"
+```
+
+## MCP Server
+
+Stage 12.4 provides `mcp_server/server.py` for stdio MCP clients. It exposes `patent_search`, `patent_get_detail`, `patent_get_citations`, and `patent_get_legal_history`, and calls the self-hosted HTTP API instead of OpenSearch.
+
+```bash
+python3 mcp_server/server.py
 ```
