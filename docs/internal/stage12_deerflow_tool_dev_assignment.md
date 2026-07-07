@@ -1,4 +1,4 @@
-# Stage 12 DeerFlow Tool 开发派工单
+# Stage 12.2 DeerFlow Tool 开发派工单
 
 ## 1. 角色判断
 
@@ -8,7 +8,7 @@
 
 ## 2. 开发目标
 
-新增 DeerFlow / Flow 可调用的专利检索工具封装，使 agent 能通过自研专利检索 API 完成：
+在 `Stage 12.1 核心 API 兼容补点` 通过后，新增 DeerFlow / Flow 可调用的专利检索工具封装，使 agent 能通过自研专利检索 API 完成：
 
 ```text
 patent_search -> patent_get_detail -> patent_get_citations
@@ -20,13 +20,18 @@ patent_search -> patent_get_detail -> patent_get_citations
 
 Stage 12 按以下顺序推进：
 
-1. 核心 API 兼容补点：只补必要兼容字段和查询能力，不改接口路径。
-2. DeerFlow Tool 封装：新增 `deerflow_tool/`，内部调用自研 API。
-3. Tool 本地 smoke：验证工具函数和 API 调用链路。
-4. DeerFlow / Flow 联调：接入实际 agent 环境。
-5. DeerFlow Tool 稳定后，再进入 MCP Server 派工。
+1. `Stage 12.1`：核心 API 兼容补点，只补必要兼容字段和查询能力，不改接口路径。
+2. `Stage 12.2`：DeerFlow Tool 封装，新增 `deerflow_tool/`，内部调用自研 API。
+3. `Stage 12.3`：Tool 本地 smoke 和 DeerFlow / Flow 联调。
+4. `Stage 12.4`：DeerFlow Tool 稳定后，再进入 MCP Server 派工。
 
 开发人员不得跳过 Tool 联调直接实现 MCP Server。
+
+进入本派工单前必须满足：
+
+1. `docs/internal/stage12_1_api_compat_dev_assignment.md` 已完成。
+2. `docs/internal/stage12_1_api_compat_test_acceptance.md` 验收通过。
+3. 项目总控确认 5 个 API 兼容补点已经关闭或有明确豁免。
 
 ## 4. 目录与边界
 
@@ -83,27 +88,7 @@ deerflow_tool/
 enterprise_patent_portrait
 ```
 
-## 7. 核心 API 兼容补点
-
-开发 DeerFlow Tool 前，开发人员需要先按测试驱动方式补齐或确认以下核心 API 兼容点：
-
-| 编号 | 补点 | 文件范围 | 验收要求 |
-|---|---|---|---|
-| A1 | `sort` 支持更多 PatentHub 风格值 | `app/schemas/search.py`、`app/query/dsl_builder.py` | 兼容值可被接收并映射为稳定排序，未知值仍返回参数错误 |
-| A2 | 支持 `agency` / `agent` 字段检索 | `app/mappings/query_field_mapping.py`、DSL tests | `agency:(...)` 命中 `Agency`，`agent:(...)` 命中 `Agent` |
-| A3 | 裸 IPC 自动识别 | tokenizer/parser 或 DSL 前置归一化层 | `H02M`、`H02M7/483` 可按 IPC 查询，不影响普通中文关键词 |
-| A4 | search 返回 `total_pages` / `next_page` / `took_ms` | `app/mappings/result_mapper.py`、search tests | 顶层字段稳定存在，分页边界正确 |
-| A5 | `legal_history` 基础能力 | API/service/mapper 或 Tool 占位策略 | 第一版至少返回 `{patent_id, transaction_count, transactions}` |
-
-约束：
-
-1. 不修改现有接口路径。
-2. 不移除 `records`。
-3. 不把 HTTP API 顶层 `records` 改成 `patents`；`patents` 只属于 Tool 层。
-4. 不修改 OpenSearch mapping。
-5. 不重建索引。
-
-## 8. DeerFlow Tool 配置项
+## 7. DeerFlow Tool 配置项
 
 Tool 需要支持：
 
@@ -117,7 +102,7 @@ PATENT_SEARCH_TIMEOUT_SECONDS=30
 
 密钥不得写入 Git 文档、代码注释、测试快照或日志。
 
-## 9. 返回结构
+## 8. 返回结构
 
 `patent_search` 对外返回工具层结构：
 
@@ -181,18 +166,9 @@ PATENT_SEARCH_TIMEOUT_SECONDS=30
 }
 ```
 
-这些补点属于核心 API 兼容增强，开发人员不得在 Tool 层绕过 API 直接补 OpenSearch 查询。
+核心 API 兼容增强不得在 Tool 层绕过 API 直接补 OpenSearch 查询。如发现 12.1 缺口，开发人员应退回项目总控确认，不在 Tool 层自行补底层查询。
 
-## 10. 开发任务清单
-
-### 10.1 核心 API 兼容
-
-1. 增加或更新单元测试，覆盖 A1 到 A5。
-2. 实现最小兼容逻辑。
-3. 保持既有 132 条测试继续通过。
-4. 更新 `docs/delivery/api_spec.md`、`docs/delivery/query_syntax.md`、`docs/delivery/field_mapping.md` 中对应说明。
-
-### 10.2 DeerFlow Tool
+## 9. 开发任务清单
 
 1. 新增 `deerflow_tool/tools.py`。
 2. 复用 `PatentHubToolAdapter` 或抽取共享 HTTP client，避免重复字段映射。
@@ -202,13 +178,11 @@ PATENT_SEARCH_TIMEOUT_SECONDS=30
 6. 新增 Tool 层测试，覆盖成功链路、错误转换、page_size 限制和环境变量。
 7. 新增或更新 smoke 脚本，供测试人员联调验证。
 
-### 10.3 提交建议
+### 9.1 提交建议
 
 建议开发人员按以下粒度提交：
 
 ```text
-test: cover Stage 12 API compatibility requirements
-feat: add Stage 12 API compatibility fields
 feat: add DeerFlow patent search tools
 docs: add DeerFlow tool usage guide
 test: add DeerFlow tool smoke coverage
@@ -220,7 +194,7 @@ test: add DeerFlow tool smoke coverage
 .venv/bin/python -m pytest -q
 ```
 
-## 11. 验收用例
+## 10. 验收用例
 
 联调至少覆盖：
 
@@ -242,7 +216,7 @@ test: add DeerFlow tool smoke coverage
 5. 错误查询式返回 `{error, code}`。
 6. 工具调用链路不依赖 PatentHub 的临时 session id。
 
-## 12. 后续交付文档
+## 11. 后续交付文档
 
 Tool 代码开发并 smoke 通过后，补充：
 

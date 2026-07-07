@@ -1,8 +1,15 @@
-# Stage 12 测试验收单
+# Stage 12 总体验收单
 
 ## 1. 角色判断
 
 本验收单由项目总控维护，供测试人员执行。测试人员在执行接口、Tool、联调验证之前，必须先对开发人员提交的代码进行 review，并输出 review 结论或问题清单。
+
+本文件是 Stage 12 总体验收口径，不要求开发和测试一步到位。实际执行按子阶段推进：
+
+1. `Stage 12.1`：核心 API 兼容补点。
+2. `Stage 12.2`：DeerFlow Tool 封装。
+3. `Stage 12.3`：DeerFlow / Flow 联调。
+4. `Stage 12.4`：MCP Server。
 
 测试人员不负责修改实现代码；发现问题后反馈给项目总控和开发人员。
 
@@ -11,13 +18,15 @@
 测试前必须阅读：
 
 1. `docs/delivery/stage12_deerflow_tool_mcp_work_plan.md`
-2. `docs/internal/stage12_deerflow_tool_dev_assignment.md`
-3. `docs/internal/stage12_code_review_checklist.md`
-4. `docs/internal/stage12_manual_test_cases.md`
-5. `docs/delivery/api_spec.md`
-6. `docs/delivery/query_syntax.md`
-7. `docs/delivery/field_mapping.md`
-8. `docs/internal/saas_patent_contract_audit.md`
+2. `docs/internal/stage12_1_api_compat_dev_assignment.md`
+3. `docs/internal/stage12_1_api_compat_test_acceptance.md`
+4. `docs/internal/stage12_deerflow_tool_dev_assignment.md`
+5. `docs/internal/stage12_code_review_checklist.md`
+6. `docs/internal/stage12_manual_test_cases.md`
+7. `docs/delivery/api_spec.md`
+8. `docs/delivery/query_syntax.md`
+9. `docs/delivery/field_mapping.md`
+10. `docs/internal/saas_patent_contract_audit.md`
 
 ## 3. 代码 Review 验收
 
@@ -49,7 +58,13 @@ Review 不通过时，不进入功能测试。
 2. 无未处理异常堆栈。
 3. 无密钥、token、OpenSearch 密码输出。
 
-## 5. 核心 API 兼容验收
+## 5. Stage 12.1 核心 API 兼容验收
+
+详细验收见：
+
+```text
+docs/internal/stage12_1_api_compat_test_acceptance.md
+```
 
 | Case | 验收点 | 期望 |
 |---|---|---|
@@ -61,7 +76,7 @@ Review 不通过时，不进入功能测试。
 | 分页 metadata | `page`, `page_size`, `total` | 返回 `total_pages`、`next_page`、`took_ms` |
 | legal history | `patent_get_legal_history` 或对应 API | 返回 `{patent_id, transaction_count, transactions}` |
 
-## 6. DeerFlow Tool 验收
+## 6. Stage 12.2 DeerFlow Tool 验收
 
 | Tool | 验收点 | 期望 |
 |---|---|---|
@@ -73,7 +88,7 @@ Review 不通过时，不进入功能测试。
 | `patent_get_legal_history` | 法律历史基础结构 | 包含 `transaction_count`、`transactions` |
 | 错误转换 | 查询语法错误、未授权、404 | 返回 `{error, code}` |
 
-## 7. DeerFlow / Flow 联调验收
+## 7. Stage 12.3 DeerFlow / Flow 联调验收
 
 联调时至少跑通：
 
