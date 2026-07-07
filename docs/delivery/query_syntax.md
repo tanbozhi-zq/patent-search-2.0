@@ -159,7 +159,7 @@ legalStatus:(在审)
 legalStatus:(失效)
 ```
 
-第一版法律状态使用基础映射，详见 `docs/field_mapping.md`。
+第一版法律状态使用基础映射，详见 `docs/delivery/field_mapping.md`。
 
 ### 4.9 专利类型
 

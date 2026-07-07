@@ -35,9 +35,9 @@ description
    - `claims:()`
    - `description:(均衡) AND AND ipc:H02M`
 5. 更新文档：
-   - `docs/query_syntax.md`
-   - `docs/field_mapping.md`
-   - `docs/api_spec.md`
+   - `docs/delivery/query_syntax.md`
+   - `docs/delivery/field_mapping.md`
+   - `docs/delivery/api_spec.md`
 
 ## 阶段边界
 
@@ -64,4 +64,3 @@ docs: update fine grained query syntax
 ```bash
 .venv/bin/python -m pytest -q
 ```
-

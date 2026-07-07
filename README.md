@@ -4,7 +4,7 @@ Self-hosted patent search backend service based on FastAPI and OpenSearch.
 
 ## Stage
 
-Current status: Stage 10.5 accepted, ready for Stage 11 deployment delivery preparation.
+Current status: Stage 12 engineering governance started, preparing DeerFlow Tool integration and MCP delivery.
 
 Implemented so far:
 
@@ -28,14 +28,32 @@ Implemented so far:
 
 Next stage:
 
-- Stage 11 deployment, operations handoff, and delivery documentation.
-- Stage 11 starts with deployment design, deploy assignment, smoke validation, rollback, and handoff.
+- Stage 12 continues with DeerFlow Tool development, Flow / DeerFlow joint testing, then MCP Server packaging.
+- Current Stage 12 governance work is documentation-only and does not modify service code.
 
 Project boundaries:
 
 - `patent_harness_base_副本/` is a local read-only SaaS contract reference.
+- `app/` is the core FastAPI service and must not depend on DeerFlow Tool or MCP Server packaging.
+- DeerFlow Tool and MCP Server must call the self-hosted HTTP API instead of querying OpenSearch directly.
 - Do not modify OpenSearch mapping or rebuild the index in the current stage.
-- Do not enter SaaS integration or gray release before the corresponding stage documents are accepted.
+
+## Documentation
+
+Current documentation index:
+
+```text
+docs/README.md
+```
+
+Key Stage 12 documents:
+
+- `docs/delivery/stage12_deerflow_tool_mcp_work_plan.md`
+- `docs/internal/stage12_deerflow_tool_dev_assignment.md`
+- `docs/delivery/api_spec.md`
+- `docs/delivery/query_syntax.md`
+- `docs/delivery/field_mapping.md`
+- `docs/ops/deployment_runbook.md`
 
 ## Local Setup
 

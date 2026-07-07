@@ -242,7 +242,7 @@ GET /api/patent/detail/cn-xxx?include_description=true
 | `family` | `Family`, `SimpleFamily`, `ExtendedFamily`, `DocDBFamily` |
 | `drawings` | `Drawings`, `DescriptionImages` |
 
-空值规则沿用 `docs/field_mapping.md` 第 6 节；`legalStatus` 优先 `LatestLegalStatus`，缺失回退 `LegalStatus`；`currentAssignee` 优先 `Assignee`，缺失回退 `Applicant`。
+空值规则沿用 `docs/delivery/field_mapping.md` 第 6 节；`legalStatus` 优先 `LatestLegalStatus`，缺失回退 `LegalStatus`；`currentAssignee` 优先 `Assignee`，缺失回退 `Applicant`。
 
 #### 4.4.2 响应示例（阶段七）
 

@@ -10,9 +10,9 @@ patent_index
 
 字段依据：
 
-1. `字段表.md`
-2. `专利检索MCP参数与字段依赖.md`
-3. `自研专利检索服务需求说明与实施路径.md`
+1. `docs/delivery/patent_index_field_table.md`
+2. `docs/delivery/mcp_parameter_field_dependency.md`
+3. `docs/archive/initial/self_hosted_patent_search_requirements_and_plan.md`
 
 ## 2. 查询字段映射
 

@@ -157,7 +157,7 @@ patent_harness_base_副本/backend/packages/harness/deerflow/community/patenthub
 | `legal_status` | `legalStatus` |
 | `main_ipc` | `mainIpc` |
 
-当前 `docs/field_mapping.md` 中的 `referencesCited` / `relatedDocuments` 与 SaaS 工具层的 `cited_by` / `patent_references` / `non_patent_references` 命名不同。阶段七需要优先兼容 SaaS 工具层命名，或同时保留两套别名。
+当前 `docs/delivery/field_mapping.md` 中的 `referencesCited` / `relatedDocuments` 与 SaaS 工具层的 `cited_by` / `patent_references` / `non_patent_references` 命名不同。阶段七需要优先兼容 SaaS 工具层命名，或同时保留两套别名。
 
 ### 2.6 Session-bound vendor ID behavior
 
@@ -179,7 +179,7 @@ patent_get_detail / patent_get_citations 必须使用最近一次 patent_search 
 
 ## 3. Impact on Stage 7
 
-阶段七不应只按原 `docs/api_spec.md` 的宽泛描述实现。现在已有 SaaS 源码证据，应把阶段七定位调整为：
+阶段七不应只按原 `docs/delivery/api_spec.md` 的宽泛描述实现。现在已有 SaaS 源码证据，应把阶段七定位调整为：
 
 ```text
 实现自研 detail/citations HTTP 接口，同时输出兼容 DeerFlow PatentHub 工具层消费的核心字段。

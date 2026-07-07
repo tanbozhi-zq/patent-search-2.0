@@ -111,9 +111,9 @@ records
 
 ## 文档与边界
 
-- `docs/query_syntax.md` 已包含 `mainClaim`、`claims`、`description` 查询语法。
-- `docs/field_mapping.md` 已包含新增字段映射。
-- `docs/api_spec.md` 已说明阶段 10.5 字段映射与 analyzer 行为。
+- `docs/delivery/query_syntax.md` 已包含 `mainClaim`、`claims`、`description` 查询语法。
+- `docs/delivery/field_mapping.md` 已包含新增字段映射。
+- `docs/delivery/api_spec.md` 已说明阶段 10.5 字段映射与 analyzer 行为。
 - 未发现 OpenSearch mapping 修改。
 - 未发现阶段 11 部署上线相关变更。
 
