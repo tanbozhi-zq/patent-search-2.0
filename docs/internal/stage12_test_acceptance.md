@@ -21,12 +21,13 @@
 2. `docs/internal/stage12_1_api_compat_dev_assignment.md`
 3. `docs/internal/stage12_1_api_compat_test_acceptance.md`
 4. `docs/internal/stage12_deerflow_tool_dev_assignment.md`
-5. `docs/internal/stage12_code_review_checklist.md`
-6. `docs/internal/stage12_manual_test_cases.md`
-7. `docs/delivery/api_spec.md`
-8. `docs/delivery/query_syntax.md`
-9. `docs/delivery/field_mapping.md`
-10. `docs/internal/saas_patent_contract_audit.md`
+5. `docs/internal/stage12_3_deerflow_integration_acceptance.md`
+6. `docs/internal/stage12_code_review_checklist.md`
+7. `docs/internal/stage12_manual_test_cases.md`
+8. `docs/delivery/api_spec.md`
+9. `docs/delivery/query_syntax.md`
+10. `docs/delivery/field_mapping.md`
+11. `docs/internal/saas_patent_contract_audit.md`
 
 ## 3. 代码 Review 验收
 
@@ -78,6 +79,8 @@ docs/internal/stage12_1_api_compat_test_acceptance.md
 
 ## 6. Stage 12.2 DeerFlow Tool 验收
 
+本阶段只验收本地 Tool 封装和 smoke，不验收真实 Flow / DeerFlow agent 加载。
+
 | Tool | 验收点 | 期望 |
 |---|---|---|
 | `patent_search` | 返回结构 | 顶层包含 `patents`，不包含 `records` |
@@ -89,6 +92,12 @@ docs/internal/stage12_1_api_compat_test_acceptance.md
 | 错误转换 | 查询语法错误、未授权、404 | 返回 `{error, code}` |
 
 ## 7. Stage 12.3 DeerFlow / Flow 联调验收
+
+详细验收见：
+
+```text
+docs/internal/stage12_3_deerflow_integration_acceptance.md
+```
 
 联调时至少跑通：
 
@@ -120,17 +129,18 @@ search -> detail -> citations
 
 ## 9. 通过标准
 
-Stage 12 DeerFlow Tool 阶段通过需要同时满足：
+Stage 12.2 DeerFlow Tool 本地封装通过需要同时满足：
 
 1. 代码 review 通过。
 2. 自动化回归通过。
 3. 核心 API 兼容补点通过。
 4. DeerFlow Tool 本地测试通过。
-5. Flow / DeerFlow 端到端主链路通过。
-6. 错误场景稳定。
-7. 未修改 `patent_harness_base_副本/`。
-8. 未提交密钥。
-9. 输出测试报告或问题清单。
+5. Tool 错误场景稳定。
+6. 未修改 `patent_harness_base_副本/`。
+7. 未提交密钥。
+8. 输出测试报告或问题清单。
+
+Stage 12.3 Flow / DeerFlow 联调通过标准以 `docs/internal/stage12_3_deerflow_integration_acceptance.md` 为准。
 
 ## 10. 测试报告要求
 

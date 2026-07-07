@@ -8,7 +8,7 @@
 
 ## 2. 开发目标
 
-在 `Stage 12.1 核心 API 兼容补点` 通过后，新增 DeerFlow / Flow 可调用的专利检索工具封装，使 agent 能通过自研专利检索 API 完成：
+在 `Stage 12.1 核心 API 兼容补点` 通过后，新增 DeerFlow / Flow 可调用的专利检索工具封装，使工具层具备支撑 agent 完成以下主链路的能力：
 
 ```text
 patent_search -> patent_get_detail -> patent_get_citations
@@ -21,8 +21,8 @@ patent_search -> patent_get_detail -> patent_get_citations
 Stage 12 按以下顺序推进：
 
 1. `Stage 12.1`：核心 API 兼容补点，只补必要兼容字段和查询能力，不改接口路径。
-2. `Stage 12.2`：DeerFlow Tool 封装，新增 `deerflow_tool/`，内部调用自研 API。
-3. `Stage 12.3`：Tool 本地 smoke 和 DeerFlow / Flow 联调。
+2. `Stage 12.2`：DeerFlow Tool 封装和本地 smoke，新增 `deerflow_tool/`，内部调用自研 API。
+3. `Stage 12.3`：DeerFlow / Flow agent 环境联调。
 4. `Stage 12.4`：DeerFlow Tool 稳定后，再进入 MCP Server 派工。
 
 开发人员不得跳过 Tool 联调直接实现 MCP Server。
@@ -176,7 +176,8 @@ PATENT_SEARCH_TIMEOUT_SECONDS=30
 4. 新增 `deerflow_tool/README.md`。
 5. 新增 `deerflow_tool/examples/` 示例配置。
 6. 新增 Tool 层测试，覆盖成功链路、错误转换、page_size 限制和环境变量。
-7. 新增或更新 smoke 脚本，供测试人员联调验证。
+7. 新增或更新本地 smoke 脚本，供测试人员在进入真实 Flow / DeerFlow 前验证工具函数。
+8. 不接入真实 Flow / DeerFlow agent；真实联调归入 `Stage 12.3`。
 
 ### 9.1 提交建议
 
@@ -194,9 +195,9 @@ test: add DeerFlow tool smoke coverage
 .venv/bin/python -m pytest -q
 ```
 
-## 10. 验收用例
+## 10. 本地验收用例
 
-联调至少覆盖：
+本阶段只验收本地 Tool 封装，不验收真实 Flow / DeerFlow agent 加载。测试至少覆盖：
 
 | 场景 | 查询式 |
 |---|---|
@@ -209,16 +210,25 @@ test: add DeerFlow tool smoke coverage
 
 验收标准：
 
-1. Flow / DeerFlow 能加载 tool。
-2. agent 能调用 `patent_search` 并得到 `patents`。
-3. agent 能使用 `patents[0].id` 调用 `patent_get_detail`。
-4. agent 能调用 `patent_get_citations`。
-5. 错误查询式返回 `{error, code}`。
-6. 工具调用链路不依赖 PatentHub 的临时 session id。
+1. `deerflow_tool.tools` 可被本地 Python 测试导入。
+2. `patent_search` 返回 `patents`，不返回 `records`。
+3. `patent_search` 受 `PATENT_SEARCH_PAGE_SIZE_LIMIT` 限制。
+4. `patent_get_detail` 可使用 search 返回的 `id` 查询详情。
+5. `patent_get_citations` 返回 `cited_by`、`patent_references`、`non_patent_references`。
+6. `patent_get_legal_history` 返回稳定基础结构。
+7. 错误查询式返回 `{error, code}`。
+8. 工具调用链路不依赖 PatentHub 的临时 session id。
+9. Tool 层不直接查询 OpenSearch。
+
+真实 Flow / DeerFlow agent 能否加载 tool、agent 能否自动选择 tool、agent 是否能生成分析结论，均归入：
+
+```text
+docs/internal/stage12_3_deerflow_integration_acceptance.md
+```
 
 ## 11. 后续交付文档
 
-Tool 代码开发并 smoke 通过后，补充：
+Tool 代码开发并本地 smoke 通过后，补充：
 
 ```text
 docs/delivery/deerflow_tool_integration_guide.md
@@ -231,6 +241,8 @@ docs/delivery/deerflow_tool_integration_guide.md
 3. 入参说明。
 4. 返回字段说明。
 5. 环境变量配置。
-6. Flow / DeerFlow 注册示例。
-7. smoke 测试命令与结果。
+6. 本地 smoke 测试命令与结果。
+7. Flow / DeerFlow 注册示例草案。
 8. 已知限制和回滚方式。
+
+真实 Flow / DeerFlow 注册结果和端到端调用记录由 `Stage 12.3` 联调阶段补充。

@@ -242,7 +242,9 @@ PY
 - 返回 `{error, code}`
 - 不抛未捕获异常
 
-## 4. DeerFlow / Flow 联调用例
+## 4. Stage 12.3 DeerFlow / Flow 联调用例
+
+以下用例只在 `Stage 12.3` 执行，不属于 `Stage 12.2` 本地 Tool 封装验收。
 
 ### 用例 14：主链路
 
