@@ -69,7 +69,7 @@ POST /api/patent/search
 |---|---|---|---|---|
 | `q` | string | 是 | 无 | 查询式 |
 | `ds` | string | 否 | `cn` | 数据范围，支持 `cn`、`all` |
-| `sort` | string | 否 | `relation` | 排序，支持 `relation`、`!applicationDate` |
+| `sort` | string | 否 | `relation` | 排序，支持 `relation`、`rank`、`relevance`、`score`、`applicationDate`、`!applicationDate`、`documentDate`、`!documentDate` |
 | `page` | integer | 否 | `1` | 页码，从 1 开始 |
 | `page_size` | integer | 否 | `50` | 每页数量 |
 | `highlight` | integer | 否 | `0` | 高亮兼容参数，支持 `0`、`1`；阶段 8 仅兼容接收，不返回高亮片段 |
@@ -83,7 +83,7 @@ POST /api/patent/search
 | `page` | 大于等于 1 |
 | `page_size` | 大于等于 1，最大值固定为 100 |
 | `ds` | 只能是 `cn` 或 `all` |
-| `sort` | 只能是 `relation` 或 `!applicationDate` |
+| `sort` | 只能是 `relation`、`rank`、`relevance`、`score`、`applicationDate`、`!applicationDate`、`documentDate`、`!documentDate` |
 | `highlight` | 只能是 `0` 或 `1` |
 
 ### 3.3 请求示例
@@ -99,7 +99,7 @@ POST /api/patent/search
 }
 ```
 
-`q` 当前支持字段查询：`title`、`ab`、`tscd`、`mainClaim`、`claims`、`description`、`ipc`、`applicant`、`currentAssignee`、`legalStatus`、`type`，以及 `ad`、`documentYear` 范围查询；同时支持 `AND`、`OR`、`NOT` 和常规多级括号分组，不承诺支持极端深度嵌套或明显不可读的超长表达式。阶段 10.5 起，`mainClaim` 映射 `MainClaim`，`claims` 映射 `Requirement`，`description` 映射 `Instructions`；`index_analyzer_mode=compat` 下这三个字段使用 phrase 查询，`normal` 下使用普通 `multi_match`。
+`q` 当前支持字段查询：`title`、`ab`、`tscd`、`mainClaim`、`claims`、`description`、`ipc`、`applicant`、`currentAssignee`、`agency`、`agent`、`legalStatus`、`type`，以及 `ad`、`documentYear` 范围查询；同时支持 `AND`、`OR`、`NOT` 和常规多级括号分组，不承诺支持极端深度嵌套或明显不可读的超长表达式。阶段 10.5 起，`mainClaim` 映射 `MainClaim`，`claims` 映射 `Requirement`，`description` 映射 `Instructions`；Stage 12.1 起，`agency` 映射 `Agency` / `AgencyRaw`，`agent` 映射 `Agent`，并支持 `H02M`、`H02M7/483`、`F16K` 等裸 IPC 自动识别。`index_analyzer_mode=compat` 下 `mainClaim`、`claims`、`description` 使用 phrase 查询，`normal` 下使用普通 `multi_match`。
 
 ### 3.4 响应示例
 
@@ -108,6 +108,9 @@ POST /api/patent/search
   "total": 128,
   "page": 1,
   "page_size": 50,
+  "total_pages": 3,
+  "next_page": 2,
+  "took_ms": 35,
   "records": [
     {
       "id": "cn-xxx",
@@ -144,6 +147,14 @@ POST /api/patent/search
 ```
 
 阶段 9 起，搜索记录在保留既有 camelCase 字段的同时补充 SaaS 工具层常用字段：`summary`、`application_number`、`document_number`、`application_date`、`document_date`、`legal_status`、`main_ipc`。`summary` 来源为 `Abstract`，与 `abstract` 同值。当前 HTTP API 顶层继续返回 `records`，不改为 PatentHub 工具层的 `patents`。
+
+Stage 12.1 起，搜索响应顶层补充分页和耗时元数据：
+
+| 字段 | 说明 |
+|---|---|
+| `total_pages` | `ceil(total / page_size)`；`total=0` 时为 `0` |
+| `next_page` | 有下一页时为 `page + 1`，否则为 `null` |
+| `took_ms` | OpenSearch raw response 的 `took`；缺失时为 `null` |
 
 ## 4. 专利详情
 
@@ -348,7 +359,33 @@ GET /api/patent/citations/{patent_id}
 3. 归一化摘要会跳过完全无法识别的空摘要，并对完全相同的摘要条目去重。
 4. 原始引用对象仍完整保留在 `referencesCited` 或 `relatedDocuments`，归一化摘要仅用于 SaaS 工具层兼容展示与后续追查。
 
-## 6. 错误码
+## 6. 法律历史
+
+```http
+GET /api/patent/legal-history/{patent_id}
+```
+
+### 6.1 路径参数
+
+| 参数 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| `patent_id` | string | 是 | 搜索结果返回的专利内部 ID |
+
+### 6.2 响应内容
+
+Stage 12.1 先提供稳定基础结构，供 DeerFlow Tool / MCP 的 `patent_get_legal_history` 封装使用。当前不承诺完整法律事务历史。
+
+```json
+{
+  "patent_id": "cn-xxx",
+  "transaction_count": 0,
+  "transactions": []
+}
+```
+
+若 OpenSearch 文档中存在结构化 `LegalStatusHistory` 数组，`transactions` 尽量原样返回，`transaction_count` 等于数组长度；无结构化数据时返回空数组。
+
+## 7. 错误码
 
 | 错误码 | 含义 | HTTP 状态码建议 |
 |---|---|---|
@@ -361,7 +398,7 @@ GET /api/patent/citations/{patent_id}
 | `50001` | OpenSearch 查询异常 | 502 |
 | `50002` | 服务内部异常 | 500 |
 
-## 7. 错误响应策略
+## 8. 错误响应策略
 
 1. 查询语法错误返回 `40001`，且不会访问 OpenSearch。
 2. Pydantic/FastAPI 参数校验错误统一转为 HTTP 400；普通参数为 `40002`，`page` / `page_size` 为 `40003`。

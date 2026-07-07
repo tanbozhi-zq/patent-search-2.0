@@ -59,6 +59,11 @@ def test_applicant_current_assignee_and_type_fields():
     assert query_clause("type:(发明专利)")["multi_match"]["fields"] == ["Type", "PatentTypeCode", "Kind"]
 
 
+def test_stage_12_agency_and_agent_fields():
+    assert query_clause("agency:(知识产权代理)")["multi_match"]["fields"] == ["Agency", "AgencyRaw"]
+    assert query_clause("agent:(张)")["multi_match"]["fields"] == ["Agent"]
+
+
 def test_stage_10_5_fine_grained_text_fields_in_normal_mode():
     assert query_clause("mainClaim:(均衡)")["multi_match"]["fields"] == ["MainClaim"]
     assert query_clause("claims:(均衡)")["multi_match"]["fields"] == ["Requirement"]

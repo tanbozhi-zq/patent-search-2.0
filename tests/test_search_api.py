@@ -20,6 +20,28 @@ def test_search_request_rejects_invalid_page_size():
         SearchRequest(q="阀门", page_size=101)
 
 
+@pytest.mark.parametrize(
+    "sort",
+    [
+        "relation",
+        "rank",
+        "relevance",
+        "score",
+        "!applicationDate",
+        "applicationDate",
+        "!documentDate",
+        "documentDate",
+    ],
+)
+def test_search_request_accepts_stage_12_sort_values(sort):
+    assert SearchRequest(q="阀门", sort=sort).sort == sort
+
+
+def test_search_request_rejects_unknown_sort_value():
+    with pytest.raises(ValidationError):
+        SearchRequest(q="阀门", sort="unknown")
+
+
 from app.api.search import get_search_service
 from app.core.exceptions import OpenSearchQueryError
 from app.core.security import require_api_key
@@ -29,7 +51,15 @@ from app.services.search_service import SearchService
 
 class FakeSearchService:
     def search(self, request):
-        return {"total": 0, "page": request.page, "page_size": request.page_size, "records": []}
+        return {
+            "total": 0,
+            "page": request.page,
+            "page_size": request.page_size,
+            "total_pages": 0,
+            "next_page": None,
+            "took_ms": None,
+            "records": [],
+        }
 
 
 class OpenSearchFailingService:
@@ -46,7 +76,15 @@ def test_search_endpoint_returns_vendor_like_shape(client):
         app.dependency_overrides.clear()
 
     assert response.status_code == 200
-    assert response.json() == {"total": 0, "page": 1, "page_size": 50, "records": []}
+    assert response.json() == {
+        "total": 0,
+        "page": 1,
+        "page_size": 50,
+        "total_pages": 0,
+        "next_page": None,
+        "took_ms": None,
+        "records": [],
+    }
 
 
 def test_search_api_returns_50001_on_opensearch_failure(client):

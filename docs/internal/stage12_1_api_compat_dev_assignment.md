@@ -56,6 +56,7 @@ Stage 12.2 DeerFlow Tool 封装
 | 输入值 | 映射 |
 |---|---|
 | `relation` | `_score` |
+| `rank` | `_score` |
 | `relevance` | `_score` |
 | `score` | `_score` |
 | `!applicationDate` | `ApplicationDate desc` |

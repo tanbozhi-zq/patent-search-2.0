@@ -54,6 +54,7 @@ Stage 12.1 只验收 5 个 API 兼容补点：
 
 ```text
 relation
+rank
 relevance
 score
 !applicationDate

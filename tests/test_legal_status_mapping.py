@@ -9,6 +9,8 @@ def test_text_field_mapping_contains_stage_six_fields():
     assert TEXT_FIELD_MAPPING["description"] == ["Instructions"]
     assert TEXT_FIELD_MAPPING["applicant"] == ["Applicant", "ApplicantNormalized", "FirstApplicant"]
     assert TEXT_FIELD_MAPPING["currentAssignee"] == ["Assignee", "AssigneeNormalized"]
+    assert TEXT_FIELD_MAPPING["agency"] == ["Agency", "AgencyRaw"]
+    assert TEXT_FIELD_MAPPING["agent"] == ["Agent"]
     assert TEXT_FIELD_MAPPING["type"] == ["Type", "PatentTypeCode", "Kind"]
 
 
@@ -62,3 +64,10 @@ def test_stage_6_5_splits_type_fields():
 def test_stage_6_5_keeps_applicant_fields_normal():
     assert get_normal_analyzer_fields("applicant") == ["Applicant", "ApplicantNormalized", "FirstApplicant"]
     assert get_risky_analyzer_fields("applicant") == []
+
+
+def test_stage_12_keeps_agency_and_agent_fields_normal():
+    assert get_normal_analyzer_fields("agency") == ["Agency", "AgencyRaw"]
+    assert get_risky_analyzer_fields("agency") == []
+    assert get_normal_analyzer_fields("agent") == ["Agent"]
+    assert get_risky_analyzer_fields("agent") == []

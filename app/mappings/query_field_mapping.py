@@ -7,6 +7,8 @@ TEXT_FIELD_MAPPING = {
     "description": ["Instructions"],
     "applicant": ["Applicant", "ApplicantNormalized", "FirstApplicant"],
     "currentAssignee": ["Assignee", "AssigneeNormalized"],
+    "agency": ["Agency", "AgencyRaw"],
+    "agent": ["Agent"],
     "type": ["Type", "PatentTypeCode", "Kind"],
 }
 
@@ -19,6 +21,8 @@ NORMAL_ANALYZER_FIELDS_BY_QUERY_FIELD = {
     "description": [],
     "applicant": ["Applicant", "ApplicantNormalized", "FirstApplicant"],
     "currentAssignee": ["Assignee", "AssigneeNormalized"],
+    "agency": ["Agency", "AgencyRaw"],
+    "agent": ["Agent"],
     "type": ["PatentTypeCode", "Kind"],
 }
 

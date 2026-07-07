@@ -32,6 +32,9 @@ def test_maps_search_response_to_vendor_like_shape():
     mapped = map_search_response(raw, page=1, page_size=50)
 
     assert mapped["total"] == 1
+    assert mapped["total_pages"] == 1
+    assert mapped["next_page"] is None
+    assert mapped["took_ms"] is None
     assert mapped["records"][0]["patent_id"] == "cn-1"
     assert mapped["records"][0]["title"] == "标题"
     assert mapped["records"][0]["summary"] == "摘要"
@@ -120,3 +123,19 @@ def test_record_includes_stage_nine_search_contract_fields():
     }
     assert required_fields <= record.keys()
     assert record["summary"] == record["abstract"]
+
+
+def test_search_response_includes_stage_12_pagination_metadata():
+    raw = {"took": 35, "hits": {"total": {"value": 101}, "hits": []}}
+
+    page_one = map_search_response(raw, page=1, page_size=50)
+    page_three = map_search_response(raw, page=3, page_size=50)
+    empty = map_search_response({"hits": {"total": {"value": 0}, "hits": []}}, page=1, page_size=50)
+
+    assert page_one["total_pages"] == 3
+    assert page_one["next_page"] == 2
+    assert page_one["took_ms"] == 35
+    assert page_three["total_pages"] == 3
+    assert page_three["next_page"] is None
+    assert empty["total_pages"] == 0
+    assert empty["next_page"] is None

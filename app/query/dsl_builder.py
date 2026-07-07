@@ -1,4 +1,5 @@
 from datetime import date
+import re
 
 from app.core.exceptions import QuerySyntaxError
 from app.mappings.legal_status_mapping import build_legal_status_clause
@@ -37,6 +38,8 @@ def build_search_dsl(request: SearchRequest) -> dict:
 
 def _build_node_clause(node: QueryNode, index_analyzer_mode: str) -> dict:
     if isinstance(node, WordNode):
+        if _is_bare_ipc(node.value):
+            return _build_ipc_clause(node.value.upper())
         return _multi_match(node.value, ["Title", "Abstract"])
     if isinstance(node, PhraseNode):
         return _multi_match(node.value, ["Title", "Abstract"])
@@ -199,6 +202,18 @@ def _parse_year(value: str) -> int:
 
 
 def _build_sort(sort: str) -> list:
+    if sort in {"relation", "rank", "relevance", "score"}:
+        return ["_score"]
+    if sort == "applicationDate":
+        return [{"ApplicationDate": {"order": "asc"}}]
     if sort == "!applicationDate":
         return [{"ApplicationDate": {"order": "desc"}}]
+    if sort == "documentDate":
+        return [{"PublicationDate": {"order": "asc"}}]
+    if sort == "!documentDate":
+        return [{"PublicationDate": {"order": "desc"}}]
     return ["_score"]
+
+
+def _is_bare_ipc(value: str) -> bool:
+    return re.fullmatch(r"[A-H]\d{2}[A-Z](?:\d{1,4}/\d{1,6})?", value.strip().upper()) is not None

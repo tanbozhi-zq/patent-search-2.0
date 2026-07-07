@@ -44,6 +44,8 @@ POST /api/patent/search
 | IPC + 全文 | `ipc:H02M AND tscd:(均衡)` | 支持 |
 | 申请人 | `applicant:(华为技术有限公司)` | 支持 |
 | 当前权利人 | `currentAssignee:(华为技术有限公司)` | 支持 |
+| 代理机构 | `agency:(知识产权代理)` | 支持 |
+| 代理人 | `agent:(张)` | 支持 |
 | 法律状态 | `legalStatus:(有效专利)` | 支持基础映射 |
 | 专利类型 | `type:(发明专利)` | 支持 |
 | 公开年 | `documentYear:[2020 TO 2024]` | 支持 |
@@ -129,12 +131,24 @@ IPCLargeGroup
 IPCSmallGroup
 ```
 
-### 4.6 申请人和当前权利人
+Stage 12.1 起支持裸 IPC 自动识别，以下输入会按 IPC 查询处理：
+
+```text
+H02M
+H02M7/483
+F16K
+```
+
+普通中文词如 `阀门` 仍按标题/摘要关键词检索；普通英文词不符合 IPC 基础格式时不自动转 IPC。
+
+### 4.6 申请人、当前权利人、代理机构和代理人
 
 ```text
 applicant:(华为技术有限公司)
 currentAssignee:(华为技术有限公司)
 currentAssignee:(华为技术有限公司) OR currentAssignee:(杭州华为数字技术有限公司)
+agency:(知识产权代理)
+agent:(张)
 ```
 
 ### 4.7 日期范围
@@ -188,7 +202,13 @@ type:(外观设计)
 | 值 | 说明 |
 |---|---|
 | `relation` | 按相关性排序 |
+| `rank` | 按相关性排序，兼容 PatentHub 原工具入参 |
+| `relevance` | 按相关性排序，兼容 PatentHub 风格入参 |
+| `score` | 按相关性排序，兼容 PatentHub 风格入参 |
+| `applicationDate` | 按申请日升序 |
 | `!applicationDate` | 按申请日倒序 |
+| `documentDate` | 按公开日/公告日升序 |
+| `!documentDate` | 按公开日/公告日倒序 |
 
 ### 5.3 `highlight`
 
@@ -227,8 +247,13 @@ type:(外观设计)
 ```text
 currentAssignee:(华为技术有限公司)
 currentAssignee:(华为技术有限公司) OR currentAssignee:(杭州华为数字技术有限公司)
+agency:(知识产权代理)
+agent:(张)
 ipc:H02M AND tscd:("均衡" OR "平衡")
 ipc:F15B AND tscd:("主线圈" OR "副线圈")
+H02M
+H02M7/483
+F16K
 tscd:("电液比例阀") AND tscd:("主线圈" OR "副线圈")
 ipc:H02M7/483
 ad:[2020-01-01 TO 2020-12-31]
@@ -253,7 +278,7 @@ mainClaim:(电路) AND NOT description:(外观)
 
 ## 阶段六已支持语法
 
-- 字段查询：`title`、`ab`、`tscd`、`mainClaim`、`claims`、`description`、`ipc`、`applicant`、`currentAssignee`、`legalStatus`、`type`
+- 字段查询：`title`、`ab`、`tscd`、`mainClaim`、`claims`、`description`、`ipc`、`applicant`、`currentAssignee`、`agency`、`agent`、`legalStatus`、`type`
 - 日期范围：`ad:[YYYY-MM-DD TO YYYY-MM-DD]`
 - 公开年范围：`documentYear:[YYYY TO YYYY]`
 - 布尔运算：`AND`、`OR`、`NOT`

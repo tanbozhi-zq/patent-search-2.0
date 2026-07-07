@@ -3,6 +3,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.api.citations import router as citations_router
 from app.api.detail import router as detail_router
+from app.api.legal_history import router as legal_history_router
 from app.api.search import router as search_router
 from app.core.error_handlers import register_error_handlers
 from app.core.logging import configure_logging
@@ -22,6 +23,7 @@ register_error_handlers(app)
 app.include_router(search_router)
 app.include_router(detail_router)
 app.include_router(citations_router)
+app.include_router(legal_history_router)
 
 app.mount("/test", StaticFiles(directory="frontend", html=True), name="frontend")
 

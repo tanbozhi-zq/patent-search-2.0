@@ -27,6 +27,8 @@ patent_index
 | `ipc` | IPC 分类 | `IPC`, `IPCList`, `IPCSmallCategory`, `IPCLargeGroup`, `IPCSmallGroup` | 支持 |
 | `applicant` | 申请人 | `Applicant`, `ApplicantNormalized`, `FirstApplicant` | 支持 |
 | `currentAssignee` | 当前权利人 | `Assignee`, `AssigneeNormalized` | 支持 |
+| `agency` | 代理机构 | `Agency`, `AgencyRaw` | Stage 12.1 支持 |
+| `agent` | 代理人 | `Agent` | Stage 12.1 支持 |
 | `ad` | 申请日 | `ApplicationDate` | 支持 |
 | `documentYear` | 公开年 | `PublicationDate` | 支持 |
 | `legalStatus` | 法律状态 | `LatestLegalStatus`, `LegalStatus`, `LegalStatusCode` | 支持基础映射 |
@@ -138,6 +140,8 @@ RelatedDocuments
 | `ipc` | `IPC`, `IPCList`, `IPCSmallCategory`, `IPCLargeGroup`, `IPCSmallGroup` |
 | `applicant` | `Applicant`, `ApplicantNormalized`, `FirstApplicant` |
 | `currentAssignee` | `Assignee`, `AssigneeNormalized` |
+| `agency` | `Agency`, `AgencyRaw` |
+| `agent` | `Agent` |
 | `legalStatus` | `LatestLegalStatus`, `LegalStatus` |
 | `type` | `Type`, `PatentTypeCode`, `Kind` |
 | `ad` | `ApplicationDate` |
@@ -152,6 +156,17 @@ RelatedDocuments
 | `mainClaim` | `MainClaim` | phrase `multi_match` | 普通 `multi_match` |
 | `claims` | `Requirement` | phrase `multi_match` | 普通 `multi_match` |
 | `description` | `Instructions` | phrase `multi_match` | 普通 `multi_match` |
+
+## Stage 12.1 API 兼容补点字段
+
+| 能力 | 字段 / 结构 | 说明 |
+|---|---|---|
+| sort 兼容 | `relation` / `rank` / `relevance` / `score` | 映射 `_score` |
+| sort 兼容 | `applicationDate` / `!applicationDate` | 映射 `ApplicationDate` 升序 / 降序 |
+| sort 兼容 | `documentDate` / `!documentDate` | 映射 `PublicationDate` 升序 / 降序 |
+| 裸 IPC | `H02M`、`H02M7/483`、`F16K` | 自动按 IPC 字段查询 |
+| search metadata | `total_pages`、`next_page`、`took_ms` | 顶层补充字段，`records` 保留 |
+| legal history | `patent_id`、`transaction_count`、`transactions` | `transactions` 来源优先为结构化 `LegalStatusHistory` 数组；缺失返回 `[]` |
 
 ## 阶段七详情与引证字段映射
 

@@ -21,7 +21,15 @@ def test_search_service_builds_dsl_and_maps_response():
     result = service.search(SearchRequest(q="阀门"))
 
     assert repository.body["size"] == 50
-    assert result == {"total": 0, "page": 1, "page_size": 50, "records": []}
+    assert result == {
+        "total": 0,
+        "page": 1,
+        "page_size": 50,
+        "total_pages": 0,
+        "next_page": None,
+        "took_ms": None,
+        "records": [],
+    }
 
 
 class FailingRepository:

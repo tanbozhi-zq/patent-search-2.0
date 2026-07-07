@@ -1,12 +1,19 @@
+from math import ceil
+
+
 def map_search_response(raw: dict, page: int, page_size: int) -> dict:
     hits = raw.get("hits", {})
     total = _extract_total(hits.get("total", 0))
     records = [_map_record(hit) for hit in hits.get("hits", [])]
+    total_pages = ceil(total / page_size) if total else 0
 
     return {
         "total": total,
         "page": page,
         "page_size": page_size,
+        "total_pages": total_pages,
+        "next_page": page + 1 if total_pages and page < total_pages else None,
+        "took_ms": raw.get("took"),
         "records": records,
     }
 
