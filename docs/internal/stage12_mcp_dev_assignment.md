@@ -1,23 +1,36 @@
-# Stage 12 MCP Server 后续开发派工单
+# Stage 12 MCP Server 远程 HTTP 服务化开发派工单
 
 ## 1. 阶段入口
 
-MCP Server 不作为 Stage 12 的第一开发任务。只有在 DeerFlow Tool 完成本地 smoke 和 Flow / DeerFlow 主链路联调后，项目总控确认进入 MCP 阶段，开发人员才开始本文档任务。
+项目总控已确认公司真实 DeerFlow / 工作台支持 `type: "http"` 的远程 MCP Server，且真实接入路径为公网访问。本阶段直接进入远程 HTTP MCP 服务化，不再依赖本地 Tool 插件联调作为前置条件。
 
 进入条件：
 
-1. `patent_search -> patent_get_detail -> patent_get_citations` Tool 主链路通过。
-2. `docs/internal/stage12_3_deerflow_integration_plan.md` 已记录真实联调结果，并由项目总控确认可以进入 MCP 阶段。
-3. DeerFlow Tool 字段缺口和错误转换问题已关闭或有明确豁免。
+1. 自研 FastAPI 专利检索服务已具备稳定 HTTP API。
+2. stdio MCP Server 已验证可列出和调用核心专利工具。
+3. 公司真实 DeerFlow / 工作台服务器可以访问我方 MCP 服务地址。
 4. 项目总控确认 MCP Server 不直接查 OpenSearch。
 
 ## 2. 开发目标
 
-新增 MCP Server，把同一套自研专利检索 API 封装为 MCP tools，供支持 MCP 的客户端或 Flow / DeerFlow MCP 接入方式调用。
+把同一套自研专利检索 API 封装为远程 HTTP MCP Server，供公司真实 DeerFlow / 工作台通过公网 MCP URL 调用。
+
+目标启动方式：
+
+```bash
+python mcp_server/server.py --transport stdio
+python mcp_server/server.py --transport http --host 0.0.0.0 --port 9000
+```
+
+HTTP MCP 入口：
+
+```text
+/mcp
+```
 
 ## 3. 目录与边界
 
-预计新增：
+当前目录：
 
 ```text
 mcp_server/
@@ -34,8 +47,9 @@ mcp_server/
 2. MCP Server 通过 HTTP 调用 `patent-api.service`。
 3. MCP Server 不读取 OpenSearch 配置。
 4. MCP Server 不创建 OpenSearch client。
-5. MCP Server 与 DeerFlow Tool 返回业务字段保持一致。
-6. stdio 优先，Streamable HTTP 后续按部署条件补充。
+5. MCP Server 不作为外部 Python 插件包被公司工作台 import。
+6. 当前 `mcp_server/patent_api_client.py` 可继续复用同仓库内的 `app.integrations.patenthub_adapter`。
+7. 如未来需要独立包交付，再单独解耦 `app.*` 依赖。
 
 ## 4. MCP Tools 清单
 
@@ -46,60 +60,84 @@ mcp_server/
 | `patent_get_citations` | `patent_id` | 引证信息 |
 | `patent_get_legal_history` | `patent_id` | 法律状态历史基础结构 |
 
+不新增 FTO、异步 `task_id`、报告生成、企业画像或 MCP prompts。
+
 ## 5. 配置项
+
+MCP 调 FastAPI：
 
 ```bash
 PATENT_SEARCH_BASE_URL=http://127.0.0.1:8000
-PATENT_SEARCH_API_TOKEN=实际token
+PATENT_SEARCH_API_TOKEN=
 PATENT_SEARCH_TIMEOUT_SECONDS=30
+PATENT_SEARCH_PAGE_SIZE_LIMIT=50
 ```
 
-## 6. 开发自查要求
+公司工作台调 MCP：
+
+```bash
+MCP_ACCESS_TOKEN=
+```
+
+`PATENT_SEARCH_API_TOKEN` 与 `MCP_ACCESS_TOKEN` 不能混用。仓库只允许提交 `.env.example` 或文档示例，不允许提交真实 `.env` 或真实 token。
+
+## 6. 鉴权要求
+
+HTTP MCP 请求必须携带：
+
+```text
+Authorization: Bearer <MCP_ACCESS_TOKEN>
+```
+
+验收要求：
+
+1. HTTP 模式未配置 `MCP_ACCESS_TOKEN` 时启动失败。
+2. 未带 token 的请求被拒绝。
+3. token 错误的请求被拒绝。
+4. token 正确时可进入 MCP `tools/list` 和工具调用。
+5. stdio 模式不要求 `MCP_ACCESS_TOKEN`。
+
+## 7. 开发自查要求
 
 开发人员需补充或说明：
 
-1. MCP tools list 自查。
-2. MCP `patent_search` 调用自查。
-3. MCP `patent_get_detail` 调用自查。
-4. MCP `patent_get_citations` 调用自查。
-5. MCP `patent_get_legal_history` 调用自查。
-6. API 错误到 MCP tool 错误的转换自查。
+1. 单元测试结果。
+2. MCP stdio tools list 自查。
+3. MCP stdio `patent_search`、detail、citations、legal history 调用自查。
+4. HTTP MCP 启动自查。
+5. HTTP MCP 鉴权自查。
+6. HTTP MCP tools list 自查。
+7. HTTP MCP 主链路调用自查。
+8. API 错误到 MCP tool 错误的转换自查。
 
-## 7. 交付文档
+## 8. 交付文档
 
-MCP Server 完成本地测试后，补充：
+开发完成后更新：
 
 ```text
 docs/delivery/mcp_integration_guide.md
+mcp_server/README.md
 ```
 
 文档需包含：
 
-1. MCP Server 启动方式。
+1. MCP Server stdio 和 HTTP 启动方式。
 2. 环境变量。
-3. tools 清单。
-4. 入参说明。
-5. 返回字段说明。
-6. stdio 接入示例。
-7. Streamable HTTP 接入规划。
-8. smoke 自查记录。
+3. HTTP 鉴权方式。
+4. tools 清单。
+5. 入参说明。
+6. 返回字段说明。
+7. 公司工作台 `type: "http"` 接入示例。
+8. smoke 自查命令。
 9. 部署和回滚说明。
 
-## 8. 联通结论
+## 9. 放行边界
 
-日期：2026-07-07
+只有满足以下条件，才允许进入公司真实工作台联调：
 
-结论：Stage 12.4 MCP stdio 联通成功。
-
-项目负责人已确认 MCP 联通成功。项目总控据此关闭 Stage 12.4 stdio MCP 开发和联通工作，并将该阶段纳入版本管理。
-
-### 8.1 放行边界
-
-1. 本次放行范围为 stdio MCP Server。
-2. MCP Server 通过自研 HTTP API 调用专利检索能力，不直接查询 OpenSearch。
-3. Streamable HTTP MCP 接入不在本次放行范围内，后续按部署条件单独规划。
-4. 若后续交付环境需要 Python 3.9，需先处理 MCP SDK 对 Python `>=3.10` 的运行时要求。
-
-### 8.2 版本结论
-
-Stage 12.4 MCP stdio Server 可作为稳定版本点管理；后续工作进入最终交付说明、部署交接或 Streamable HTTP 扩展规划。
+1. 本地 Tool 插件路径已从当前交付主线移除。
+2. MCP Server 通过自研 HTTP API 调用专利检索能力。
+3. MCP Server 不直接查询 OpenSearch。
+4. HTTP MCP 未鉴权访问会被拒绝。
+5. 带正确 token 的 `tools/list` 和四个工具调用可用。
+6. 若后续交付环境需要 Python 3.9，需先处理 MCP SDK 对 Python `>=3.10` 的运行时要求。

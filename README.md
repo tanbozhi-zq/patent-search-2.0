@@ -4,7 +4,7 @@ Self-hosted patent search backend service based on FastAPI and OpenSearch.
 
 ## Stage
 
-Current status: Stage 12.4 MCP stdio integration passed. Stage 12 DeerFlow Tool and MCP stdio paths are both available for handoff.
+Current status: Stage 12 remote HTTP MCP delivery is in progress.
 
 Implemented so far:
 
@@ -19,25 +19,33 @@ Implemented so far:
 - `GET /api/patent/detail/{patent_id}`
 - `GET /api/patent/detail/{patent_id}?include_description=true`
 - `GET /api/patent/citations/{patent_id}`
+- `GET /api/patent/legal-history/{patent_id}`
 - flat error responses for validation, business, auth, and OpenSearch failures
 - search record snake_case compatibility aliases
 - SaaS PatentHub tool adapter for self-hosted search/detail/citations/legal-history
-- Stage 12.2 DeerFlow Tool wrappers under `deerflow_tool/`
 - Stage 12.4 MCP stdio server under `mcp_server/`
 - legacy static inspection page under `/test/`
 - pytest test suite
-- systemd deployment template
+- systemd deployment template for the FastAPI service
+
+Current delivery mainline:
+
+- FastAPI patent search service under `app/`
+- Remote HTTP MCP Server under `mcp_server/`
+- Company DeerFlow / workspace connects to the public MCP URL through `type: "http"`
+
+The local DeerFlow Tool plugin path is not part of the current delivery scope.
 
 Next stage:
 
-- Prepare final delivery notes, deployment handoff, and any follow-up Streamable HTTP MCP deployment plan.
+- Add remote HTTP MCP transport, MCP bearer-token authentication, `patent-mcp.service`, HTTP MCP smoke verification, and updated company workspace integration documentation.
 - Stage 12 no longer uses a separate test environment, tester assignment, test acceptance sheet, or test report; quality gates are developer self-check, project-control review, real integration records, and delivery-doc review.
 
 Project boundaries:
 
 - `patent_harness_base_副本/` is a local read-only SaaS contract reference.
-- `app/` is the core FastAPI service and must not depend on DeerFlow Tool or MCP Server packaging.
-- DeerFlow Tool and MCP Server must call the self-hosted HTTP API instead of querying OpenSearch directly.
+- `app/` is the core FastAPI service and must not depend on MCP Server packaging.
+- MCP Server must call the self-hosted HTTP API instead of querying OpenSearch directly.
 - Do not modify OpenSearch mapping or rebuild the index in the current stage.
 
 ## Documentation
@@ -51,9 +59,8 @@ docs/README.md
 Key Stage 12 documents:
 
 - `docs/delivery/stage12_deerflow_tool_mcp_work_plan.md`
-- `docs/delivery/deerflow_tool_integration_guide.md`
 - `docs/delivery/mcp_integration_guide.md`
-- `docs/internal/stage12_deerflow_tool_dev_assignment.md`
+- `docs/internal/stage12_mcp_dev_assignment.md`
 - `docs/delivery/api_spec.md`
 - `docs/delivery/query_syntax.md`
 - `docs/delivery/field_mapping.md`
@@ -134,14 +141,13 @@ Local self-check:
 
 ```bash
 python3 scripts/smoke_saas_adapter.py http://127.0.0.1:8000 "$API_TOKEN"
-python3 scripts/smoke_deerflow_tool.py http://127.0.0.1:8000 "$API_TOKEN"
 python3 scripts/smoke_mcp_server.py http://127.0.0.1:8000 "$API_TOKEN"
 ```
 
 ## MCP Server
 
-Stage 12.4 provides `mcp_server/server.py` for stdio MCP clients. It exposes `patent_search`, `patent_get_detail`, `patent_get_citations`, and `patent_get_legal_history`, and calls the self-hosted HTTP API instead of OpenSearch.
+Stage 12.4 provides `mcp_server/server.py` for MCP clients. It exposes `patent_search`, `patent_get_detail`, `patent_get_citations`, and `patent_get_legal_history`, and calls the self-hosted HTTP API instead of OpenSearch.
 
 ```bash
-python3 mcp_server/server.py
+python3 mcp_server/server.py --transport stdio
 ```
