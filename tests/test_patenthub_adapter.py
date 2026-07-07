@@ -24,6 +24,9 @@ def test_self_hosted_search_maps_records_to_patents_and_caps_page_size():
                 "total": 1,
                 "page": 1,
                 "page_size": 50,
+                "total_pages": 1,
+                "next_page": None,
+                "took_ms": 12,
                 "records": [
                     {
                         "id": "cn-1",
@@ -53,6 +56,10 @@ def test_self_hosted_search_maps_records_to_patents_and_caps_page_size():
 
     assert len(requests) == 1
     assert result["total"] == 1
+    assert result["total_pages"] == 1
+    assert result["next_page"] is None
+    assert result["took_ms"] == 12
+    assert result["page_size"] == 50
     assert result["patents"][0]["id"] == "cn-1"
     assert result["patents"][0]["summary"] == "摘要"
     assert result["patents"][0]["application_number"] == "CN1"
@@ -100,6 +107,32 @@ def test_self_hosted_detail_and_citations_return_tool_json():
     assert detail["claims"] == "权利要求"
     assert citations["patent_id"] == "cn-1"
     assert citations["cited_by"] == []
+
+
+def test_self_hosted_legal_history_returns_tool_json():
+    def handler(request):
+        assert request.url.path == "/api/patent/legal-history/cn-1"
+        return httpx.Response(
+            200,
+            json={
+                "patent_id": "cn-1",
+                "transaction_count": 1,
+                "transactions": [{"date": "2024-01-01", "type": "公开"}],
+            },
+        )
+
+    adapter = PatentHubToolAdapter(
+        config=PatentHubAdapterConfig(self_hosted_base_url="http://self-hosted"),
+        client=_client(handler),
+    )
+
+    result = json.loads(adapter.patent_get_legal_history("cn-1"))
+
+    assert result == {
+        "patent_id": "cn-1",
+        "transaction_count": 1,
+        "transactions": [{"date": "2024-01-01", "type": "公开"}],
+    }
 
 
 def test_self_hosted_error_converts_to_tool_error():

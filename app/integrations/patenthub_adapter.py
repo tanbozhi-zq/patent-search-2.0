@@ -78,6 +78,9 @@ class PatentHubToolAdapter:
                 "total": data.get("total"),
                 "page": data.get("page", page),
                 "page_size": data.get("page_size", payload["page_size"]),
+                "total_pages": data.get("total_pages"),
+                "next_page": data.get("next_page"),
+                "took_ms": data.get("took_ms"),
                 "patents": [self._map_search_record(record) for record in records],
             }
         )
@@ -102,6 +105,20 @@ class PatentHubToolAdapter:
             return self._vendor_citations(patent_id)
 
         path = "/api/patent/citations/{}".format(quote(patent_id, safe=""))
+        data = self._request_json(
+            "GET",
+            self._self_hosted_url(path),
+            headers=self._self_hosted_headers(),
+        )
+        if self._is_error(data):
+            return _format_json(self._tool_error(data))
+        return _format_json(data)
+
+    def patent_get_legal_history(self, patent_id: str) -> str:
+        if not self.config.use_self_hosted:
+            return self._vendor_legal_history(patent_id)
+
+        path = "/api/patent/legal-history/{}".format(quote(patent_id, safe=""))
         data = self._request_json(
             "GET",
             self._self_hosted_url(path),
@@ -205,6 +222,28 @@ class PatentHubToolAdapter:
             }
         )
 
+    def _vendor_legal_history(self, patent_id: str) -> str:
+        data = self._vendor_get("/api/patent/tx", {"id": patent_id})
+        if not data.get("success"):
+            return _format_json({"error": data.get("error", "Request failed"), "code": data.get("code")})
+
+        transactions = data.get("transactions", [])
+        return _format_json(
+            {
+                "patent_id": patent_id,
+                "transaction_count": len(transactions),
+                "transactions": [
+                    {
+                        "date": transaction.get("date"),
+                        "type": transaction.get("type"),
+                        "application_number": transaction.get("applicationNumber"),
+                        "content": transaction.get("content"),
+                    }
+                    for transaction in transactions
+                ],
+            }
+        )
+
     def _vendor_get(self, path: str, params: Dict[str, Any]) -> Dict[str, Any]:
         if not self.config.vendor_api_token:
             return {"success": False, "code": 40101, "error": "PATENTHUB_API_TOKEN is not configured"}
@@ -303,6 +342,10 @@ def patent_get_detail(patent_id: str, include_description: bool = False) -> str:
 
 def patent_get_citations(patent_id: str) -> str:
     return PatentHubToolAdapter().patent_get_citations(patent_id)
+
+
+def patent_get_legal_history(patent_id: str) -> str:
+    return PatentHubToolAdapter().patent_get_legal_history(patent_id)
 
 
 def _format_json(data: Dict[str, Any]) -> str:

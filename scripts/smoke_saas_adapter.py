@@ -35,16 +35,17 @@ def main() -> int:
         json.dumps(
             {
                 "name": "adapter_search",
-                "ok": bool(patent_id) and not missing,
+                "ok": bool(patent_id) and not missing and _has_search_metadata(search),
                 "total": search.get("total"),
                 "patents": len(patents),
                 "patent_id": patent_id,
+                "metadata": _has_search_metadata(search),
                 "missing_fields": missing,
             },
             ensure_ascii=False,
         )
     )
-    if not patent_id or missing:
+    if not patent_id or missing or not _has_search_metadata(search):
         return 1
 
     detail = _loads(adapter.patent_get_detail(patent_id))
@@ -92,6 +93,21 @@ def main() -> int:
     if "error" in citations or citation_missing:
         return 1
 
+    legal_history = _loads(adapter.patent_get_legal_history(patent_id))
+    legal_missing = _missing_legal_history_fields(legal_history)
+    print(
+        json.dumps(
+            {
+                "name": "adapter_legal_history",
+                "ok": "error" not in legal_history and not legal_missing,
+                "missing_fields": legal_missing,
+            },
+            ensure_ascii=False,
+        )
+    )
+    if "error" in legal_history or legal_missing:
+        return 1
+
     error = _loads(adapter.patent_search(q="ipc:H02M AND AND tscd:(均衡)"))
     print(
         json.dumps(
@@ -128,6 +144,10 @@ def _missing_search_fields(record: dict) -> list:
     return [field for field in required if field not in record]
 
 
+def _has_search_metadata(search: dict) -> bool:
+    return all(field in search for field in ("total_pages", "next_page", "took_ms"))
+
+
 def _missing_detail_fields(detail: dict) -> list:
     required = [
         "id",
@@ -148,6 +168,11 @@ def _missing_detail_fields(detail: dict) -> list:
 def _missing_citation_fields(citations: dict) -> list:
     required = ["patent_id", "cited_by", "patent_references", "non_patent_references"]
     return [field for field in required if field not in citations]
+
+
+def _missing_legal_history_fields(legal_history: dict) -> list:
+    required = ["patent_id", "transaction_count", "transactions"]
+    return [field for field in required if field not in legal_history]
 
 
 if __name__ == "__main__":

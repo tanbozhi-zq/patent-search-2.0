@@ -1,0 +1,18 @@
+tools:
+  - name: patent_search
+    group: web
+    use: deerflow_tool.tools:patent_search_tool
+    base_url: ${PATENT_SEARCH_BASE_URL}
+    api_token: ${PATENT_SEARCH_API_TOKEN}
+
+  - name: patent_get_detail
+    group: web
+    use: deerflow_tool.tools:patent_get_detail_tool
+
+  - name: patent_get_citations
+    group: web
+    use: deerflow_tool.tools:patent_get_citations_tool
+
+  - name: patent_get_legal_history
+    group: web
+    use: deerflow_tool.tools:patent_get_legal_history_tool
