@@ -181,10 +181,4 @@ docs: update Stage 12 API compatibility docs
 4. 更新后的 `docs/delivery/field_mapping.md`。
 5. 开发说明或 commit message，说明每个补点是否完成。
 
-测试人员按：
-
-```text
-docs/internal/stage12_1_api_compat_test_acceptance.md
-```
-
-执行验收。
+Stage 12.1 已关闭。后续阶段不再单独设置测试验收单；如需追溯 12.1 放行依据，查看 `docs/internal/stage12_1_acceptance_summary.md` 和 `docs/internal/stage12_1_test_report.md`。

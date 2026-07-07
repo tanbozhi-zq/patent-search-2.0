@@ -1,14 +1,16 @@
-# Stage 12.3 DeerFlow / Flow 联调验收单
+# Stage 12.3 DeerFlow / Flow 真实联调计划
 
 ## 1. 阶段入口
 
-本验收单由项目总控维护，供测试人员和联调人员在真实 Flow / DeerFlow 环境中执行。
+本文档由项目总控维护，供开发人员和联调/接入人员在真实 Flow / DeerFlow 环境中执行。
+
+Stage 12.3 不再单独设置测试环境、测试人员派工、测试验收单或测试报告。联调结论直接沉淀到本文件或后续交付文档的问题清单中。
 
 进入 Stage 12.3 前必须满足：
 
 1. `Stage 12.1` 核心 API 兼容补点已通过。
-2. `Stage 12.2` DeerFlow Tool 本地封装和 smoke 已通过。
-3. `docs/delivery/deerflow_tool_integration_guide.md` 已包含 Tool 名称、参数、返回字段和本地 smoke 结果。
+2. `Stage 12.2` DeerFlow Tool 本地封装已完成，并有开发自查记录或提交说明。
+3. `docs/delivery/deerflow_tool_integration_guide.md` 已包含 Tool 名称、参数、返回字段和本地自查方式。
 4. 项目总控确认可以进入真实 agent 环境联调。
 
 ## 2. 本阶段目标
@@ -129,27 +131,21 @@ patent_search -> patent_get_detail -> patent_get_citations
 4. agent 分析是否受字段缺口影响。
 5. 是否需要回到 12.1 或 12.2 补能力。
 
-## 6. 通过标准
+## 6. 放行标准
 
-Stage 12.3 通过需要同时满足：
+Stage 12.3 放行需要同时满足：
 
 1. Flow / DeerFlow 能加载 tool。
 2. agent 能完成 search -> detail -> citations 主链路。
 3. 错误查询式不会导致系统崩溃。
 4. Tool 返回字段满足 agent 分析需要。
-5. 已输出联调记录、问题清单和是否进入 MCP 阶段的建议。
+5. 已记录联调问题、字段缺口和是否进入 MCP 阶段的建议。
 
-## 7. 输出文档
+## 7. 输出要求
 
-联调完成后，测试人员或联调人员输出：
+联调完成后，由项目总控整理以下内容：
 
-```text
-docs/internal/stage12_3_integration_report.md
-```
-
-报告至少包含：
-
-1. 联调环境。
+1. 联调环境或接入账号的脱敏说明。
 2. API 服务地址脱敏说明。
 3. Tool 配置方式。
 4. 用例执行结果。
@@ -157,3 +153,24 @@ docs/internal/stage12_3_integration_report.md
 6. 问题清单。
 7. 字段缺口清单。
 8. 是否建议进入 `Stage 12.4 MCP Server`。
+
+## 8. 联调结论
+
+日期：2026-07-07
+
+结论：Stage 12.3 DeerFlow / Flow 真实联调通过。
+
+项目负责人已确认 12.3 联调通过。项目总控据此关闭 12.3，并允许 12.4 MCP Server 开发继续推进。
+
+本结论不代表 12.4 MCP Server 已完成；12.4 仍需在独立分支或独立提交中按 `docs/internal/stage12_mcp_dev_assignment.md` 执行。
+
+### 8.1 放行边界
+
+1. 12.3 是真实 Flow / DeerFlow 联调阶段，不新增业务功能代码。
+2. 联调对象为 Stage 12.2 DeerFlow Tool 和自研 HTTP API。
+3. MCP Server 不纳入 12.3 放行范围。
+4. 若后续 MCP 开发发现 Tool 字段或错误结构缺口，应回到 12.2 补丁处理，再重新确认对 12.4 的影响。
+
+### 8.2 版本结论
+
+Stage 12.2 DeerFlow Tool 和 Stage 12.3 真实联调可作为一个稳定版本点管理；Stage 12.4 MCP Server 继续作为后续开发版本管理。

@@ -4,7 +4,7 @@
 
 本任务单由项目总控维护，用于开发人员实现 DeerFlow / Flow tool 前确认边界。项目总控只维护需求、边界、字段映射、API 设计、查询语法清单、Git 状态和交付文档，不直接承担开发实现。
 
-开发人员负责按本文档实现代码；测试人员负责在测试前先 review 开发提交，再执行验收与联调用例。
+开发人员负责按本文档实现代码，并在提交说明中记录本地自查结果。项目总控负责 review 开发结果是否符合文档约定。
 
 ## 2. 开发目标
 
@@ -30,7 +30,7 @@ Stage 12 按以下顺序推进：
 进入本派工单前必须满足：
 
 1. `docs/internal/stage12_1_api_compat_dev_assignment.md` 已完成。
-2. `docs/internal/stage12_1_api_compat_test_acceptance.md` 验收通过。
+2. `docs/internal/stage12_1_acceptance_summary.md` 已确认 Stage 12.1 收口。
 3. 项目总控确认 5 个 API 兼容补点已经关闭或有明确豁免。
 
 ## 4. 目录与边界
@@ -175,8 +175,8 @@ PATENT_SEARCH_TIMEOUT_SECONDS=30
 3. 暴露 `patent_search`、`patent_get_detail`、`patent_get_citations`、`patent_get_legal_history`。
 4. 新增 `deerflow_tool/README.md`。
 5. 新增 `deerflow_tool/examples/` 示例配置。
-6. 新增 Tool 层测试，覆盖成功链路、错误转换、page_size 限制和环境变量。
-7. 新增或更新本地 smoke 脚本，供测试人员在进入真实 Flow / DeerFlow 前验证工具函数。
+6. 新增 Tool 层本地自查覆盖，说明成功链路、错误转换、page_size 限制和环境变量。
+7. 新增或更新本地 smoke 脚本，供开发人员和项目总控在进入真实 Flow / DeerFlow 前自查工具函数。
 8. 不接入真实 Flow / DeerFlow agent；真实联调归入 `Stage 12.3`。
 
 ### 9.1 提交建议
@@ -189,15 +189,15 @@ docs: add DeerFlow tool usage guide
 test: add DeerFlow tool smoke coverage
 ```
 
-每次提交前运行：
+建议每次提交前运行：
 
 ```bash
 .venv/bin/python -m pytest -q
 ```
 
-## 10. 本地验收用例
+## 10. 本地自查用例
 
-本阶段只验收本地 Tool 封装，不验收真实 Flow / DeerFlow agent 加载。测试至少覆盖：
+本阶段只完成本地 Tool 封装自查，不接入真实 Flow / DeerFlow agent。自查至少覆盖：
 
 | 场景 | 查询式 |
 |---|---|
@@ -208,7 +208,7 @@ test: add DeerFlow tool smoke coverage
 | 当前权利人 | `currentAssignee:华为技术有限公司` |
 | 错误查询式 | `ipc:H02M AND AND tscd:(均衡)` |
 
-验收标准：
+自查标准：
 
 1. `deerflow_tool.tools` 可被本地 Python 测试导入。
 2. `patent_search` 返回 `patents`，不返回 `records`。
@@ -223,7 +223,7 @@ test: add DeerFlow tool smoke coverage
 真实 Flow / DeerFlow agent 能否加载 tool、agent 能否自动选择 tool、agent 是否能生成分析结论，均归入：
 
 ```text
-docs/internal/stage12_3_deerflow_integration_acceptance.md
+docs/internal/stage12_3_deerflow_integration_plan.md
 ```
 
 ## 11. 后续交付文档
@@ -241,7 +241,7 @@ docs/delivery/deerflow_tool_integration_guide.md
 3. 入参说明。
 4. 返回字段说明。
 5. 环境变量配置。
-6. 本地 smoke 测试命令与结果。
+6. 本地 smoke 自查命令与结果。
 7. Flow / DeerFlow 注册示例草案。
 8. 已知限制和回滚方式。
 

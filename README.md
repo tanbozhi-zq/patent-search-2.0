@@ -4,7 +4,7 @@ Self-hosted patent search backend service based on FastAPI and OpenSearch.
 
 ## Stage
 
-Current status: Stage 12 engineering governance started, preparing DeerFlow Tool integration and MCP delivery.
+Current status: Stage 12.3 DeerFlow / Flow integration passed; Stage 12.4 MCP Server development may continue separately.
 
 Implemented so far:
 
@@ -21,15 +21,16 @@ Implemented so far:
 - `GET /api/patent/citations/{patent_id}`
 - flat error responses for validation, business, auth, and OpenSearch failures
 - search record snake_case compatibility aliases
-- SaaS PatentHub tool adapter for self-hosted search/detail/citations
-- static manual test page under `/test/`
+- SaaS PatentHub tool adapter for self-hosted search/detail/citations/legal-history
+- Stage 12.2 DeerFlow Tool wrappers under `deerflow_tool/`
+- legacy static inspection page under `/test/`
 - pytest test suite
 - systemd deployment template
 
 Next stage:
 
-- Stage 12 continues with DeerFlow Tool development, Flow / DeerFlow joint testing, then MCP Server packaging.
-- Current Stage 12 governance work is documentation-only and does not modify service code.
+- Stage 12.4 continues with MCP Server packaging on an isolated development branch.
+- Stage 12 no longer uses a separate test environment, tester assignment, test acceptance sheet, or test report; quality gates are developer self-check, project-control review, real integration records, and delivery-doc review.
 
 Project boundaries:
 
@@ -49,6 +50,7 @@ docs/README.md
 Key Stage 12 documents:
 
 - `docs/delivery/stage12_deerflow_tool_mcp_work_plan.md`
+- `docs/delivery/deerflow_tool_integration_guide.md`
 - `docs/internal/stage12_deerflow_tool_dev_assignment.md`
 - `docs/delivery/api_spec.md`
 - `docs/delivery/query_syntax.md`
@@ -115,7 +117,7 @@ Stage 8 compatibility notes: `page_size` is capped at 100; `highlight=1` is acce
 
 ## SaaS Tool Adapter
 
-Stage 10 provides `app.integrations.patenthub_adapter.PatentHubToolAdapter` for SaaS/Agent integration. It exposes PatentHub-like `patent_search`, `patent_get_detail`, and `patent_get_citations` methods, maps self-hosted `records` to tool-layer `patents`, and converts service errors to `{error, code}`.
+Stage 10+ provides `app.integrations.patenthub_adapter.PatentHubToolAdapter` for SaaS/Agent integration. It exposes PatentHub-like `patent_search`, `patent_get_detail`, `patent_get_citations`, and `patent_get_legal_history` methods, maps self-hosted `records` to tool-layer `patents`, and converts service errors to `{error, code}`.
 
 Key environment variables:
 
@@ -126,8 +128,9 @@ export PATENT_SEARCH_USE_SELF_HOSTED=true
 export PATENT_SEARCH_PAGE_SIZE_LIMIT=50
 ```
 
-Smoke:
+Local self-check:
 
 ```bash
 python3 scripts/smoke_saas_adapter.py http://127.0.0.1:8000 "$API_TOKEN"
+python3 scripts/smoke_deerflow_tool.py http://127.0.0.1:8000 "$API_TOKEN"
 ```

@@ -23,6 +23,7 @@ Stage 12 的核心原则：
 3. DeerFlow Tool 和 MCP Server 不直接查询 OpenSearch。
 4. `patent_harness_base_副本/` 仅作为合约参考，不做任何修改。
 5. 本阶段先治理文档和交付边界，再进入工具代码开发。
+6. 后续不再单独设置测试环境、测试人员派工、测试验收单或测试报告；质量门改为开发自查、项目总控 review、真实联调记录和交付文档复核。
 
 ## 2. 阶段一：自研接口部署与基础验证
 
@@ -50,11 +51,11 @@ Stage 12 的核心原则：
 1. 服务访问地址。
 2. 鉴权方式说明。
 3. `X-API-Key` token 交接方式。
-4. 基础接口 smoke 测试结果。
+4. 基础接口 smoke 自查结果。
 5. 部署环境说明。
 6. 回滚方式。
 
-### 2.4 验收标准
+### 2.4 放行标准
 
 1. `/health` 返回正常。
 2. `search` 能返回专利列表。
@@ -158,9 +159,9 @@ PATENT_SEARCH_TIMEOUT_SECONDS=30
 3. `docs/delivery/deerflow_tool_integration_guide.md`。
 4. Tool 名称、参数、返回字段说明。
 5. Flow / DeerFlow 配置示例。
-6. Tool smoke 测试脚本或测试记录。
+6. Tool smoke 自查脚本或自查记录。
 
-### 3.8 验收标准
+### 3.8 放行标准
 
 1. Flow / DeerFlow 能加载 tool。
 2. agent 能调用 `patent_search`。
@@ -174,13 +175,13 @@ PATENT_SEARCH_TIMEOUT_SECONDS=30
 ### 4.1 工作任务
 
 1. 将 tool 注册到 Flow / DeerFlow 平台。
-2. 配置测试 agent。
-3. 使用自研 tool 替换或并行测试原 PatentHub tool。
+2. 配置联调 agent。
+3. 使用自研 tool 替换或并行对比原 PatentHub tool。
 4. 跑完整专利检索分析流程。
 5. 记录工具调用日志、输入参数、返回字段和异常信息。
 6. 对比自研结果与 PatentHub 结果。
 
-### 4.2 联调用例
+### 4.2 联调场景
 
 1. 普通关键词检索：`阀门`
 2. 标题摘要权利要求说明书检索：`tscd:(阀门 AND 密封)`
@@ -211,7 +212,7 @@ PATENT_SEARCH_TIMEOUT_SECONDS=30
 5. 检索效果对比记录。
 6. 是否进入 MCP 封装阶段的确认结论。
 
-### 4.5 验收标准
+### 4.5 放行标准
 
 1. Flow agent 能完成 search -> detail -> citations 主链路。
 2. 主流程无工具调用异常。
@@ -229,7 +230,7 @@ PATENT_SEARCH_TIMEOUT_SECONDS=30
 4. 暴露与 DeerFlow tool 同名或同义的 MCP tools。
 5. 准备 stdio 和 Streamable HTTP 两种启动方式。
 6. 编写 MCP 接入说明。
-7. 编写 MCP smoke 测试用例。
+7. 编写 MCP smoke 自查命令。
 
 ### 5.2 MCP tools 清单
 
@@ -268,10 +269,10 @@ http://服务器IP:9000/mcp
 4. MCP tools 返回字段说明。
 5. stdio 接入示例。
 6. Streamable HTTP 接入示例。
-7. MCP smoke 测试记录。
+7. MCP smoke 自查记录。
 8. MCP 部署说明。
 
-### 5.6 验收标准
+### 5.6 放行标准
 
 1. MCP client 能连接 server。
 2. MCP client 能列出 tools。
@@ -287,7 +288,7 @@ http://服务器IP:9000/mcp
 
 1. 将 MCP server 部署到目标环境。
 2. 将 MCP server 接入 Flow / DeerFlow 或目标 MCP client。
-3. 复用 DeerFlow Tool 阶段的测试用例。
+3. 复用 DeerFlow Tool 阶段的联调场景。
 4. 跑 MCP 方式端到端流程。
 5. 对比 Tool 方式与 MCP 方式的调用结果。
 6. 修复 MCP 封装层问题。
@@ -297,12 +298,12 @@ http://服务器IP:9000/mcp
 
 1. MCP 联调记录。
 2. MCP 接入配置。
-3. MCP 端到端测试结果。
+3. MCP 端到端联调结果。
 4. 服务部署说明。
 5. 回滚说明。
 6. 最终交付说明。
 
-### 6.3 验收标准
+### 6.3 放行标准
 
 1. MCP 方式能完成 search -> detail -> citations 主链路。
 2. MCP 返回字段满足 agent 分析需要。
@@ -316,10 +317,10 @@ http://服务器IP:9000/mcp
 2. 自研服务鉴权 token。
 3. DeerFlow tool 代码。
 4. DeerFlow tool 配置说明。
-5. DeerFlow 联调测试记录。
+5. DeerFlow 联调记录。
 6. MCP server 代码。
 7. MCP server 配置说明。
-8. MCP 联调测试记录。
+8. MCP 联调记录。
 9. 接口字段说明。
 10. 常用检索式样例。
 11. 错误码说明。
@@ -331,10 +332,10 @@ http://服务器IP:9000/mcp
 
 1. 在 `feature/stage-12-deerflow-tool-mcp` 分支开展 Stage 12 工作。
 2. 完成 `docs/` 文档分层治理和 `docs/README.md` 文档索引。
-3. 生成 DeerFlow Tool 开发任务单，明确工具封装边界、字段契约和验收标准。
-4. 确认自研服务本地测试通过。
+3. 生成 DeerFlow Tool 开发任务单，明确工具封装边界、字段契约和放行标准。
+4. 确认自研服务本地自查通过。
 5. 确认服务器部署环境和 Flow / DeerFlow 可访问路径。
-6. 部署或复用自研 API 服务并执行 smoke 测试。
+6. 部署或复用自研 API 服务并执行 smoke 自查。
 7. 开发 DeerFlow Tool，先跑通 search -> detail -> citations 主链路。
 8. DeerFlow Tool 联调通过后，再启动 MCP Server 开发。
 
@@ -352,6 +353,6 @@ feature/stage-12-deerflow-tool-mcp
 2. `docs: organize project documentation structure`
 3. `feat: add DeerFlow patent search tools`
 4. `feat: add patent search MCP server`
-5. `test: add integration smoke tests and delivery guide`
+5. `chore: add integration smoke self-checks and delivery guide`
 
 本轮工程治理只执行前两个文档类提交，不提交 `agents.md`、`frontend/index.html`、`会议记录/` 等与 Stage 12 文档治理无关的已有工作区变更。

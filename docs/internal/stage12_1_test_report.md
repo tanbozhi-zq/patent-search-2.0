@@ -2,7 +2,7 @@
 
 ## 1. 测试范围
 
-按照 `docs/internal/stage12_1_api_compat_test_acceptance.md` 验收以下 5 个补点：
+按照 Stage 12.1 开发派工边界和当时执行口径，记录以下 5 个补点的收口结果：
 
 1. sort 兼容。
 2. `agency` / `agent` 字段检索。
@@ -50,7 +50,7 @@ Review 结论：通过。
 1. `agency:(知识产权代理)` 在真实 OpenSearch smoke 中命中量较大，可能与 analyzer / 字段内容有关，非 Stage 12.1 阻塞问题。
 2. 真实 OpenSearch 上构造稳定 `total=0` 搜索较困难，`total=0` metadata 边界以单元测试覆盖。
 
-是否允许进入功能测试：允许。
+是否允许进入功能验证：允许。
 
 ## 3. 自动化测试
 

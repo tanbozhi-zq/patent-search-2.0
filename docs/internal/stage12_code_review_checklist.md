@@ -1,10 +1,10 @@
-# Stage 12 代码 Review 清单
+# Stage 12 项目总控 Review 清单
 
 ## 1. 使用对象
 
-本清单供测试人员在执行 Stage 12 测试前 review 开发提交使用，也供项目总控审查开发结果是否符合文档约定。
+本清单供项目总控审查开发结果是否符合文档约定，也可供开发人员提交前自查。
 
-Review 结论必须先于测试结论输出。
+Stage 12 后续不再设置独立测试环境、测试人员派工、测试验收单或测试报告。Review 结论直接作为是否进入真实联调或下一阶段的放行依据之一。
 
 ## 2. 基础信息
 
@@ -15,7 +15,7 @@ Review 时记录：
 | 分支 | `feature/stage-12-deerflow-tool-mcp` 或开发人员实际分支 |
 | Base commit | 开发前提交号 |
 | Head commit | 待 review 提交号 |
-| Review 人 | 测试人员或项目总控 |
+| Review 人 | 项目总控或开发自查人 |
 | Review 时间 | 实际时间 |
 
 建议命令：
@@ -88,9 +88,9 @@ test ! -d mcp_server || rg -n "OpenSearch|OPENSEARCH|OpenSearchRepository" mcp_s
 
 如果命中 `deerflow_tool/` 或 `mcp_server/`，必须解释原因；通常应判定为不通过。
 
-## 7. 测试覆盖检查
+## 7. 开发自查证据检查
 
-必须有测试覆盖：
+开发提交中应能说明以下自查点：
 
 1. 新增查询字段。
 2. 裸 IPC 自动识别。
@@ -100,11 +100,13 @@ test ! -d mcp_server || rg -n "OpenSearch|OPENSEARCH|OpenSearchRepository" mcp_s
 6. Tool page_size 限制。
 7. legal history 基础结构。
 
-必须执行：
+建议开发自查命令：
 
 ```bash
 .venv/bin/python -m pytest -q
 ```
+
+若本地环境不具备执行条件，开发人员需要在提交说明中记录原因；项目总控据此判断是否放行。
 
 ## 8. 安全与日志检查
 
@@ -126,7 +128,7 @@ rg -n "API_TOKEN=|PATENT_SEARCH_API_TOKEN=|OPENSEARCH_PASS=|password|passwd|secr
 
 ## 9. Review 结论格式
 
-输出到测试报告或单独问题清单：
+输出到项目总控复核记录或单独问题清单：
 
 ```text
 Review 结论：通过 / 不通过
@@ -135,7 +137,7 @@ Head commit:
 阻塞问题:
 重要问题:
 建议问题:
-是否允许进入功能测试:
+是否允许进入真实联调或下一阶段:
 ```
 
 阻塞问题必须由开发人员修复后重新 review。
