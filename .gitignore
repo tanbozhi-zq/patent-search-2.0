@@ -8,6 +8,31 @@
 # Python artifacts
 .venv/
 __pycache__/
+.pytest_cache/
+
+# Local agent/tooling state
+.superpowers/
 
 # Local read-only SaaS source copy for contract audit
 patent_harness_base_副本/
+
+# Local DeerFlow tool prototype, not part of current deployable package
+deerflow_tool/
+
+# Local working materials, not intended for GitHub
+会议记录/
+相关测试/
+test数据集/
+对外交付文档/
+
+# Internal/project-control documents kept only in the working folder
+docs/archive/
+docs/delivery/
+docs/internal/
+docs/superpowers/
+
+# Generated outputs
+artifacts/
+outputs/
+reports/
+*.log
