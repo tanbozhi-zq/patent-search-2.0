@@ -9,6 +9,10 @@ QUERIES = [
     "title:(口腔数字印模仪)",
     "ab:(药物组合物)",
     "type:(发明专利)",
+    "applicant:(华为技术有限公司)",
+    "currentAssignee:(华为技术有限公司)",
+    "agency:(北京风雅颂专利代理有限公司)",
+    "ipc:H02M",
 ]
 
 

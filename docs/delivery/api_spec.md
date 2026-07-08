@@ -99,7 +99,7 @@ POST /api/patent/search
 }
 ```
 
-`q` 当前支持字段查询：`title`、`ab`、`tscd`、`mainClaim`、`claims`、`description`、`ipc`、`applicant`、`currentAssignee`、`agency`、`agent`、`legalStatus`、`type`，以及 `ad`、`documentYear` 范围查询；同时支持 `AND`、`OR`、`NOT` 和常规多级括号分组，不承诺支持极端深度嵌套或明显不可读的超长表达式。阶段 10.5 起，`mainClaim` 映射 `MainClaim`，`claims` 映射 `Requirement`，`description` 映射 `Instructions`；Stage 12.1 起，`agency` 映射 `Agency` / `AgencyRaw`，`agent` 映射 `Agent`，并支持 `H02M`、`H02M7/483`、`F16K` 等裸 IPC 自动识别。`index_analyzer_mode=compat` 下 `mainClaim`、`claims`、`description` 使用 phrase 查询，`normal` 下使用普通 `multi_match`。
+`q` 当前支持字段查询：`title`、`ab`、`tscd`、`mainClaim`、`claims`、`description`、`ipc`、`applicant`、`currentAssignee`、`agency`、`agent`、`legalStatus`、`type`，以及 `ad`、`documentYear` 范围查询；同时支持 `AND`、`OR`、`NOT` 和常规多级括号分组，不承诺支持极端深度嵌套或明显不可读的超长表达式。阶段 10.5 起，`mainClaim` 映射 `MainClaim`，`claims` 映射 `Requirement`，`description` 映射 `Instructions`；Stage 12.1 起，`agency` 映射 `Agency` / `AgencyRaw`，`agent` 映射 `Agent`，并支持 `H02M`、`H02M7/483`、`F16K` 等裸 IPC 自动识别。`index_analyzer_mode=compat` 下 `mainClaim`、`claims`、`description`、`applicant`、`currentAssignee`、`agency` 使用 phrase 查询，`ipc` 的 `IPCList` 使用 `IPCList.keyword` 与 phrase 查询降低 analyzer 误召回；`normal` 下保留普通 `multi_match` / `match` 行为用于历史对比。
 
 ### 3.4 响应示例
 

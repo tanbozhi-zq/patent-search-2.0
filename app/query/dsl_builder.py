@@ -39,7 +39,7 @@ def build_search_dsl(request: SearchRequest) -> dict:
 def _build_node_clause(node: QueryNode, index_analyzer_mode: str) -> dict:
     if isinstance(node, WordNode):
         if _is_bare_ipc(node.value):
-            return _build_ipc_clause(node.value.upper())
+            return _build_ipc_clause(node.value.upper(), index_analyzer_mode)
         return _multi_match(node.value, ["Title", "Abstract"])
     if isinstance(node, PhraseNode):
         return _multi_match(node.value, ["Title", "Abstract"])
@@ -83,7 +83,7 @@ def _build_field_clause(node: FieldQuery, index_analyzer_mode: str) -> dict:
     if field in TEXT_FIELD_MAPPING:
         return _build_field_value_clause(node.value, field, index_analyzer_mode)
     if field == "ipc":
-        return _build_ipc_clause(value)
+        return _build_ipc_clause(value, index_analyzer_mode)
     if field == LEGAL_STATUS_FIELD:
         return build_legal_status_clause(value)
 
@@ -165,12 +165,17 @@ def _build_range_clause(node: RangeQuery) -> dict:
     raise QuerySyntaxError(f"q 查询语法错误：不支持字段 {node.field}")
 
 
-def _build_ipc_clause(code: str) -> dict:
+def _build_ipc_clause(code: str, index_analyzer_mode: str) -> dict:
     if not code:
         raise QuerySyntaxError("q 查询语法错误：字段 ipc 的值不能为空")
+    ipc_list_clause = (
+        [{"term": {"IPCList.keyword": code}}, {"match_phrase": {"IPCList": code}}]
+        if index_analyzer_mode == "compat"
+        else [{"match": {"IPCList": code}}]
+    )
     should = [
         {"term": {"IPC": code}},
-        {"match": {"IPCList": code}},
+        *ipc_list_clause,
         {"term": {"IPCSmallCategory": code}},
         {"term": {"IPCLargeGroup": code}},
         {"term": {"IPCSmallGroup": code}},

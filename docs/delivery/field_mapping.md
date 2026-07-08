@@ -157,6 +157,19 @@ RelatedDocuments
 | `claims` | `Requirement` | phrase `multi_match` | 普通 `multi_match` |
 | `description` | `Instructions` | phrase `multi_match` | 普通 `multi_match` |
 
+## Hotfix: 企业实体字段 analyzer 兼容匹配
+
+当前 OpenSearch 中 `Applicant` / `Assignee` 使用中文分词，`ApplicantNormalized` / `AssigneeNormalized` 使用 standard analyzer。为避免企业归属检索在默认 `compat` 模式下被普通分词查询放大，实体字段查询策略如下：
+
+| q 字段 | OpenSearch 字段 | `compat` 模式 | `normal` 模式 |
+|---|---|---|---|
+| `applicant` | `Applicant`, `ApplicantNormalized`, `FirstApplicant` | phrase `multi_match` | 普通 `multi_match` |
+| `currentAssignee` | `Assignee`, `AssigneeNormalized` | phrase `multi_match` | 普通 `multi_match` |
+| `agency` | `Agency`, `Agency.keyword`, `AgencyRaw` | phrase `multi_match` | 普通 `multi_match` on `Agency`, `AgencyRaw` |
+| `ipc` 中的 `IPCList` | `IPCList.keyword`, `IPCList` | `term` on `IPCList.keyword` + `match_phrase` on `IPCList` | 普通 `match` on `IPCList` |
+
+该 hotfix 不修改 OpenSearch mapping，不重建索引；如需真正精确企业归属检索，后续应补充 keyword / normalizer 字段并重建索引。
+
 ## Stage 12.1 API 兼容补点字段
 
 | 能力 | 字段 / 结构 | 说明 |
