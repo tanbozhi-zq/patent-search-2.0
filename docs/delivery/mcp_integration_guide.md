@@ -2,24 +2,13 @@
 
 ## 1. Scope
 
-Stage 12.4 provides a stdio MCP Server in `mcp_server/`.
+The current delivery mainline is a remote HTTP MCP Server in `mcp_server/`, backed by the self-hosted FastAPI patent search service.
 
-The MCP Server exposes the same four patent tools as the DeerFlow Tool layer and calls the self-hosted HTTP API. It does not query OpenSearch directly.
+The MCP Server exposes four patent tools and calls the FastAPI service through HTTP. It does not query OpenSearch directly, does not read OpenSearch settings, and does not create an OpenSearch client.
 
-Streamable HTTP is reserved for a later deployment pass after the stdio path is validated.
+The local DeerFlow Tool plugin path is not part of the current delivery scope.
 
-## 2. Files
-
-| Path | Purpose |
-|---|---|
-| `mcp_server/server.py` | FastMCP stdio server and tool registration |
-| `mcp_server/patent_api_client.py` | HTTP API client wrapper |
-| `mcp_server/settings.py` | `PATENT_SEARCH_*` environment settings |
-| `mcp_server/README.md` | Local usage |
-| `mcp_server/examples/stdio_config.example.json` | MCP client config draft |
-| `scripts/smoke_mcp_server.py` | Local stdio smoke self-check |
-
-## 3. Runtime
+## 2. Runtime
 
 The MCP Python SDK is pinned in `requirements.txt`:
 
@@ -29,18 +18,69 @@ mcp==1.28.1
 
 This SDK requires Python `>=3.10`. If a target host still uses Python 3.9, upgrade the MCP runtime before deploying this server.
 
-## 4. Environment Variables
+Project-level HTTP startup uses `--transport http`; internally this maps to the SDK Streamable HTTP transport.
+
+## 3. Environment Variables
 
 ```bash
 PATENT_SEARCH_BASE_URL=http://127.0.0.1:8000
 PATENT_SEARCH_API_TOKEN=<provided securely>
 PATENT_SEARCH_TIMEOUT_SECONDS=30
 PATENT_SEARCH_PAGE_SIZE_LIMIT=50
+MCP_ACCESS_TOKEN=<provided securely>
 ```
+
+`PATENT_SEARCH_API_TOKEN` is for MCP-to-FastAPI calls. `MCP_ACCESS_TOKEN` is for DeerFlow/workspace-to-MCP calls. Do not document or deploy them as interchangeable values.
 
 Do not commit real API tokens or OpenSearch credentials.
 
-## 5. Tools
+## 4. Start
+
+Local stdio verification:
+
+```bash
+python3 mcp_server/server.py --transport stdio
+```
+
+Remote HTTP MCP service:
+
+```bash
+export MCP_ACCESS_TOKEN=<provided securely>
+python3 mcp_server/server.py --transport http --host 0.0.0.0 --port 9000
+```
+
+The HTTP MCP endpoint is:
+
+```text
+http://<server-public-ip>:9000/mcp
+```
+
+HTTP MCP requests must include:
+
+```text
+Authorization: Bearer <MCP_ACCESS_TOKEN>
+```
+
+## 5. Company Workspace Config Example
+
+```json
+{
+  "mcpServers": {
+    "patent-search": {
+      "enabled": true,
+      "type": "http",
+      "url": "http://<server-public-ip>:9000/mcp",
+      "headers": {
+        "Authorization": "Bearer ${PATENT_MCP_TOKEN}"
+      },
+      "description": "自研专利检索 MCP 服务"
+    }
+  },
+  "skills": {}
+}
+```
+
+## 6. Tools
 
 | Tool | Parameters | Return shape |
 |---|---|---|
@@ -49,7 +89,7 @@ Do not commit real API tokens or OpenSearch credentials.
 | `patent_get_citations` | `patent_id` | `patent_id`, `cited_by`, `patent_references`, `non_patent_references` |
 | `patent_get_legal_history` | `patent_id` | `patent_id`, `transaction_count`, `transactions` |
 
-Errors are returned as:
+Tool errors are returned as:
 
 ```json
 {
@@ -58,72 +98,76 @@ Errors are returned as:
 }
 ```
 
-## 6. Start
-
-Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-Start the stdio server:
-
-```bash
-python3 mcp_server/server.py
-```
-
-## 7. MCP Client Config Draft
-
-See `mcp_server/examples/stdio_config.example.json`.
+HTTP MCP authentication errors are returned as:
 
 ```json
 {
-  "mcpServers": {
-    "patent-search": {
-      "command": "python3",
-      "args": ["mcp_server/server.py"]
-    }
-  }
+  "error": "unauthorized",
+  "code": 40101
 }
 ```
 
-## 8. Local Smoke
+## 7. Smoke
 
-Start the patent search API first:
+Start the FastAPI patent search service first:
 
 ```bash
 uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-Run:
+Run stdio smoke:
 
 ```bash
 python3 scripts/smoke_mcp_server.py http://127.0.0.1:8000 "$API_TOKEN"
 ```
 
-The smoke self-check covers:
+Start HTTP MCP:
 
-1. MCP tools list.
-2. `patent_search`.
-3. `patent_get_detail`.
-4. `patent_get_citations`.
-5. `patent_get_legal_history`.
-6. Query syntax error conversion to `{error, code}`.
+```bash
+export PATENT_SEARCH_BASE_URL=http://127.0.0.1:8000
+export PATENT_SEARCH_API_TOKEN="$API_TOKEN"
+export MCP_ACCESS_TOKEN=<provided securely>
+python3 mcp_server/server.py --transport http --host 0.0.0.0 --port 9000
+```
 
-## 9. Streamable HTTP Plan
+Run HTTP smoke:
 
-`FastMCP` supports Streamable HTTP, but Stage 12.4 ships stdio first. Streamable HTTP should be enabled in a later deployment pass after port, auth, reverse proxy, and process supervision requirements are confirmed.
+```bash
+python3 scripts/smoke_mcp_http.py http://127.0.0.1:9000/mcp "$MCP_ACCESS_TOKEN"
+```
 
-## 10. Rollback
+HTTP MCP authentication checks:
 
-Remove the MCP client registration for `patent-search`. No OpenSearch mapping, index, or core API rollback is required for this stage.
+```bash
+curl -i -X POST http://127.0.0.1:9000/mcp
+curl -i -X POST http://127.0.0.1:9000/mcp -H "Authorization: Bearer wrong"
+```
 
-## 11. Integration Result
+Both unauthenticated and wrong-token requests should return HTTP 401 with `{error, code}`.
 
-Date: 2026-07-07
+## 8. Deployment
 
-Result: Stage 12.4 stdio MCP integration passed.
+The systemd template is:
 
-Project owner confirmed that the MCP path is connected successfully. This guide is the delivery reference for the Stage 12.4 stdio MCP version.
+```text
+deployment/patent-mcp.service
+```
 
-The Streamable HTTP path remains a later deployment item and is not part of this version's release boundary.
+Recommended public deployment shape:
+
+1. Bind FastAPI patent API to `127.0.0.1:8000` when only MCP needs public access.
+2. Bind MCP HTTP service to `0.0.0.0:9000` or proxy it through Nginx/HTTPS.
+3. Keep `MCP_ACCESS_TOKEN` private and rotate it when the workspace configuration changes.
+4. Restrict firewall access to known company workspace egress addresses when possible.
+
+## 9. Rollback
+
+1. Disable or remove the workspace MCP server configuration for `patent-search`.
+2. Stop the MCP service:
+
+```bash
+sudo systemctl stop patent-mcp.service
+```
+
+3. Keep the FastAPI patent search service running unless the rollback specifically targets the core API.
+4. No OpenSearch mapping, index, or data rollback is required for MCP service rollback.

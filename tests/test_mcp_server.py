@@ -1,8 +1,12 @@
 import json
 
 import anyio
+from starlette.applications import Starlette
+from starlette.responses import JSONResponse
+from starlette.routing import Route
+from starlette.testclient import TestClient
 
-from mcp_server.server import build_server
+from mcp_server.server import BearerTokenAuthApp, build_server, parse_args
 
 
 class FakePatentApiClient:
@@ -70,3 +74,54 @@ def test_mcp_server_calls_detail_citations_and_legal_history_tools():
         assert legal_history["transactions"] == []
 
     anyio.run(run)
+
+
+def test_parse_args_defaults_to_stdio():
+    args = parse_args([])
+
+    assert args.transport == "stdio"
+    assert args.host == "0.0.0.0"
+    assert args.port == 9000
+
+
+def test_parse_args_accepts_http_host_and_port():
+    args = parse_args(["--transport", "http", "--host", "127.0.0.1", "--port", "9100"])
+
+    assert args.transport == "http"
+    assert args.host == "127.0.0.1"
+    assert args.port == 9100
+
+
+def test_bearer_token_auth_rejects_missing_and_invalid_tokens():
+    async def ok(_request):
+        return JSONResponse({"ok": True})
+
+    app = BearerTokenAuthApp(
+        Starlette(routes=[Route("/mcp", ok, methods=["GET", "POST"])]),
+        access_token="secret",
+    )
+    client = TestClient(app)
+
+    missing = client.post("/mcp")
+    invalid = client.post("/mcp", headers={"Authorization": "Bearer wrong"})
+
+    assert missing.status_code == 401
+    assert missing.json() == {"error": "unauthorized", "code": 40101}
+    assert invalid.status_code == 401
+    assert invalid.json() == {"error": "unauthorized", "code": 40101}
+
+
+def test_bearer_token_auth_allows_valid_token():
+    async def ok(_request):
+        return JSONResponse({"ok": True})
+
+    app = BearerTokenAuthApp(
+        Starlette(routes=[Route("/mcp", ok, methods=["GET", "POST"])]),
+        access_token="secret",
+    )
+    client = TestClient(app)
+
+    response = client.post("/mcp", headers={"Authorization": "Bearer secret"})
+
+    assert response.status_code == 200
+    assert response.json() == {"ok": True}

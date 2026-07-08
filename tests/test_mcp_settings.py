@@ -23,3 +23,28 @@ def test_mcp_settings_use_safe_defaults(monkeypatch):
     assert settings.base_url == "http://127.0.0.1:8000"
     assert settings.api_token == ""
     assert settings.timeout_seconds == 30
+
+
+def test_mcp_settings_read_access_token(monkeypatch):
+    monkeypatch.setenv("MCP_ACCESS_TOKEN", "mcp-secret")
+
+    settings = McpServerSettings.from_env()
+
+    assert settings.access_token == "mcp-secret"
+
+
+def test_mcp_settings_require_access_token_for_http():
+    settings = McpServerSettings(access_token="  mcp-secret  ")
+
+    assert settings.require_access_token() == "mcp-secret"
+
+
+def test_mcp_settings_reject_empty_access_token_for_http():
+    settings = McpServerSettings(access_token=" ")
+
+    try:
+        settings.require_access_token()
+    except RuntimeError as exc:
+        assert str(exc) == "MCP_ACCESS_TOKEN is required when --transport http is used"
+    else:
+        raise AssertionError("empty MCP_ACCESS_TOKEN should fail HTTP startup")
