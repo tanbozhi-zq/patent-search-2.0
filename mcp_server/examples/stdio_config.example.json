@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "patent-search": {
+      "command": "python3",
+      "args": ["mcp_server/server.py"],
+      "env": {
+        "PATENT_SEARCH_BASE_URL": "http://127.0.0.1:8000",
+        "PATENT_SEARCH_API_TOKEN": "${PATENT_SEARCH_API_TOKEN}",
+        "PATENT_SEARCH_TIMEOUT_SECONDS": "30",
+        "PATENT_SEARCH_PAGE_SIZE_LIMIT": "50"
+      }
+    }
+  }
+}

@@ -1,0 +1,17 @@
+[Unit]
+Description=Patent Search MCP Server
+After=network.target patent-search-service.service
+
+[Service]
+User=work
+Group=work
+WorkingDirectory=/opt/patent-search-service
+EnvironmentFile=/opt/patent-search-service/.env
+ExecStart=/opt/patent-search-service/.venv/bin/python mcp_server/server.py --transport http --host 0.0.0.0 --port 9000
+Restart=always
+RestartSec=5
+StandardOutput=append:/var/log/patent-search-service/patent-mcp.log
+StandardError=append:/var/log/patent-search-service/patent-mcp.err.log
+
+[Install]
+WantedBy=multi-user.target
