@@ -19,9 +19,9 @@ NORMAL_ANALYZER_FIELDS_BY_QUERY_FIELD = {
     "mainClaim": [],
     "claims": [],
     "description": [],
-    "applicant": ["Applicant", "ApplicantNormalized", "FirstApplicant"],
-    "currentAssignee": ["Assignee", "AssigneeNormalized"],
-    "agency": ["Agency", "AgencyRaw"],
+    "applicant": [],
+    "currentAssignee": [],
+    "agency": [],
     "agent": ["Agent"],
     "type": ["PatentTypeCode", "Kind"],
 }
@@ -33,6 +33,9 @@ RISKY_ANALYZER_FIELDS_BY_QUERY_FIELD = {
     "mainClaim": ["MainClaim"],
     "claims": ["Requirement"],
     "description": ["Instructions"],
+    "applicant": ["Applicant", "ApplicantNormalized", "FirstApplicant"],
+    "currentAssignee": ["Assignee", "AssigneeNormalized"],
+    "agency": ["Agency", "Agency.keyword", "AgencyRaw"],
     "type": ["Type"],
 }
 
