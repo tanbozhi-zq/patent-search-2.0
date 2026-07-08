@@ -1,71 +1,32 @@
-# 专利检索 2.0 文档索引
+# 专利检索 2.0 云端文档索引
 
-## 当前阶段
+本仓库上云内容只保留部署和协作所需的最小文档。开发过程资料、测试数据、会议记录和交付材料可以继续放在同一个本地工作文件夹内，但不进入 GitHub。
 
-当前项目处于 `Stage 12：远程 HTTP MCP 服务化交付`。
+## 云端保留
 
-Stage 12 当前主线是：保持核心 FastAPI HTTP API 稳定，把已验证的 stdio MCP Server 收敛为公司真实 DeerFlow / 工作台可通过公网调用的远程 HTTP MCP Server。
-
-本阶段不再维护 DeerFlow Tool 本地插件路径；相关历史可通过 Git 历史查询。
-
-## 优先阅读
-
-1. `docs/delivery/stage12_deerflow_tool_mcp_work_plan.md`
-2. `docs/delivery/mcp_integration_guide.md`
-3. `docs/delivery/patent_search_service_api_delivery_overview.md`
-4. `docs/delivery/api_spec.md`
-5. `docs/delivery/query_syntax.md`
-6. `docs/delivery/field_mapping.md`
-7. `docs/ops/deployment_runbook.md`
-
-## 正式交付文档
-
-正式交付文档放在 `docs/delivery/`，用于接口确认、字段确认、Stage 12 工作计划和后续远程 HTTP MCP 接入说明。
-
-当前文件：
-
-| 文件 | 用途 |
+| 路径 | 用途 |
 |---|---|
-| `stage12_deerflow_tool_mcp_work_plan.md` | Stage 12 工作计划和交付边界 |
-| `mcp_integration_guide.md` | 远程 HTTP MCP 接入、部署、smoke 和 tools 清单说明 |
-| `patent_search_service_api_delivery_overview.md` | 专利检索 HTTP API 接口交付说明 |
-| `api_spec.md` | HTTP API 契约、参数、响应和错误码说明 |
-| `query_syntax.md` | `q` 查询语法、字段语法和限制说明 |
-| `field_mapping.md` | 外部字段、OpenSearch 字段和返回字段映射 |
-| `patent_index_field_table.md` | `patent_index` 原始字段表 |
-| `mcp_parameter_field_dependency.md` | MCP / Agent 参数和字段消费依赖参考 |
+| `README.md` | 项目概览、本地启动、服务接口和当前交付边界 |
+| `.env.example` | 环境变量模板，不包含真实密钥 |
+| `docs/README.md` | 云端文档范围说明 |
+| `docs/ops/deployment_runbook.md` | systemd 部署、日志、验证和回滚步骤 |
+| `docs/ops/deploy_env_check.md` | 部署前环境检查项 |
+| `deployment/` | systemd 服务模板 |
 
-后续开发完成后补充：
+## 本地保留
 
-| 文件 | 触发条件 |
-|---|---|
-| `final_delivery_checklist.md` | HTTP MCP 联调完成并准备最终交付时 |
+以下内容属于本地工作材料，默认不提交到 GitHub：
 
-## 运维部署文档
+- `会议记录/`
+- `相关测试/`
+- `test数据集/`
+- `对外交付文档/`
+- `docs/archive/`
+- `docs/delivery/`
+- `docs/internal/`
+- `docs/superpowers/`
+- `frontend/`
+- `tests/`
+- `artifacts/`、`outputs/`、`reports/`
 
-运维部署文档放在 `docs/ops/`，用于服务器部署、环境变量、smoke 验证和回滚。
-
-当前文件：
-
-| 文件 | 用途 |
-|---|---|
-| `deployment_runbook.md` | systemd 部署、日志、部署后验证和回滚步骤 |
-| `deploy_env_check.md` | 服务器、OpenSearch、端口和生产约束确认记录 |
-
-## 内部过程文档
-
-内部过程文档、阶段派工、阶段测试报告、历史归档和 agent 过程设计文件不进入远端可部署主线。开发人员可在本地 `.local-dev/` 中保存这些过程资产。
-
-Stage 12 起当前远端 `main` 只保留可部署代码、正式交付文档和运维文档。质量门统一收敛为开发自查、项目总控 review、真实联调记录和交付文档复核。
-
-## 历史归档
-
-历史归档文档不进入远端可部署主线。如需保留历史过程材料，请放在本地 `.local-dev/` 并由 `.gitignore` 忽略。
-
-## 外部交付口径
-
-对外交付内容以 `docs/delivery/` 中的正式交付文档为准；重复整理目录和过程材料不进入远端可部署主线。
-
-## 只读参考仓库
-
-`patent_harness_base_副本/` 是 DeerFlow / SaaS / PatentHub 合约参考仓库，只读参考，不允许在本项目治理或开发过程中修改。
+这些文件不会被删除，只是不再作为云端仓库内容维护。

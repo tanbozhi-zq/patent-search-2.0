@@ -8,18 +8,31 @@
 # Python artifacts
 .venv/
 __pycache__/
+.pytest_cache/
 
 # Local development process artifacts
 docs/internal/
 docs/archive/
+docs/delivery/
 docs/superpowers/
 frontend/
 tests/
 对外交付文档/
 会议记录/
+相关测试/
+test数据集/
 .local-dev/
 agents.md
 pytest.ini
 
 # Local read-only SaaS source copy for contract audit
 patent_harness_base_副本/
+
+# Local DeerFlow tool prototype, not part of current deployable package
+deerflow_tool/
+
+# Generated outputs
+artifacts/
+outputs/
+reports/
+*.log
