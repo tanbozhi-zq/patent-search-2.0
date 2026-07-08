@@ -197,7 +197,7 @@ GET /api/patent/detail/cn-xxx?include_description=true
 
 #### 4.4.1 双兼容字段（阶段七）
 
-阶段七起，详情接口对核心关键字段同时输出 HTTP API 风格的 camelCase 字段与 SaaS PatentHub 工具层实际消费的 snake_case 别名，保证两套消费方均无需自行改写。设计依据见 `docs/superpowers/specs/2026-07-06-stage-7-detail-citations-design.md` §7.2。
+阶段七起，详情接口对核心关键字段同时输出 HTTP API 风格的 camelCase 字段与 SaaS PatentHub 工具层实际消费的 snake_case 别名，保证两套消费方均无需自行改写。
 
 基础著录字段（camelCase + snake_case 别名）：
 
@@ -309,7 +309,7 @@ GET /api/patent/citations/{patent_id}
 
 ### 5.2 响应内容
 
-阶段七起，引证接口同时输出 SaaS PatentHub 工具层字段与本项目原始兼容字段。设计依据见 `docs/superpowers/specs/2026-07-06-stage-7-detail-citations-design.md` §8.2。
+阶段七起，引证接口同时输出 SaaS PatentHub 工具层字段与本项目原始兼容字段。
 
 ```json
 {

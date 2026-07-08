@@ -212,9 +212,9 @@ SaaS 适配层 smoke：
 |---|---|
 | Base URL | `http://host:8000` 或网关地址 |
 | API Key | 通过安全渠道单独提供 |
-| 接口契约 | `对外交付文档/专利检索服务接口契约.md` |
-| 查询语法 | `对外交付文档/专利检索服务查询语法说明.md` |
-| 验收清单 | `对外交付文档/专利检索服务上线验收清单.md` |
+| 接口契约 | `docs/delivery/api_spec.md` |
+| 查询语法 | `docs/delivery/query_syntax.md` |
+| 验收清单 | `docs/delivery/final_delivery_checklist.md`（最终交付前补充） |
 
 ## 11. 回滚方案
 

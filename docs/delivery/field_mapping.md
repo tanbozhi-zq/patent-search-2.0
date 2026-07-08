@@ -12,7 +12,7 @@ patent_index
 
 1. `docs/delivery/patent_index_field_table.md`
 2. `docs/delivery/mcp_parameter_field_dependency.md`
-3. `docs/archive/initial/self_hosted_patent_search_requirements_and_plan.md`
+3. 已确认的交付口径和当前代码实现
 
 ## 2. 查询字段映射
 
@@ -170,7 +170,7 @@ RelatedDocuments
 
 ## 阶段七详情与引证字段映射
 
-阶段七新增 `GET /api/patent/detail/{patent_id}` 与 `GET /api/patent/citations/{patent_id}` 两个接口，详情接口对核心关键字段同时输出 camelCase 与 snake_case 别名，引证接口同时输出 SaaS PatentHub 工具层字段与原始兼容字段。设计依据见 `docs/superpowers/specs/2026-07-06-stage-7-detail-citations-design.md` §7.2、§8.2。
+阶段七新增 `GET /api/patent/detail/{patent_id}` 与 `GET /api/patent/citations/{patent_id}` 两个接口，详情接口对核心关键字段同时输出 camelCase 与 snake_case 别名，引证接口同时输出 SaaS PatentHub 工具层字段与原始兼容字段。
 
 ### 详情字段映射
 

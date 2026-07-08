@@ -24,8 +24,6 @@ Implemented so far:
 - search record snake_case compatibility aliases
 - SaaS PatentHub tool adapter for self-hosted search/detail/citations/legal-history
 - Stage 12.4 MCP stdio server under `mcp_server/`
-- legacy static inspection page under `/test/`
-- pytest test suite
 - systemd deployment template for the FastAPI service
 
 Current delivery mainline:
@@ -60,7 +58,6 @@ Key Stage 12 documents:
 
 - `docs/delivery/stage12_deerflow_tool_mcp_work_plan.md`
 - `docs/delivery/mcp_integration_guide.md`
-- `docs/internal/stage12_mcp_dev_assignment.md`
 - `docs/delivery/api_spec.md`
 - `docs/delivery/query_syntax.md`
 - `docs/delivery/field_mapping.md`
@@ -73,7 +70,6 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
-python3 -m pytest -q
 uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
