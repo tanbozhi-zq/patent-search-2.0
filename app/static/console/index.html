@@ -643,8 +643,8 @@
                 { value: 'agent', label: '代理人' }
             ]},
             { key: 'number', label: '号码', fields: [
+                { value: 'documentNumber', label: '专利号/公开(公告)号' },
                 { value: 'applicationNumber', label: '申请号' },
-                { value: 'documentNumber', label: '公开(公告)号' },
                 { value: 'publicationNumber', label: '公开号' },
                 { value: 'patentId', label: '专利ID' }
             ]},
@@ -698,8 +698,12 @@
             };
         }
 
+        function createDefaultConditions() {
+            return CATEGORIES.map(category => createCondition(category.key, category.fields[0].value));
+        }
+
         function init() {
-            conditions = [createCondition('keyword', 'tscd')];
+            conditions = createDefaultConditions();
             renderConditions();
             updateQueryPreview();
             loadState();
@@ -758,6 +762,7 @@
                 return `
                     <div class="condition-value">
                         <select onchange="updateCondition('${cond.id}', 'value', this.value)">
+                            <option value="" ${cond.value ? '' : 'selected'}>请选择</option>
                             ${field.options.map(opt => `<option value="${escapeHtml(opt)}" ${opt === cond.value ? 'selected' : ''}>${escapeHtml(opt)}</option>`).join('')}
                         </select>
                     </div>
@@ -818,12 +823,19 @@
         }
 
         function clearAllConditions() {
-            conditions = [createCondition('keyword', 'tscd')];
-            conditions[0].value = '';
+            conditions = createDefaultConditions();
             document.getElementById('q').value = '';
             renderConditions();
             updateQueryPreview();
             clearResults();
+        }
+
+        function isConditionEmpty(cond) {
+            const field = getFieldDef(cond.category, cond.field);
+            if (field.type === 'dateRange' || field.type === 'yearRange') {
+                return !(cond.start || cond.end);
+            }
+            return !(cond.value || '').trim();
         }
 
         function buildQueryClause(cond) {
@@ -874,16 +886,19 @@
 
         function buildFullQuery() {
             const parts = [];
+            let clauseIndex = 0;
             for (let i = 0; i < conditions.length; i++) {
                 const cond = conditions[i];
+                if (isConditionEmpty(cond)) continue;
                 const built = buildQueryClause(cond);
                 if (built.error) return built;
-                if (i === 0) {
+                if (clauseIndex === 0) {
                     parts.push(built.q);
                 } else {
                     const op = cond.connector === 'not' ? 'AND NOT' : cond.connector.toUpperCase();
                     parts.push(`${op} ${built.q}`);
                 }
+                clauseIndex += 1;
             }
             return { q: parts.join(' ') };
         }
