@@ -34,7 +34,7 @@
         }
         .top-panel {
             width: 100%;
-            max-height: 55vh;
+            max-height: 60vh;
             background: var(--card-bg);
             border-bottom: 1px solid var(--border);
             display: flex;
@@ -94,21 +94,11 @@
             padding: 16px;
         }
         .search-layout {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            align-items: start;
+            display: block;
+            max-width: 100%;
         }
         .search-layout .builder-section {
             margin-top: 0;
-        }
-        @media (max-width: 1100px) {
-            .search-layout {
-                grid-template-columns: 1fr;
-            }
-            .top-panel {
-                max-height: 65vh;
-            }
         }
         .card {
             background: var(--card-bg);
@@ -185,20 +175,6 @@
         button.small {
             padding: 5px 10px;
             font-size: 12px;
-        }
-        .template-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            gap: 8px;
-        }
-        .template-grid button {
-            text-align: left;
-            background: #ecf5ff;
-            color: var(--primary);
-            border: 1px solid #d9ecff;
-        }
-        .template-grid button:hover {
-            background: #d9ecff;
         }
         .summary {
             background: #f0f9ff;
@@ -447,18 +423,18 @@
         }
         .builder-row {
             display: grid;
-            grid-template-columns: 90px 130px 90px 1fr 60px;
-            gap: 8px;
+            grid-template-columns: 100px 160px 90px 1fr 70px;
+            gap: 10px;
             align-items: start;
-            padding: 8px;
-            margin-bottom: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
             background: #fafafa;
             border: 1px solid #eee;
             border-radius: 4px;
-            font-size: 12px;
+            font-size: 13px;
         }
         .builder-row.group-node {
-            grid-template-columns: 90px 1fr 60px;
+            grid-template-columns: 100px 1fr 70px;
             background: #f0f9ff;
         }
         .builder-row input, .builder-row select, .builder-row textarea {
@@ -503,7 +479,7 @@
             </div>
             <div class="top-body" id="topBody">
                 <div class="search-layout">
-                    <div class="card">
+                    <div class="card search-card">
                         <div class="card-header">检索参数</div>
                         <div class="card-body">
                             <div class="form-row">
@@ -596,22 +572,6 @@
                                 <button onclick="doSearch()">搜索</button>
                                 <button class="secondary" onclick="copyQuery()">复制检索式</button>
                                 <button class="secondary" onclick="resetForm()">重置</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-header">常用模板</div>
-                        <div class="card-body">
-                            <div class="template-grid">
-                                <button onclick="applyTemplate('ipcH02M')">IPC: H02M</button>
-                                <button onclick="applyTemplate('titleValve')">标题：阀门</button>
-                                <button onclick="applyTemplate('applicantHuawei')">申请人：华为</button>
-                                <button onclick="applyTemplate('mainIpcOnly')">仅主 IPC</button>
-                                <button onclick="applyTemplate('applicationNumber')">按申请号查</button>
-                                <button onclick="applyTemplate('documentNumber')">按公开号查</button>
-                                <button onclick="applyTemplate('patentId')">按 patentId</button>
-                                <button onclick="applyTemplate('recent2024')">2024 年申请</button>
                             </div>
                         </div>
                     </div>
@@ -709,25 +669,6 @@
         let builderNodeId = 1;
         let builderCollapsed = false;
         let builderRoot = createBuilderGroup('root', 'AND');
-
-        const TEMPLATES = {
-            ipcH02M: { q: 'ipc:H02M', ds: 'cn' },
-            titleValve: { q: 'title:(阀门)', ds: 'cn' },
-            applicantHuawei: { q: 'applicant:(华为技术有限公司)', ds: 'cn' },
-            mainIpcOnly: { q: 'mainIpc:H02M', ds: 'cn' },
-            applicationNumber: { q: 'applicationNumber:CN202411108082.1', ds: 'all' },
-            documentNumber: { q: 'documentNumber:CN119188170B', ds: 'all' },
-            patentId: { q: 'patentId:cn-xxx', ds: 'all' },
-            recent2024: { q: 'ad:[2024-01-01 TO 2024-12-31]', ds: 'cn' },
-        };
-
-        function applyTemplate(name) {
-            const t = TEMPLATES[name];
-            if (!t) return;
-            document.getElementById('q').value = t.q;
-            if (t.ds) document.getElementById('ds').value = t.ds;
-            doSearch();
-        }
 
         function getForm() {
             return {
