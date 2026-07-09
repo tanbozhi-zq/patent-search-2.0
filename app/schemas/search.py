@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 
 class SearchRequest(BaseModel):
     q: str = Field(min_length=1, max_length=1000)
-    ds: str = Field(default="cn", pattern="^(cn|all)$")
+    ds: str = Field(default="cn", pattern="^([Aa][Ll][Ll]|[A-Za-z]{2})$")
     sort: str = Field(
         default="relation",
         pattern="^(relation|rank|relevance|score|!?applicationDate|!?documentDate)$",

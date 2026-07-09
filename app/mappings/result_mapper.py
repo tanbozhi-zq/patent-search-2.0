@@ -33,6 +33,8 @@ def _map_record(hit: dict) -> dict:
     abstract = _string(source.get("Abstract"))
     applicant = _string(source.get("Applicant"))
     main_ipc = _string(source.get("IPC"))
+    main_claim = _string(source.get("MainClaim"))
+    independent_claims = _string(source.get("IndependentClaims"))
     application_date = _string(source.get("ApplicationDate"))
     document_date = _string(source.get("PublicationDate"))
     legal_status = _string(source.get("LatestLegalStatus") or source.get("LegalStatus"))
@@ -52,6 +54,10 @@ def _map_record(hit: dict) -> dict:
         "currentAssignee": _string(source.get("Assignee") or source.get("Applicant")),
         "inventor": _string(source.get("Inventor")),
         "mainIpc": main_ipc,
+        "mainClaim": main_claim,
+        "main_claim": main_claim,
+        "independentClaims": independent_claims,
+        "independent_claims": independent_claims,
         "ipcMainList": _array(source.get("IPCList")),
         "applicationDate": application_date,
         "ad": application_date,

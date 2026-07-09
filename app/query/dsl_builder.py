@@ -4,7 +4,9 @@ import re
 from app.core.exceptions import QuerySyntaxError
 from app.mappings.legal_status_mapping import build_legal_status_clause
 from app.mappings.query_field_mapping import (
+    IDENTIFIER_FIELD_MAPPING,
     LEGAL_STATUS_FIELD,
+    MAIN_IPC_FIELD,
     SUPPORTED_FIELDS,
     TEXT_FIELD_MAPPING,
     get_normal_analyzer_fields,
@@ -19,8 +21,9 @@ def build_search_dsl(request: SearchRequest) -> dict:
     must = [_build_node_clause(parse_query(request.q), request.index_analyzer_mode)]
     filters = []
 
-    if request.ds == "cn":
-        filters.append({"term": {"Country": "CN"}})
+    ds = request.ds.lower()
+    if ds != "all":
+        filters.append({"term": {"Country": ds.upper()}})
 
     return {
         "from": request.offset,
@@ -84,6 +87,10 @@ def _build_field_clause(node: FieldQuery, index_analyzer_mode: str) -> dict:
         return _build_field_value_clause(node.value, field, index_analyzer_mode)
     if field == "ipc":
         return _build_ipc_clause(value, index_analyzer_mode)
+    if field == MAIN_IPC_FIELD:
+        return _build_main_ipc_value_clause(node.value, field)
+    if field in IDENTIFIER_FIELD_MAPPING:
+        return _build_identifier_value_clause(node.value, IDENTIFIER_FIELD_MAPPING[field], field)
     if field == LEGAL_STATUS_FIELD:
         return build_legal_status_clause(value)
 
@@ -180,6 +187,79 @@ def _build_ipc_clause(code: str, index_analyzer_mode: str) -> dict:
         {"term": {"IPCLargeGroup": code}},
         {"term": {"IPCSmallGroup": code}},
     ]
+    return {"bool": {"should": should, "minimum_should_match": 1}}
+
+
+def _build_main_ipc_value_clause(value_node: QueryNode, query_field: str) -> dict:
+    if isinstance(value_node, (WordNode, PhraseNode)):
+        code = value_node.value.strip().upper()
+        if not code:
+            raise QuerySyntaxError(f"q 查询语法错误：字段 {query_field} 的值不能为空")
+        return {"term": {"IPC": code}}
+    if isinstance(value_node, AndNode):
+        return {
+            "bool": {
+                "must": [
+                    _build_main_ipc_value_clause(value_node.left, query_field),
+                    _build_main_ipc_value_clause(value_node.right, query_field),
+                ]
+            }
+        }
+    if isinstance(value_node, OrNode):
+        return {
+            "bool": {
+                "should": [
+                    _build_main_ipc_value_clause(value_node.left, query_field),
+                    _build_main_ipc_value_clause(value_node.right, query_field),
+                ],
+                "minimum_should_match": 1,
+            }
+        }
+    if isinstance(value_node, NotNode):
+        return {"bool": {"must_not": [_build_main_ipc_value_clause(value_node.child, query_field)]}}
+    raise QuerySyntaxError("q 查询语法错误：字段值不支持该表达式")
+
+
+def _build_identifier_value_clause(value_node: QueryNode, fields: list[str], query_field: str) -> dict:
+    if isinstance(value_node, (WordNode, PhraseNode)):
+        value = value_node.value.strip()
+        if not value:
+            raise QuerySyntaxError(f"q 查询语法错误：字段 {query_field} 的值不能为空")
+        return _build_identifier_clause(value, fields)
+    if isinstance(value_node, AndNode):
+        return {
+            "bool": {
+                "must": [
+                    _build_identifier_value_clause(value_node.left, fields, query_field),
+                    _build_identifier_value_clause(value_node.right, fields, query_field),
+                ]
+            }
+        }
+    if isinstance(value_node, OrNode):
+        return {
+            "bool": {
+                "should": [
+                    _build_identifier_value_clause(value_node.left, fields, query_field),
+                    _build_identifier_value_clause(value_node.right, fields, query_field),
+                ],
+                "minimum_should_match": 1,
+            }
+        }
+    if isinstance(value_node, NotNode):
+        return {"bool": {"must_not": [_build_identifier_value_clause(value_node.child, fields, query_field)]}}
+    raise QuerySyntaxError("q 查询语法错误：字段值不支持该表达式")
+
+
+def _build_identifier_clause(value: str, fields: list[str]) -> dict:
+    should = []
+    for field in fields:
+        should.extend(
+            [
+                {"term": {field: value}},
+                {"term": {f"{field}.keyword": value}},
+                {"match_phrase": {field: value}},
+            ]
+        )
     return {"bool": {"should": should, "minimum_should_match": 1}}
 
 
