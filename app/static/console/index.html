@@ -115,6 +115,22 @@
             gap: 10px;
             margin-bottom: 16px;
         }
+        .request-params {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(120px, 1fr));
+            gap: 10px;
+            padding: 12px;
+            margin-bottom: 14px;
+            background: #fafafa;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+        }
+        .request-param label {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
         .condition-row {
             display: flex;
             align-items: center;
@@ -450,6 +466,7 @@
         }
 
         @media (max-width: 900px) {
+            .request-params { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
             .condition-label { display: none; }
             .condition-row { flex-wrap: wrap; }
             .condition-connector { width: 80px; }
@@ -469,6 +486,61 @@
                 <div class="search-header-actions">
                     <button onclick="clearAllConditions()">清空</button>
                     <button class="primary" onclick="doSearch()">检索</button>
+                </div>
+            </div>
+
+            <div class="request-params">
+                <div class="request-param">
+                    <label for="ds">数据范围 ds</label>
+                    <select id="ds">
+                        <option value="cn" selected>cn（中国）</option>
+                        <option value="all">all（全球）</option>
+                        <option value="us">us（美国）</option>
+                        <option value="jp">jp（日本）</option>
+                        <option value="de">de（德国）</option>
+                        <option value="ep">ep（欧洲专利局）</option>
+                        <option value="wo">wo（WIPO）</option>
+                        <option value="kr">kr（韩国）</option>
+                        <option value="gb">gb（英国）</option>
+                        <option value="fr">fr（法国）</option>
+                        <option value="ca">ca（加拿大）</option>
+                        <option value="au">au（澳大利亚）</option>
+                    </select>
+                </div>
+                <div class="request-param">
+                    <label for="sort">排序 sort</label>
+                    <select id="sort">
+                        <option value="relation" selected>relation</option>
+                        <option value="rank">rank</option>
+                        <option value="relevance">relevance</option>
+                        <option value="score">score</option>
+                        <option value="applicationDate">applicationDate</option>
+                        <option value="!applicationDate">!applicationDate</option>
+                        <option value="documentDate">documentDate</option>
+                        <option value="!documentDate">!documentDate</option>
+                    </select>
+                </div>
+                <div class="request-param">
+                    <label for="page">页码 page</label>
+                    <input id="page" type="number" value="1" min="1">
+                </div>
+                <div class="request-param">
+                    <label for="pageSize">每页 page_size</label>
+                    <input id="pageSize" type="number" value="10" min="1" max="100">
+                </div>
+                <div class="request-param">
+                    <label for="highlight">高亮 highlight</label>
+                    <select id="highlight">
+                        <option value="0" selected>0（关闭）</option>
+                        <option value="1">1（开启）</option>
+                    </select>
+                </div>
+                <div class="request-param">
+                    <label for="indexAnalyzerMode">分析模式</label>
+                    <select id="indexAnalyzerMode">
+                        <option value="compat" selected>compat</option>
+                        <option value="normal">normal</option>
+                    </select>
                 </div>
             </div>
 
@@ -565,6 +637,10 @@
             { key: 'party', label: '相关人', fields: [
                 { value: 'applicant', label: '申请人' },
                 { value: 'currentAssignee', label: '当前权利人' }
+            ]},
+            { key: 'agency', label: '代理', fields: [
+                { value: 'agency', label: '代理机构' },
+                { value: 'agent', label: '代理人' }
             ]},
             { key: 'number', label: '号码', fields: [
                 { value: 'applicationNumber', label: '申请号' },
@@ -693,6 +769,8 @@
                 field.value === 'documentNumber' ? 'CN119188170B' :
                 field.value === 'publicationNumber' ? 'CN119188170B' :
                 field.value === 'patentId' ? 'cn-xxx' :
+                field.value === 'agency' ? '北京风雅颂专利代理有限公司' :
+                field.value === 'agent' ? '张三' :
                 field.value === 'keyword' ? '无人机 AND 航拍' : '例如：格力';
             return `
                 <div class="condition-value">
@@ -826,12 +904,12 @@
         function getForm() {
             return {
                 q: document.getElementById('q').value.trim(),
-                ds: 'cn',
-                sort: 'relation',
-                page: 1,
-                page_size: 10,
-                highlight: 0,
-                index_analyzer_mode: 'compat'
+                ds: document.getElementById('ds').value,
+                sort: document.getElementById('sort').value,
+                page: parseInt(document.getElementById('page').value, 10) || 1,
+                page_size: parseInt(document.getElementById('pageSize').value, 10) || 10,
+                highlight: parseInt(document.getElementById('highlight').value, 10) || 0,
+                index_analyzer_mode: document.getElementById('indexAnalyzerMode').value
             };
         }
 
@@ -878,20 +956,26 @@
         }
 
         async function doSearch(page) {
-            const q = document.getElementById('q').value.trim();
+            const form = getForm();
+            const q = form.q;
             if (!q) {
                 setRequestInfo('查询式 q 不能为空');
                 return;
             }
 
+            if (page) {
+                form.page = page;
+                document.getElementById('page').value = page;
+            }
+
             const payload = {
                 q,
-                ds: 'cn',
-                sort: 'relation',
-                page: page || 1,
-                page_size: 10,
-                highlight: 0,
-                index_analyzer_mode: 'compat'
+                ds: form.ds,
+                sort: form.sort,
+                page: form.page,
+                page_size: form.page_size,
+                highlight: form.highlight,
+                index_analyzer_mode: form.index_analyzer_mode
             };
 
             try {
