@@ -109,19 +109,12 @@
             color: #fff;
         }
 
-        .conditions-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-bottom: 16px;
-        }
         .request-params {
             display: grid;
             grid-template-columns: repeat(6, minmax(120px, 1fr));
             gap: 10px;
-            padding: 12px;
-            margin-bottom: 14px;
-            background: #fafafa;
+            padding: 10px;
+            background: #f8fafc;
             border: 1px solid var(--border);
             border-radius: 6px;
         }
@@ -130,48 +123,6 @@
             margin-bottom: 4px;
             font-size: 12px;
             color: var(--text-secondary);
-        }
-        .condition-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 0;
-            border-bottom: 1px dashed #eee;
-        }
-        .condition-row:last-child {
-            border-bottom: none;
-        }
-        .condition-label {
-            width: 80px;
-            font-size: 13px;
-            color: var(--text-secondary);
-            text-align: right;
-            flex-shrink: 0;
-        }
-        .condition-connector {
-            width: 70px;
-            flex-shrink: 0;
-        }
-        .condition-field {
-            width: 180px;
-            flex-shrink: 0;
-        }
-        .condition-value {
-            flex: 1;
-            min-width: 120px;
-        }
-        .condition-value-pair {
-            flex: 1;
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-        .condition-actions {
-            width: 80px;
-            display: flex;
-            gap: 6px;
-            justify-content: flex-end;
-            flex-shrink: 0;
         }
         input, select, textarea {
             width: 100%;
@@ -194,23 +145,33 @@
             margin-top: 4px;
         }
 
-        .query-preview {
+        .query-workbench {
+            display: grid;
+            grid-template-columns: minmax(320px, 1.4fr) minmax(420px, 1fr);
+            gap: 12px;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+        .query-editor {
             border: 1px solid var(--border);
             border-radius: 6px;
             padding: 12px;
-            background: #fafafa;
+            background: #f8fafc;
         }
-        .query-preview label {
+        .query-editor label,
+        .builder-label {
             display: block;
             font-size: 13px;
             color: var(--text-secondary);
             margin-bottom: 6px;
             font-weight: 500;
         }
-        .query-preview textarea {
+        .query-editor textarea {
             background: #fff;
-            min-height: 60px;
+            min-height: 92px;
             margin-bottom: 8px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+            line-height: 1.5;
         }
         .query-toolbar {
             display: flex;
@@ -220,6 +181,107 @@
         .query-toolbar button {
             padding: 5px 12px;
             font-size: 12px;
+        }
+        .builder-panel {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: #fff;
+            padding: 12px;
+        }
+        .builder-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        .builder-header h2 {
+            margin: 0;
+            font-size: 14px;
+            color: var(--text);
+        }
+        .builder-toolbar,
+        .builder-group-actions,
+        .builder-node-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .builder-toolbar {
+            margin-bottom: 10px;
+        }
+        .builder-tree {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .builder-group {
+            border: 1px solid #cfd8e3;
+            border-left: 4px solid var(--primary);
+            border-radius: 6px;
+            padding: 10px;
+            background: #fbfdff;
+        }
+        .builder-group.depth-1 { border-left-color: var(--success); }
+        .builder-group.depth-2 { border-left-color: var(--warning); }
+        .builder-group.depth-3 { border-left-color: #8b5cf6; }
+        .builder-group-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 8px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        .builder-children {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .builder-node {
+            display: grid;
+            grid-template-columns: 112px minmax(150px, 190px) 118px minmax(220px, 1fr) 76px;
+            gap: 8px;
+            align-items: end;
+            padding: 10px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            background: #fff;
+        }
+        .builder-node.group-node {
+            grid-template-columns: 112px minmax(220px, 1fr) 76px;
+            background: #f6fbff;
+        }
+        .builder-node label {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+        .builder-value-pair {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 8px;
+        }
+        .builder-value textarea {
+            min-height: 64px;
+        }
+        .builder-preview {
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px dashed #bfd0e4;
+            border-radius: 6px;
+            background: #f8fafc;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+            font-size: 12px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .builder-error {
+            margin-bottom: 10px;
         }
 
         /* 结果区 */
@@ -466,12 +528,13 @@
         }
 
         @media (max-width: 900px) {
+            .query-workbench { grid-template-columns: 1fr; }
             .request-params { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
-            .condition-label { display: none; }
-            .condition-row { flex-wrap: wrap; }
-            .condition-connector { width: 80px; }
-            .condition-field { width: 140px; }
-            .condition-value { min-width: 100%; }
+            .builder-node,
+            .builder-node.group-node {
+                grid-template-columns: 1fr;
+            }
+            .builder-value-pair { grid-template-columns: 1fr; }
             .detail-overlay { width: 100vw; }
             .search-panel { padding: 12px; }
             .results-list { padding: 12px; }
@@ -489,75 +552,110 @@
                 </div>
             </div>
 
-            <div class="request-params">
-                <div class="request-param">
-                    <label for="ds">数据范围 ds</label>
-                    <select id="ds">
-                        <option value="cn" selected>cn（中国）</option>
-                        <option value="all">all（全球）</option>
-                        <option value="us">us（美国）</option>
-                        <option value="jp">jp（日本）</option>
-                        <option value="de">de（德国）</option>
-                        <option value="ep">ep（欧洲专利局）</option>
-                        <option value="wo">wo（WIPO）</option>
-                        <option value="kr">kr（韩国）</option>
-                        <option value="gb">gb（英国）</option>
-                        <option value="fr">fr（法国）</option>
-                        <option value="ca">ca（加拿大）</option>
-                        <option value="au">au（澳大利亚）</option>
-                    </select>
+            <div class="query-workbench">
+                <div class="query-editor">
+                    <label for="q">q 查询式</label>
+                    <textarea id="q" rows="4" placeholder="例如：ipc:H02M AND tscd:(&quot;均衡&quot; OR &quot;平衡&quot;)"></textarea>
+                    <div class="query-toolbar">
+                        <button onclick="insertOp('AND')">AND</button>
+                        <button onclick="insertOp('OR')">OR</button>
+                        <button onclick="insertOp('NOT')">NOT</button>
+                        <button onclick="insertOp('(')">(</button>
+                        <button onclick="insertOp(')')">)</button>
+                        <button onclick="copyQuery()">复制检索式</button>
+                    </div>
                 </div>
-                <div class="request-param">
-                    <label for="sort">排序 sort</label>
-                    <select id="sort">
-                        <option value="relation" selected>relation</option>
-                        <option value="rank">rank</option>
-                        <option value="relevance">relevance</option>
-                        <option value="score">score</option>
-                        <option value="applicationDate">applicationDate</option>
-                        <option value="!applicationDate">!applicationDate</option>
-                        <option value="documentDate">documentDate</option>
-                        <option value="!documentDate">!documentDate</option>
-                    </select>
-                </div>
-                <div class="request-param">
-                    <label for="page">页码 page</label>
-                    <input id="page" type="number" value="1" min="1">
-                </div>
-                <div class="request-param">
-                    <label for="pageSize">每页 page_size</label>
-                    <input id="pageSize" type="number" value="10" min="1" max="100">
-                </div>
-                <div class="request-param">
-                    <label for="highlight">高亮 highlight</label>
-                    <select id="highlight">
-                        <option value="0" selected>0（关闭）</option>
-                        <option value="1">1（开启）</option>
-                    </select>
-                </div>
-                <div class="request-param">
-                    <label for="indexAnalyzerMode">分析模式</label>
-                    <select id="indexAnalyzerMode">
-                        <option value="compat" selected>compat</option>
-                        <option value="normal">normal</option>
-                    </select>
+
+                <div class="request-params">
+                    <div class="request-param">
+                        <label for="ds">数据范围 ds</label>
+                        <select id="ds">
+                            <option value="cn" selected>cn（中国）</option>
+                            <option value="all">all（全球）</option>
+                            <option value="us">us（美国）</option>
+                            <option value="jp">jp（日本）</option>
+                            <option value="de">de（德国）</option>
+                            <option value="ep">ep（欧洲专利局）</option>
+                            <option value="wo">wo（WIPO）</option>
+                            <option value="kr">kr（韩国）</option>
+                            <option value="gb">gb（英国）</option>
+                            <option value="fr">fr（法国）</option>
+                            <option value="ca">ca（加拿大）</option>
+                            <option value="au">au（澳大利亚）</option>
+                        </select>
+                    </div>
+                    <div class="request-param">
+                        <label for="sort">排序 sort</label>
+                        <select id="sort">
+                            <option value="relation" selected>relation</option>
+                            <option value="rank">rank</option>
+                            <option value="relevance">relevance</option>
+                            <option value="score">score</option>
+                            <option value="applicationDate">applicationDate</option>
+                            <option value="!applicationDate">!applicationDate</option>
+                            <option value="documentDate">documentDate</option>
+                            <option value="!documentDate">!documentDate</option>
+                        </select>
+                    </div>
+                    <div class="request-param">
+                        <label for="page">页码 page</label>
+                        <input id="page" type="number" value="1" min="1">
+                    </div>
+                    <div class="request-param">
+                        <label for="pageSize">每页 page_size</label>
+                        <input id="pageSize" type="number" value="10" min="1" max="100">
+                    </div>
+                    <div class="request-param">
+                        <label for="highlight">高亮 highlight</label>
+                        <select id="highlight">
+                            <option value="0" selected>0（关闭）</option>
+                            <option value="1">1（开启）</option>
+                        </select>
+                    </div>
+                    <div class="request-param">
+                        <label for="indexAnalyzerMode">分析模式</label>
+                        <select id="indexAnalyzerMode">
+                            <option value="compat" selected>compat</option>
+                            <option value="normal">normal</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
-            <div class="conditions-list" id="conditionsList"></div>
-
-            <div class="query-preview">
-                <label>检索式预览（可直接编辑）</label>
-                <textarea id="q" rows="2" placeholder="例如：阀门 或 ipc:H02M AND tscd:(均衡)"></textarea>
-                <div class="query-toolbar">
-                    <button onclick="insertOp('AND')">AND</button>
-                    <button onclick="insertOp('OR')">OR</button>
-                    <button onclick="insertOp('NOT')">NOT</button>
-                    <button onclick="insertOp('(')">(</button>
-                    <button onclick="insertOp(')')">)</button>
-                    <button onclick="copyQuery()">复制检索式</button>
+            <div class="builder-panel">
+                <div class="builder-header">
+                    <h2>布尔构建器</h2>
+                    <div class="builder-toolbar">
+                        <button class="small" onclick="applyBuilderTemplate('textIpcExclude')">技术 + IPC + 排除</button>
+                        <button class="small" onclick="applyBuilderTemplate('claimsDate')">权利要求 + 日期</button>
+                        <button class="small" onclick="applyBuilderTemplate('numbers')">号码 OR</button>
+                        <button class="small" onclick="applyBuilderTemplate('legalStatus')">法律状态 OR</button>
+                    </div>
                 </div>
+                <div id="builderError" class="builder-error"></div>
+                <div id="builderTree" class="builder-tree"></div>
+                <div class="builder-group-actions">
+                    <button class="small" onclick="addBuilderCondition('root')">添加条件</button>
+                    <button class="small" onclick="addBuilderGroup('root')">添加分组</button>
+                    <button class="small primary" onclick="applyBuilderQuery(false)">生成 q</button>
+                    <button class="small" onclick="applyBuilderQuery(true)">生成并检索</button>
+                    <button class="small" onclick="resetBuilder()">重置构建器</button>
+                </div>
+                <div id="builderPreview" class="builder-preview"></div>
             </div>
+
+            <datalist id="legalStatusOptions">
+                <option value="有效专利"></option>
+                <option value="在审"></option>
+                <option value="失效"></option>
+                <option value="实质审查"></option>
+                <option value="授权"></option>
+            </datalist>
+            <datalist id="typeOptions">
+                <option value="发明专利"></option>
+                <option value="实用新型"></option>
+                <option value="外观设计"></option>
+            </datalist>
         </div>
 
         <div class="results-panel">
@@ -612,296 +710,486 @@
 
     <script>
         const API_BASE = '/console-api';
-        let conditions = [];
-        let nextConditionId = 1;
+        let builderRoot = null;
+        let builderNextId = 1;
+        let qTouchedManually = false;
         let lastResponse = null;
         let currentDetailId = null;
         let currentDetailData = null;
         let currentExtraData = null;
         let requestCollapsed = false;
 
-        const CATEGORIES = [
-            { key: 'keyword', label: '技术关键词', fields: [
-                { value: 'tscd', label: '名称/摘要/权利要求' },
-                { value: 'title', label: '名称/标题' },
-                { value: 'ab', label: '摘要' },
-                { value: 'mainClaim', label: '首权' },
-                { value: 'claims', label: '权利要求' },
-                { value: 'description', label: '说明书' },
-                { value: 'keyword', label: '普通关键词' }
-            ]},
-            { key: 'classification', label: '分类号', fields: [
-                { value: 'ipc', label: 'IPC分类号' },
-                { value: 'mainIpc', label: '主IPC分类号' }
-            ]},
-            { key: 'party', label: '相关人', fields: [
-                { value: 'applicant', label: '申请人' },
-                { value: 'currentAssignee', label: '当前权利人' }
-            ]},
-            { key: 'agency', label: '代理', fields: [
-                { value: 'agency', label: '代理机构' },
-                { value: 'agent', label: '代理人' }
-            ]},
-            { key: 'number', label: '号码', fields: [
-                { value: 'documentNumber', label: '专利号/公开(公告)号' },
-                { value: 'applicationNumber', label: '申请号' },
-                { value: 'publicationNumber', label: '公开号' },
-                { value: 'patentId', label: '专利ID' }
-            ]},
-            { key: 'date', label: '日期', fields: [
-                { value: 'ad', label: '申请日', type: 'dateRange' },
-                { value: 'documentYear', label: '公开年', type: 'yearRange' }
-            ]},
-            { key: 'status', label: '法律状态', fields: [
-                { value: 'legalStatus', label: '专利状态', type: 'enum', options: ['有效专利', '在审', '失效'] }
-            ]},
-            { key: 'type', label: '类型', fields: [
-                { value: 'type', label: '专利类型', type: 'enum', options: ['发明专利', '实用新型', '外观设计'] }
-            ]}
+        const QUERY_FIELDS = [
+            { value: 'keyword', label: '普通关键词', kind: 'keyword', placeholder: '阀门' },
+            { value: 'title', label: '标题 title', kind: 'text', placeholder: '均衡' },
+            { value: 'ab', label: '摘要 ab', kind: 'text', placeholder: '平衡' },
+            { value: 'tscd', label: '全文 tscd', kind: 'text', placeholder: '电液比例阀' },
+            { value: 'mainClaim', label: '首权 mainClaim', kind: 'text', placeholder: '电路' },
+            { value: 'claims', label: '权利要求 claims', kind: 'text', placeholder: '均衡' },
+            { value: 'description', label: '说明书 description', kind: 'text', placeholder: '外观' },
+            { value: 'applicant', label: '申请人 applicant', kind: 'text', placeholder: '华为技术有限公司' },
+            { value: 'currentAssignee', label: '当前权利人 currentAssignee', kind: 'text', placeholder: '华为技术有限公司' },
+            { value: 'agency', label: '代理机构 agency', kind: 'text', placeholder: '知识产权代理' },
+            { value: 'agent', label: '代理人 agent', kind: 'text', placeholder: '张三' },
+            { value: 'type', label: '专利类型 type', kind: 'enum', placeholder: '发明专利', list: 'typeOptions' },
+            { value: 'ipc', label: 'IPC ipc', kind: 'classification', placeholder: 'H02M' },
+            { value: 'mainIpc', label: '主 IPC mainIpc', kind: 'classification', placeholder: 'H02M' },
+            { value: 'legalStatus', label: '法律状态 legalStatus', kind: 'enum', placeholder: '有效专利', list: 'legalStatusOptions' },
+            { value: 'applicationNumber', label: '申请号 applicationNumber', kind: 'identifier', placeholder: 'CN202411108082.1' },
+            { value: 'documentNumber', label: '公开号 documentNumber', kind: 'identifier', placeholder: 'CN119188170B' },
+            { value: 'publicationNumber', label: '公开号 publicationNumber', kind: 'identifier', placeholder: 'CN119188170B' },
+            { value: 'patentId', label: '专利 ID patentId', kind: 'identifier', placeholder: 'cn-xxx' },
+            { value: 'ad', label: '申请日 ad', kind: 'dateRange' },
+            { value: 'documentYear', label: '公开年 documentYear', kind: 'yearRange' }
         ];
 
-        const DS_OPTIONS = [
-            { value: 'cn', label: '中国' },
-            { value: 'all', label: '全球' },
-            { value: 'us', label: '美国' },
-            { value: 'jp', label: '日本' },
-            { value: 'de', label: '德国' },
-            { value: 'ep', label: '欧洲专利局' },
-            { value: 'wo', label: 'WIPO' },
-            { value: 'kr', label: '韩国' },
-            { value: 'gb', label: '英国' },
-            { value: 'fr', label: '法国' },
-            { value: 'ca', label: '加拿大' },
-            { value: 'au', label: '澳大利亚' }
-        ];
-
-        function getCategory(key) {
-            return CATEGORIES.find(c => c.key === key) || CATEGORIES[0];
+        function nextBuilderId() {
+            builderNextId += 1;
+            return `node-${builderNextId}`;
         }
 
-        function getFieldDef(categoryKey, fieldValue) {
-            const cat = getCategory(categoryKey);
-            return cat.fields.find(f => f.value === fieldValue) || cat.fields[0];
-        }
-
-        function createCondition(categoryKey, fieldValue) {
-            const cat = getCategory(categoryKey);
-            const field = fieldValue ? cat.fields.find(f => f.value === fieldValue) || cat.fields[0] : cat.fields[0];
+        function createBuilderGroup(id, children, connector) {
             return {
-                id: `cond-${nextConditionId++}`,
-                connector: conditions.length === 0 ? 'and' : 'and',
-                category: cat.key,
-                field: field.value,
-                value: '',
-                start: '',
-                end: ''
+                type: 'group',
+                id: id || nextBuilderId(),
+                connector: connector || 'AND',
+                children: children || []
             };
         }
 
-        function createDefaultConditions() {
-            return CATEGORIES.map(category => createCondition(category.key, category.fields[0].value));
+        function createBuilderCondition(fieldValue, connector) {
+            const field = getQueryField(fieldValue || 'keyword');
+            const base = {
+                type: 'condition',
+                id: nextBuilderId(),
+                connector: connector || 'AND',
+                field: field.value,
+                mode: field.kind === 'text' || field.kind === 'keyword' ? 'single' : 'fixed',
+                value: '',
+                values: [],
+                start: '',
+                end: ''
+            };
+            if (field.kind === 'keyword') return { ...base, value: '阀门' };
+            if (field.kind === 'text') return { ...base, value: field.placeholder || '均衡', values: ['均衡', '平衡'] };
+            if (field.kind === 'classification') return { ...base, value: field.placeholder || 'H02M' };
+            if (field.kind === 'identifier') return { ...base, value: field.placeholder || '' };
+            if (field.kind === 'enum') return { ...base, value: field.placeholder || '' };
+            if (field.kind === 'dateRange') return { ...base, mode: 'range', start: '2020-01-01', end: '2020-12-31' };
+            if (field.kind === 'yearRange') return { ...base, mode: 'range', start: '2020', end: '2024' };
+            return base;
+        }
+
+        function createDefaultBuilderTree() {
+            return createBuilderGroup('root', [createBuilderCondition('keyword', 'AND')]);
+        }
+
+        function getQueryField(value) {
+            return QUERY_FIELDS.find(field => field.value === value) || QUERY_FIELDS[0];
         }
 
         function init() {
-            conditions = createDefaultConditions();
-            renderConditions();
-            updateQueryPreview();
+            builderRoot = createDefaultBuilderTree();
+            renderBuilder();
+            updateBuilderPreview();
+            const qEl = document.getElementById('q');
+            if (qEl && qEl.addEventListener) {
+                qEl.addEventListener('input', () => {
+                    qTouchedManually = true;
+                });
+            }
             loadState();
         }
 
-        function renderConditions() {
-            const container = document.getElementById('conditionsList');
-            container.innerHTML = conditions.map((cond, index) => renderConditionRow(cond, index)).join('');
+        function renderBuilder() {
+            const container = document.getElementById('builderTree');
+            if (!container) return;
+            container.innerHTML = renderBuilderGroup(builderRoot, 0, true);
         }
 
-        function renderConditionRow(cond, index) {
-            const cat = getCategory(cond.category);
-            const field = getFieldDef(cond.category, cond.field);
+        function renderBuilderGroup(group, depth, isRoot) {
+            const children = group.children.length === 0
+                ? '<div class="hint">本分组暂无条件</div>'
+                : group.children.map((node, index) => renderBuilderNode(node, group.id, index, depth + 1)).join('');
             return `
-                <div class="condition-row" data-id="${cond.id}">
-                    <div class="condition-label">${cat.label}</div>
-                    <div class="condition-connector">
-                        <select onchange="updateCondition('${cond.id}', 'connector', this.value)">
-                            ${renderOptions(['and', 'or', 'not'], cond.connector, v => ({ value: v, label: v }))}
+                <div class="builder-group depth-${Math.min(depth, 3)}">
+                    <div class="builder-group-title">
+                        <span>${isRoot ? '根分组' : '子分组'}</span>
+                        <div class="builder-group-actions">
+                            <button class="small" onclick="addBuilderCondition('${group.id}')">条件</button>
+                            <button class="small" onclick="addBuilderGroup('${group.id}')">分组</button>
+                        </div>
+                    </div>
+                    <div class="builder-children">${children}</div>
+                </div>
+            `;
+        }
+
+        function renderBuilderNode(node, parentId, index, depth) {
+            if (node.type === 'group') {
+                return `
+                    <div class="builder-node group-node">
+                        <div>
+                            <label>连接</label>
+                            ${renderConnectorSelect(parentId, index, node.connector)}
+                        </div>
+                        <div>
+                            <label>分组</label>
+                            <div class="hint">生成时自动加括号</div>
+                        </div>
+                        <div class="builder-node-actions">
+                            <button class="small" onclick="removeBuilderNode('${parentId}', ${index})">删除</button>
+                        </div>
+                    </div>
+                    ${renderBuilderGroup(node, depth, false)}
+                `;
+            }
+            const field = getQueryField(node.field);
+            return `
+                <div class="builder-node">
+                    <div>
+                        <label>连接</label>
+                        ${renderConnectorSelect(parentId, index, node.connector)}
+                    </div>
+                    <div>
+                        <label>字段</label>
+                        <select onchange="changeBuilderField('${parentId}', ${index}, this.value)">
+                            ${QUERY_FIELDS.map(item => optionHtml(item.value, item.label, node.field)).join('')}
                         </select>
                     </div>
-                    <div class="condition-field">
-                        <select onchange="changeConditionField('${cond.id}', this.value)">
-                            ${cat.fields.map(f => `<option value="${escapeHtml(f.value)}" ${f.value === cond.field ? 'selected' : ''}>${escapeHtml(f.label)}</option>`).join('')}
-                        </select>
+                    <div>
+                        <label>模式</label>
+                        ${renderModeControl(parentId, index, node, field)}
                     </div>
-                    ${renderConditionValue(cond, field)}
-                    <div class="condition-actions">
-                        <button class="icon add" title="添加同类型条件" onclick="addCondition('${cond.category}', '${cond.field}')">+</button>
-                        ${conditions.length > 1 ? `<button class="icon remove" title="删除" onclick="removeCondition('${cond.id}')">×</button>` : ''}
+                    <div class="builder-value">
+                        <label>值</label>
+                        ${renderValueControl(parentId, index, node, field)}
+                    </div>
+                    <div class="builder-node-actions">
+                        <button class="small" onclick="removeBuilderNode('${parentId}', ${index})">删除</button>
                     </div>
                 </div>
             `;
         }
 
-        function renderConditionValue(cond, field) {
-            if (field.type === 'dateRange') {
-                return `
-                    <div class="condition-value-pair">
-                        <input type="date" placeholder="开始" value="${escapeHtml(cond.start || '')}" onchange="updateCondition('${cond.id}', 'start', this.value)">
-                        <span>-</span>
-                        <input type="date" placeholder="结束" value="${escapeHtml(cond.end || '')}" onchange="updateCondition('${cond.id}', 'end', this.value)">
-                    </div>
-                `;
-            }
-            if (field.type === 'yearRange') {
-                return `
-                    <div class="condition-value-pair">
-                        <input type="number" min="1900" max="2100" placeholder="开始年" value="${escapeHtml(cond.start || '')}" onchange="updateCondition('${cond.id}', 'start', this.value)">
-                        <span>-</span>
-                        <input type="number" min="1900" max="2100" placeholder="结束年" value="${escapeHtml(cond.end || '')}" onchange="updateCondition('${cond.id}', 'end', this.value)">
-                    </div>
-                `;
-            }
-            if (field.type === 'enum') {
-                return `
-                    <div class="condition-value">
-                        <select onchange="updateCondition('${cond.id}', 'value', this.value)">
-                            <option value="" ${cond.value ? '' : 'selected'}>请选择</option>
-                            ${field.options.map(opt => `<option value="${escapeHtml(opt)}" ${opt === cond.value ? 'selected' : ''}>${escapeHtml(opt)}</option>`).join('')}
-                        </select>
-                    </div>
-                `;
-            }
-            const placeholder = field.value === 'ipc' ? '例如：H02M' :
-                field.value === 'mainIpc' ? '例如：H02M' :
-                field.value === 'applicationNumber' ? 'CN202411108082.1' :
-                field.value === 'documentNumber' ? 'CN119188170B' :
-                field.value === 'publicationNumber' ? 'CN119188170B' :
-                field.value === 'patentId' ? 'cn-xxx' :
-                field.value === 'agency' ? '北京风雅颂专利代理有限公司' :
-                field.value === 'agent' ? '张三' :
-                field.value === 'keyword' ? '无人机 AND 航拍' : '例如：格力';
+        function renderConnectorSelect(parentId, index, value) {
             return `
-                <div class="condition-value">
-                    <input type="text" value="${escapeHtml(cond.value || '')}" placeholder="${escapeHtml(placeholder)}" oninput="updateCondition('${cond.id}', 'value', this.value)">
-                </div>
+                <select onchange="updateBuilderNode('${parentId}', ${index}, 'connector', this.value)" ${index === 0 ? 'disabled' : ''}>
+                    ${optionHtml('AND', 'AND', value)}
+                    ${optionHtml('OR', 'OR', value)}
+                    ${optionHtml('AND NOT', 'AND NOT', value)}
+                </select>
             `;
         }
 
-        function renderOptions(values, selected, mapper) {
-            return values.map(v => {
-                const item = mapper(v);
-                return `<option value="${escapeHtml(item.value)}" ${item.value === selected ? 'selected' : ''}>${escapeHtml(item.label)}</option>`;
-            }).join('');
+        function renderModeControl(parentId, index, node, field) {
+            if (field.kind === 'text' || field.kind === 'keyword') {
+                return `
+                    <select onchange="changeBuilderMode('${parentId}', ${index}, this.value)">
+                        ${optionHtml('single', '单值', node.mode)}
+                        ${optionHtml('or', 'OR 词组', node.mode)}
+                    </select>
+                `;
+            }
+            return '<input type="text" value="固定" disabled>';
         }
 
-        function addCondition(categoryKey, fieldValue) {
-            conditions.push(createCondition(categoryKey, fieldValue));
-            renderConditions();
-            updateQueryPreview();
+        function renderValueControl(parentId, index, node, field) {
+            if (field.kind === 'dateRange') {
+                return `
+                    <div class="builder-value-pair">
+                        <input type="date" value="${escapeHtml(node.start || '')}" onchange="updateBuilderNode('${parentId}', ${index}, 'start', this.value)">
+                        <input type="date" value="${escapeHtml(node.end || '')}" onchange="updateBuilderNode('${parentId}', ${index}, 'end', this.value)">
+                    </div>
+                `;
+            }
+            if (field.kind === 'yearRange') {
+                return `
+                    <div class="builder-value-pair">
+                        <input type="number" min="1900" max="2100" value="${escapeHtml(node.start || '')}" onchange="updateBuilderNode('${parentId}', ${index}, 'start', this.value)">
+                        <input type="number" min="1900" max="2100" value="${escapeHtml(node.end || '')}" onchange="updateBuilderNode('${parentId}', ${index}, 'end', this.value)">
+                    </div>
+                `;
+            }
+            if ((field.kind === 'text' || field.kind === 'keyword') && node.mode === 'or') {
+                return `<textarea placeholder="每行一个词" oninput="updateBuilderValues('${parentId}', ${index}, this.value)">${escapeHtml((node.values || []).join('\n'))}</textarea>`;
+            }
+            const listAttr = field.list ? ` list="${field.list}"` : '';
+            return `
+                <input type="text"${listAttr} value="${escapeHtml(node.value || '')}" placeholder="${escapeHtml(field.placeholder || '')}" oninput="updateBuilderNode('${parentId}', ${index}, 'value', this.value)">
+            `;
         }
 
-        function removeCondition(id) {
-            if (conditions.length <= 1) return;
-            conditions = conditions.filter(c => c.id !== id);
-            renderConditions();
-            updateQueryPreview();
+        function optionHtml(value, label, selected) {
+            return `<option value="${escapeHtml(value)}" ${value === selected ? 'selected' : ''}>${escapeHtml(label)}</option>`;
         }
 
-        function changeConditionField(id, fieldValue) {
-            const cond = conditions.find(c => c.id === id);
-            if (!cond) return;
-            cond.field = fieldValue;
-            cond.value = '';
-            cond.start = '';
-            cond.end = '';
-            renderConditions();
-            updateQueryPreview();
+        function findBuilderNode(id, node) {
+            const current = node || builderRoot;
+            if (!current) return null;
+            if (current.id === id) return current;
+            if (current.type !== 'group') return null;
+            for (const child of current.children) {
+                const found = findBuilderNode(id, child);
+                if (found) return found;
+            }
+            return null;
         }
 
-        function updateCondition(id, key, value) {
-            const cond = conditions.find(c => c.id === id);
-            if (!cond) return;
-            cond[key] = value;
-            updateQueryPreview();
+        function addBuilderCondition(parentId, fieldValue) {
+            const group = findBuilderNode(parentId || 'root');
+            if (!group || group.type !== 'group') return;
+            group.children.push(createBuilderCondition(fieldValue || 'title', group.children.length === 0 ? 'AND' : 'AND'));
+            renderBuilder();
+            updateBuilderPreview();
+        }
+
+        function addBuilderGroup(parentId) {
+            const group = findBuilderNode(parentId || 'root');
+            if (!group || group.type !== 'group') return;
+            const child = createBuilderGroup(nextBuilderId(), [createBuilderCondition('title', 'AND')], group.children.length === 0 ? 'AND' : 'AND');
+            group.children.push(child);
+            renderBuilder();
+            updateBuilderPreview();
+        }
+
+        function removeBuilderNode(parentId, index) {
+            const parent = findBuilderNode(parentId);
+            if (!parent || !parent.children[index]) return;
+            parent.children.splice(index, 1);
+            if (parent.children[0]) parent.children[0].connector = 'AND';
+            renderBuilder();
+            updateBuilderPreview();
+        }
+
+        function updateBuilderNode(parentId, index, key, value) {
+            const parent = findBuilderNode(parentId);
+            if (!parent || !parent.children[index]) return;
+            parent.children[index][key] = value;
+            updateBuilderPreview();
+        }
+
+        function updateBuilderValues(parentId, index, raw) {
+            const parent = findBuilderNode(parentId);
+            if (!parent || !parent.children[index]) return;
+            parent.children[index].values = raw.split('\n').map(item => item.trim()).filter(Boolean);
+            updateBuilderPreview();
+        }
+
+        function changeBuilderField(parentId, index, fieldValue) {
+            const parent = findBuilderNode(parentId);
+            if (!parent || !parent.children[index]) return;
+            parent.children[index] = createBuilderCondition(fieldValue, parent.children[index].connector);
+            renderBuilder();
+            updateBuilderPreview();
+        }
+
+        function changeBuilderMode(parentId, index, mode) {
+            const parent = findBuilderNode(parentId);
+            if (!parent || !parent.children[index]) return;
+            parent.children[index].mode = mode;
+            renderBuilder();
+            updateBuilderPreview();
+        }
+
+        function resetBuilder() {
+            builderRoot = createDefaultBuilderTree();
+            qTouchedManually = false;
+            renderBuilder();
+            updateBuilderPreview();
         }
 
         function clearAllConditions() {
-            conditions = createDefaultConditions();
+            resetBuilder();
             document.getElementById('q').value = '';
-            renderConditions();
-            updateQueryPreview();
             clearResults();
         }
 
-        function isConditionEmpty(cond) {
-            const field = getFieldDef(cond.category, cond.field);
-            if (field.type === 'dateRange' || field.type === 'yearRange') {
-                return !(cond.start || cond.end);
+        function applyBuilderTemplate(name) {
+            builderNextId = 1;
+            if (name === 'textIpcExclude') {
+                builderRoot = createBuilderGroup('root', [
+                    createBuilderGroup(nextBuilderId(), [
+                        createBuilderGroup(nextBuilderId(), [
+                            condition('title', 'AND', 'single', '均衡'),
+                            condition('ab', 'OR', 'single', '平衡')
+                        ], 'AND'),
+                        createBuilderGroup(nextBuilderId(), [
+                            condition('ipc', 'AND', 'fixed', 'H02M'),
+                            condition('ipc', 'OR', 'fixed', 'F16K')
+                        ], 'AND')
+                    ], 'AND'),
+                    condition('description', 'AND NOT', 'single', '外观')
+                ]);
+            } else if (name === 'claimsDate') {
+                const date = condition('ad', 'AND', 'range', '');
+                date.start = '2020-01-01';
+                date.end = '2020-12-31';
+                builderRoot = createBuilderGroup('root', [
+                    { ...condition('claims', 'AND', 'or', ''), values: ['均衡', '平衡'] },
+                    date
+                ]);
+            } else if (name === 'numbers') {
+                builderRoot = createBuilderGroup('root', [
+                    createBuilderGroup(nextBuilderId(), [
+                        condition('applicationNumber', 'AND', 'fixed', 'CN202411108082.1'),
+                        condition('documentNumber', 'OR', 'fixed', 'CN119188170B')
+                    ], 'AND')
+                ]);
+            } else if (name === 'legalStatus') {
+                builderRoot = createBuilderGroup('root', [
+                    createBuilderGroup(nextBuilderId(), [
+                        condition('legalStatus', 'AND', 'fixed', '有效专利'),
+                        condition('legalStatus', 'OR', 'fixed', '实质审查')
+                    ], 'AND')
+                ]);
             }
-            return !(cond.value || '').trim();
+            qTouchedManually = false;
+            renderBuilder();
+            applyBuilderQuery(false);
         }
 
-        function buildQueryClause(cond) {
-            const field = getFieldDef(cond.category, cond.field);
-            if (field.type === 'dateRange') {
-                if (!cond.start || !cond.end) return { error: `${field.label}起止日期都必须填写` };
-                return { q: `${cond.field}:[${cond.start} TO ${cond.end}]` };
-            }
-            if (field.type === 'yearRange') {
-                if (!/^\d{4}$/.test(cond.start || '') || !/^\d{4}$/.test(cond.end || '')) {
-                    return { error: `${field.label}必须是4位年份` };
+        function condition(field, connector, mode, value) {
+            const item = createBuilderCondition(field, connector);
+            item.mode = mode || item.mode;
+            item.value = value || item.value;
+            return item;
+        }
+
+        function buildQueryFromTree(tree) {
+            return buildBuilderGroupQuery(tree, true);
+        }
+
+        function buildBuilderGroupQuery(group, isRoot) {
+            if (!group || group.type !== 'group') return { error: '分组非法' };
+            if (!group.children || group.children.length === 0) return { error: '分组不能为空' };
+
+            const parts = [];
+            for (let index = 0; index < group.children.length; index += 1) {
+                const child = group.children[index];
+                const built = child.type === 'group'
+                    ? buildBuilderGroupQuery(child, false)
+                    : buildBuilderCondition(child);
+                if (built.error) return { error: built.error };
+                if (parts.length === 0) {
+                    parts.push(built.q);
+                } else {
+                    parts.push(`${normalizeConnector(child.connector)} ${built.q}`);
                 }
-                return { q: `${cond.field}:[${cond.start} TO ${cond.end}]` };
             }
-            if (field.type === 'enum') {
-                const value = (cond.value || '').trim();
-                if (!value) return { error: `${field.label}不能为空` };
-                return { q: `${cond.field}:(${formatTerm(value)})` };
-            }
-            const value = (cond.value || '').trim();
-            if (!value) return { error: `${field.label}不能为空` };
-            if (cond.field === 'keyword') {
+            const q = parts.join(' ');
+            return { q: isRoot ? q : `(${q})` };
+        }
+
+        function buildBuilderCondition(node) {
+            const field = getQueryField(node.field);
+            if (field.kind === 'keyword') {
+                if (node.mode === 'or') {
+                    const values = normalizedValues(node.values);
+                    if (values.length === 0) return { error: '普通关键词 OR 词组不能为空' };
+                    return { q: `(${values.map(quoteTerm).join(' OR ')})` };
+                }
+                const value = normalizedValue(node.value);
+                if (!value) return { error: '普通关键词不能为空' };
                 return { q: value };
             }
-            return { q: `${cond.field}:(${formatTerm(value)})` };
+            if (field.kind === 'text') {
+                if (node.mode === 'or') {
+                    const values = normalizedValues(node.values);
+                    if (values.length === 0) return { error: `${field.label} OR 词组不能为空` };
+                    return { q: `${field.value}:(${values.map(quoteTerm).join(' OR ')})` };
+                }
+                const value = normalizedValue(node.value);
+                if (!value) return { error: `${field.label}不能为空` };
+                return { q: `${field.value}:(${formatTerm(value)})` };
+            }
+            if (field.kind === 'classification') {
+                const value = normalizedValue(node.value).toUpperCase();
+                if (!value) return { error: `${field.label}不能为空` };
+                return { q: `${field.value}:${value}` };
+            }
+            if (field.kind === 'identifier') {
+                const value = normalizedValue(node.value);
+                if (!value) return { error: `${field.label}不能为空` };
+                return { q: `${field.value}:${value}` };
+            }
+            if (field.kind === 'enum') {
+                const value = normalizedValue(node.value);
+                if (!value) return { error: `${field.label}不能为空` };
+                return { q: `${field.value}:(${formatTerm(value)})` };
+            }
+            if (field.kind === 'dateRange') {
+                if (!node.start || !node.end) return { error: `${field.label}起止日期都必须填写` };
+                return { q: `${field.value}:[${node.start} TO ${node.end}]` };
+            }
+            if (field.kind === 'yearRange') {
+                if (!/^\d{4}$/.test(node.start || '') || !/^\d{4}$/.test(node.end || '')) {
+                    return { error: `${field.label}必须是4位年份` };
+                }
+                return { q: `${field.value}:[${node.start} TO ${node.end}]` };
+            }
+            return { error: '不支持的字段类型' };
+        }
+
+        function normalizeConnector(value) {
+            return value === 'OR' || value === 'AND NOT' ? value : 'AND';
+        }
+
+        function normalizedValue(value) {
+            return String(value || '').trim();
+        }
+
+        function normalizedValues(values) {
+            return (values || []).map(normalizedValue).filter(Boolean);
         }
 
         function formatTerm(value) {
             const escaped = escapeQuery(value);
-            if (/\s/.test(escaped) && !/^".*"$/.test(escaped)) {
-                return `"${escaped}"`;
-            }
+            if (/\s/.test(escaped) && !/^".*"$/.test(escaped)) return `"${escaped}"`;
             return escaped;
         }
 
+        function quoteTerm(value) {
+            return `"${escapeQuery(value)}"`;
+        }
+
         function escapeQuery(value) {
-            return value.replace(/"/g, '\\"');
+            return String(value || '').replace(/"/g, '');
         }
 
-        function updateQueryPreview() {
-            const manual = document.getElementById('q');
-            if (document.activeElement === manual) return;
-            const result = buildFullQuery();
-            if (!result.error) {
-                manual.value = result.q;
+        function updateBuilderPreview() {
+            const result = buildQueryFromTree(builderRoot);
+            const preview = document.getElementById('builderPreview');
+            const error = document.getElementById('builderError');
+            if (result.error) {
+                preview.textContent = '';
+                error.innerHTML = `<div class="error">${escapeHtml(result.error)}</div>`;
+                return;
+            }
+            error.innerHTML = '';
+            preview.textContent = result.q;
+            if (!qTouchedManually && document.activeElement !== document.getElementById('q')) {
+                document.getElementById('q').value = result.q;
             }
         }
 
-        function buildFullQuery() {
-            const parts = [];
-            let clauseIndex = 0;
-            for (let i = 0; i < conditions.length; i++) {
-                const cond = conditions[i];
-                if (isConditionEmpty(cond)) continue;
-                const built = buildQueryClause(cond);
-                if (built.error) return built;
-                if (clauseIndex === 0) {
-                    parts.push(built.q);
-                } else {
-                    const op = cond.connector === 'not' ? 'AND NOT' : cond.connector.toUpperCase();
-                    parts.push(`${op} ${built.q}`);
-                }
-                clauseIndex += 1;
+        function applyBuilderQuery(searchAfterGenerate) {
+            const result = buildQueryFromTree(builderRoot);
+            if (result.error) {
+                document.getElementById('builderError').innerHTML = `<div class="error">${escapeHtml(result.error)}</div>`;
+                return;
             }
-            return { q: parts.join(' ') };
+            document.getElementById('builderError').innerHTML = '';
+            document.getElementById('builderPreview').textContent = result.q;
+            document.getElementById('q').value = result.q;
+            qTouchedManually = false;
+            if (searchAfterGenerate) doSearch();
         }
+
+        window.consoleQueryBuilder = {
+            fields: QUERY_FIELDS,
+            buildQueryFromTree
+        };
 
         function insertOp(op) {
             const el = document.getElementById('q');
@@ -914,6 +1202,7 @@
             el.value = before + insert + after;
             el.focus();
             el.setSelectionRange(start + insert.length, start + insert.length);
+            qTouchedManually = true;
         }
 
         function getForm() {
