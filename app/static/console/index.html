@@ -36,15 +36,20 @@
         .search-panel {
             background: var(--card-bg);
             border-bottom: 1px solid var(--border);
-            padding: 16px 24px;
+            padding: 12px 24px;
             overflow-y: auto;
             max-height: 58vh;
+        }
+        .search-panel.search-collapsed {
+            overflow: visible;
+            max-height: none;
         }
         .search-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 16px;
+            gap: 16px;
+            margin-bottom: 12px;
         }
         .search-header h1 {
             margin: 0;
@@ -54,6 +59,38 @@
         .search-header-actions {
             display: flex;
             gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+        .search-body.collapsed {
+            display: none;
+        }
+        .search-summary {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            padding: 8px 10px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            background: #f8fafc;
+            color: var(--text-secondary);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        .search-summary.hidden {
+            display: none;
+        }
+        .summary-q {
+            flex: 1 1 320px;
+            color: var(--text);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .summary-meta {
+            color: #909399;
+            white-space: nowrap;
         }
         button {
             padding: 8px 18px;
@@ -543,119 +580,124 @@
 </head>
 <body>
     <div class="app">
-        <div class="search-panel">
+        <div class="search-panel search-collapsed" id="searchPanel">
             <div class="search-header">
                 <h1>高级检索</h1>
                 <div class="search-header-actions">
+                    <button id="searchToggle" onclick="toggleSearchPanel()" aria-expanded="false">展开查询</button>
                     <button onclick="clearAllConditions()">清空</button>
                     <button class="primary" onclick="doSearch()">检索</button>
                 </div>
             </div>
 
-            <div class="query-workbench">
-                <div class="query-editor">
-                    <label for="q">q 查询式</label>
-                    <textarea id="q" rows="4" placeholder="例如：ipc:H02M AND tscd:(&quot;均衡&quot; OR &quot;平衡&quot;)"></textarea>
-                    <div class="query-toolbar">
-                        <button onclick="insertOp('AND')">AND</button>
-                        <button onclick="insertOp('OR')">OR</button>
-                        <button onclick="insertOp('NOT')">NOT</button>
-                        <button onclick="insertOp('(')">(</button>
-                        <button onclick="insertOp(')')">)</button>
-                        <button onclick="copyQuery()">复制检索式</button>
+            <div id="searchSummary" class="search-summary"></div>
+
+            <div id="searchBody" class="search-body collapsed">
+                <div class="query-workbench">
+                    <div class="query-editor">
+                        <label for="q">q 查询式</label>
+                        <textarea id="q" rows="4" placeholder="例如：ipc:H02M AND tscd:(&quot;均衡&quot; OR &quot;平衡&quot;)"></textarea>
+                        <div class="query-toolbar">
+                            <button onclick="insertOp('AND')">AND</button>
+                            <button onclick="insertOp('OR')">OR</button>
+                            <button onclick="insertOp('NOT')">NOT</button>
+                            <button onclick="insertOp('(')">(</button>
+                            <button onclick="insertOp(')')">)</button>
+                            <button onclick="copyQuery()">复制检索式</button>
+                        </div>
+                    </div>
+
+                    <div class="request-params">
+                        <div class="request-param">
+                            <label for="ds">数据范围 ds</label>
+                            <select id="ds">
+                                <option value="cn" selected>cn（中国）</option>
+                                <option value="all">all（全球）</option>
+                                <option value="us">us（美国）</option>
+                                <option value="jp">jp（日本）</option>
+                                <option value="de">de（德国）</option>
+                                <option value="ep">ep（欧洲专利局）</option>
+                                <option value="wo">wo（WIPO）</option>
+                                <option value="kr">kr（韩国）</option>
+                                <option value="gb">gb（英国）</option>
+                                <option value="fr">fr（法国）</option>
+                                <option value="ca">ca（加拿大）</option>
+                                <option value="au">au（澳大利亚）</option>
+                            </select>
+                        </div>
+                        <div class="request-param">
+                            <label for="sort">排序 sort</label>
+                            <select id="sort">
+                                <option value="relation" selected>relation</option>
+                                <option value="rank">rank</option>
+                                <option value="relevance">relevance</option>
+                                <option value="score">score</option>
+                                <option value="applicationDate">applicationDate</option>
+                                <option value="!applicationDate">!applicationDate</option>
+                                <option value="documentDate">documentDate</option>
+                                <option value="!documentDate">!documentDate</option>
+                            </select>
+                        </div>
+                        <div class="request-param">
+                            <label for="page">页码 page</label>
+                            <input id="page" type="number" value="1" min="1">
+                        </div>
+                        <div class="request-param">
+                            <label for="pageSize">每页 page_size</label>
+                            <input id="pageSize" type="number" value="10" min="1" max="100">
+                        </div>
+                        <div class="request-param">
+                            <label for="highlight">高亮 highlight</label>
+                            <select id="highlight">
+                                <option value="0" selected>0（关闭）</option>
+                                <option value="1">1（开启）</option>
+                            </select>
+                        </div>
+                        <div class="request-param">
+                            <label for="indexAnalyzerMode">分析模式</label>
+                            <select id="indexAnalyzerMode">
+                                <option value="compat" selected>compat</option>
+                                <option value="normal">normal</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
-                <div class="request-params">
-                    <div class="request-param">
-                        <label for="ds">数据范围 ds</label>
-                        <select id="ds">
-                            <option value="cn" selected>cn（中国）</option>
-                            <option value="all">all（全球）</option>
-                            <option value="us">us（美国）</option>
-                            <option value="jp">jp（日本）</option>
-                            <option value="de">de（德国）</option>
-                            <option value="ep">ep（欧洲专利局）</option>
-                            <option value="wo">wo（WIPO）</option>
-                            <option value="kr">kr（韩国）</option>
-                            <option value="gb">gb（英国）</option>
-                            <option value="fr">fr（法国）</option>
-                            <option value="ca">ca（加拿大）</option>
-                            <option value="au">au（澳大利亚）</option>
-                        </select>
+                <div class="builder-panel">
+                    <div class="builder-header">
+                        <h2>布尔构建器</h2>
+                        <div class="builder-toolbar">
+                            <button class="small" onclick="applyBuilderTemplate('textIpcExclude')">技术 + IPC + 排除</button>
+                            <button class="small" onclick="applyBuilderTemplate('claimsDate')">权利要求 + 日期</button>
+                            <button class="small" onclick="applyBuilderTemplate('numbers')">号码 OR</button>
+                            <button class="small" onclick="applyBuilderTemplate('legalStatus')">法律状态 OR</button>
+                        </div>
                     </div>
-                    <div class="request-param">
-                        <label for="sort">排序 sort</label>
-                        <select id="sort">
-                            <option value="relation" selected>relation</option>
-                            <option value="rank">rank</option>
-                            <option value="relevance">relevance</option>
-                            <option value="score">score</option>
-                            <option value="applicationDate">applicationDate</option>
-                            <option value="!applicationDate">!applicationDate</option>
-                            <option value="documentDate">documentDate</option>
-                            <option value="!documentDate">!documentDate</option>
-                        </select>
+                    <div id="builderError" class="builder-error"></div>
+                    <div id="builderTree" class="builder-tree"></div>
+                    <div class="builder-group-actions">
+                        <button class="small" onclick="addBuilderCondition('root')">添加条件</button>
+                        <button class="small" onclick="addBuilderGroup('root')">添加分组</button>
+                        <button class="small primary" onclick="applyBuilderQuery(false)">生成 q</button>
+                        <button class="small" onclick="applyBuilderQuery(true)">生成并检索</button>
+                        <button class="small" onclick="resetBuilder()">重置构建器</button>
                     </div>
-                    <div class="request-param">
-                        <label for="page">页码 page</label>
-                        <input id="page" type="number" value="1" min="1">
-                    </div>
-                    <div class="request-param">
-                        <label for="pageSize">每页 page_size</label>
-                        <input id="pageSize" type="number" value="10" min="1" max="100">
-                    </div>
-                    <div class="request-param">
-                        <label for="highlight">高亮 highlight</label>
-                        <select id="highlight">
-                            <option value="0" selected>0（关闭）</option>
-                            <option value="1">1（开启）</option>
-                        </select>
-                    </div>
-                    <div class="request-param">
-                        <label for="indexAnalyzerMode">分析模式</label>
-                        <select id="indexAnalyzerMode">
-                            <option value="compat" selected>compat</option>
-                            <option value="normal">normal</option>
-                        </select>
-                    </div>
+                    <div id="builderPreview" class="builder-preview"></div>
                 </div>
+
+                <datalist id="legalStatusOptions">
+                    <option value="有效专利"></option>
+                    <option value="在审"></option>
+                    <option value="失效"></option>
+                    <option value="实质审查"></option>
+                    <option value="授权"></option>
+                </datalist>
+                <datalist id="typeOptions">
+                    <option value="发明专利"></option>
+                    <option value="实用新型"></option>
+                    <option value="外观设计"></option>
+                </datalist>
             </div>
-
-            <div class="builder-panel">
-                <div class="builder-header">
-                    <h2>布尔构建器</h2>
-                    <div class="builder-toolbar">
-                        <button class="small" onclick="applyBuilderTemplate('textIpcExclude')">技术 + IPC + 排除</button>
-                        <button class="small" onclick="applyBuilderTemplate('claimsDate')">权利要求 + 日期</button>
-                        <button class="small" onclick="applyBuilderTemplate('numbers')">号码 OR</button>
-                        <button class="small" onclick="applyBuilderTemplate('legalStatus')">法律状态 OR</button>
-                    </div>
-                </div>
-                <div id="builderError" class="builder-error"></div>
-                <div id="builderTree" class="builder-tree"></div>
-                <div class="builder-group-actions">
-                    <button class="small" onclick="addBuilderCondition('root')">添加条件</button>
-                    <button class="small" onclick="addBuilderGroup('root')">添加分组</button>
-                    <button class="small primary" onclick="applyBuilderQuery(false)">生成 q</button>
-                    <button class="small" onclick="applyBuilderQuery(true)">生成并检索</button>
-                    <button class="small" onclick="resetBuilder()">重置构建器</button>
-                </div>
-                <div id="builderPreview" class="builder-preview"></div>
-            </div>
-
-            <datalist id="legalStatusOptions">
-                <option value="有效专利"></option>
-                <option value="在审"></option>
-                <option value="失效"></option>
-                <option value="实质审查"></option>
-                <option value="授权"></option>
-            </datalist>
-            <datalist id="typeOptions">
-                <option value="发明专利"></option>
-                <option value="实用新型"></option>
-                <option value="外观设计"></option>
-            </datalist>
         </div>
 
         <div class="results-panel">
@@ -669,9 +711,9 @@
         <div class="request-panel" id="requestPanel" style="display: none;">
             <div class="request-header" onclick="toggleRequestPanel()">
                 <span>请求 / 错误信息</span>
-                <span id="requestToggle">▼</span>
+                <span id="requestToggle">▶</span>
             </div>
-            <div class="request-body" id="requestBody">
+            <div class="request-body collapsed" id="requestBody">
                 <pre id="requestInfo">暂无请求</pre>
             </div>
         </div>
@@ -717,7 +759,8 @@
         let currentDetailId = null;
         let currentDetailData = null;
         let currentExtraData = null;
-        let requestCollapsed = false;
+        let searchExpanded = false;
+        let requestCollapsed = true;
 
         const QUERY_FIELDS = [
             { value: 'keyword', label: '普通关键词', kind: 'keyword', placeholder: '阀门' },
@@ -788,6 +831,48 @@
             return QUERY_FIELDS.find(field => field.value === value) || QUERY_FIELDS[0];
         }
 
+        function setSearchPanelExpanded(expanded) {
+            searchExpanded = expanded;
+            const panel = document.getElementById('searchPanel');
+            const body = document.getElementById('searchBody');
+            const summary = document.getElementById('searchSummary');
+            const toggle = document.getElementById('searchToggle');
+            if (panel) panel.classList.toggle('search-collapsed', !expanded);
+            if (body) body.classList.toggle('collapsed', !expanded);
+            if (summary) summary.classList.toggle('hidden', expanded);
+            if (toggle) {
+                toggle.textContent = expanded ? '收起查询' : '展开查询';
+                toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+            }
+            refreshSearchSummary();
+        }
+
+        function toggleSearchPanel() {
+            setSearchPanelExpanded(!searchExpanded);
+        }
+
+        function refreshSearchSummary() {
+            const summary = document.getElementById('searchSummary');
+            if (!summary) return;
+            const qEl = document.getElementById('q');
+            const q = (qEl && qEl.value.trim()) || '未设置 q';
+            const ds = document.getElementById('ds')?.value || 'cn';
+            const sort = document.getElementById('sort')?.value || 'relation';
+            const page = document.getElementById('page')?.value || '1';
+            const pageSize = document.getElementById('pageSize')?.value || '10';
+            const highlight = document.getElementById('highlight')?.value || '0';
+            const analyzer = document.getElementById('indexAnalyzerMode')?.value || 'compat';
+            summary.innerHTML = `
+                <span class="summary-q">q: ${escapeHtml(q)}</span>
+                <span class="summary-meta">ds ${escapeHtml(ds)}</span>
+                <span class="summary-meta">sort ${escapeHtml(sort)}</span>
+                <span class="summary-meta">page ${escapeHtml(page)}</span>
+                <span class="summary-meta">size ${escapeHtml(pageSize)}</span>
+                <span class="summary-meta">highlight ${escapeHtml(highlight)}</span>
+                <span class="summary-meta">${escapeHtml(analyzer)}</span>
+            `;
+        }
+
         function init() {
             builderRoot = createDefaultBuilderTree();
             renderBuilder();
@@ -796,9 +881,17 @@
             if (qEl && qEl.addEventListener) {
                 qEl.addEventListener('input', () => {
                     qTouchedManually = true;
+                    refreshSearchSummary();
                 });
             }
+            ['ds', 'sort', 'page', 'pageSize', 'highlight', 'indexAnalyzerMode'].forEach((id) => {
+                const el = document.getElementById(id);
+                if (el && el.addEventListener) el.addEventListener('change', refreshSearchSummary);
+            });
             loadState();
+            setSearchPanelExpanded(false);
+            setRequestPanelCollapsed(true);
+            refreshSearchSummary();
         }
 
         function renderBuilder() {
@@ -1002,6 +1095,8 @@
         function clearAllConditions() {
             resetBuilder();
             document.getElementById('q').value = '';
+            qTouchedManually = true;
+            refreshSearchSummary();
             clearResults();
         }
 
@@ -1171,6 +1266,7 @@
             if (!qTouchedManually && document.activeElement !== document.getElementById('q')) {
                 document.getElementById('q').value = result.q;
             }
+            refreshSearchSummary();
         }
 
         function applyBuilderQuery(searchAfterGenerate) {
@@ -1183,6 +1279,7 @@
             document.getElementById('builderPreview').textContent = result.q;
             document.getElementById('q').value = result.q;
             qTouchedManually = false;
+            refreshSearchSummary();
             if (searchAfterGenerate) doSearch();
         }
 
@@ -1203,6 +1300,7 @@
             el.focus();
             el.setSelectionRange(start + insert.length, start + insert.length);
             qTouchedManually = true;
+            refreshSearchSummary();
         }
 
         function getForm() {
@@ -1228,7 +1326,11 @@
                 const raw = localStorage.getItem('patentConsole:lastSearch');
                 if (!raw) return;
                 const state = JSON.parse(raw);
-                if (state.q !== undefined) document.getElementById('q').value = state.q;
+                if (state.q !== undefined) {
+                    document.getElementById('q').value = state.q;
+                    qTouchedManually = true;
+                    refreshSearchSummary();
+                }
                 if (state.response) {
                     lastResponse = state.response;
                     renderResults(state.response);
@@ -1236,20 +1338,23 @@
             } catch (e) {}
         }
 
+        function setRequestPanelCollapsed(collapsed) {
+            requestCollapsed = collapsed;
+            const body = document.getElementById('requestBody');
+            const toggle = document.getElementById('requestToggle');
+            if (body) body.classList.toggle('collapsed', collapsed);
+            if (toggle) toggle.textContent = collapsed ? '▶' : '▼';
+        }
+
         function setRequestInfo(text) {
             const panel = document.getElementById('requestPanel');
-            const body = document.getElementById('requestBody');
             document.getElementById('requestInfo').textContent = text;
             panel.style.display = text ? 'block' : 'none';
-            body.classList.remove('collapsed');
-            document.getElementById('requestToggle').textContent = '▼';
+            setRequestPanelCollapsed(true);
         }
 
         function toggleRequestPanel() {
-            requestCollapsed = !requestCollapsed;
-            const body = document.getElementById('requestBody');
-            body.classList.toggle('collapsed', requestCollapsed);
-            document.getElementById('requestToggle').textContent = requestCollapsed ? '▶' : '▼';
+            setRequestPanelCollapsed(!requestCollapsed);
         }
 
         function clearResults() {
@@ -1270,6 +1375,7 @@
             if (page) {
                 form.page = page;
                 document.getElementById('page').value = page;
+                refreshSearchSummary();
             }
 
             const payload = {

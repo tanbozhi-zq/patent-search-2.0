@@ -45,6 +45,14 @@ REQUIRED_REQUEST_CONTROLS = {
     "indexAnalyzerMode",
 }
 
+REQUIRED_COLLAPSE_CONTROLS = {
+    "searchBody",
+    "searchToggle",
+    "searchSummary",
+    "requestBody",
+    "requestToggle",
+}
+
 BUILDER_CONTRACT_CASES = [
     {
         "name": "nested text and ipc with exclusion",
@@ -166,17 +174,45 @@ def _extract_console_builder_output(html: str) -> dict:
         };
 
         function makeElement(id) {
+          const classes = new Set();
+          const attributes = {};
           return {
             id,
             value: '',
             innerHTML: '',
             textContent: '',
             style: {},
+            attributes,
             selectionStart: 0,
             selectionEnd: 0,
             rows: 0,
-            classList: { add() {}, remove() {}, toggle() {} },
+            classList: {
+              add(...names) { names.forEach((name) => classes.add(name)); },
+              remove(...names) { names.forEach((name) => classes.delete(name)); },
+              toggle(name, force) {
+                if (force === undefined) {
+                  if (classes.has(name)) {
+                    classes.delete(name);
+                    return false;
+                  }
+                  classes.add(name);
+                  return true;
+                }
+                if (force) {
+                  classes.add(name);
+                  return true;
+                }
+                classes.delete(name);
+                return false;
+              },
+              contains(name) { return classes.has(name); },
+              toString() { return Array.from(classes).join(' '); },
+            },
             focus() {},
+            addEventListener() {},
+            setAttribute(name, value) {
+              attributes[name] = String(value);
+            },
             setSelectionRange(start, end) {
               this.selectionStart = start;
               this.selectionEnd = end;
@@ -225,7 +261,43 @@ def _extract_console_builder_output(html: str) -> dict:
             error: typeof result === 'object' ? result.error || null : null,
           };
         });
-        console.log(JSON.stringify({ fields: builder.fields.map((field) => field.value), outputs }));
+
+        const searchBody = context.document.getElementById('searchBody');
+        const searchToggle = context.document.getElementById('searchToggle');
+        const searchSummary = context.document.getElementById('searchSummary');
+        const initialSearchCollapsed = searchBody.classList.contains('collapsed');
+        const initialSearchToggle = searchToggle.textContent;
+        const initialSearchSummaryHidden = searchSummary.style.display === 'none';
+
+        if (typeof context.toggleSearchPanel === 'function') {
+          context.toggleSearchPanel();
+        }
+        const toggledSearchExpanded = !searchBody.classList.contains('collapsed');
+        const toggledSearchToggle = searchToggle.textContent;
+
+        if (typeof context.setRequestInfo === 'function') {
+          context.setRequestInfo('probe request');
+        }
+        const requestBody = context.document.getElementById('requestBody');
+        const requestToggle = context.document.getElementById('requestToggle');
+        const requestPanel = context.document.getElementById('requestPanel');
+        const requestCollapsedAfterInfo = requestBody.classList.contains('collapsed');
+        const requestToggleAfterInfo = requestToggle.textContent;
+
+        console.log(JSON.stringify({
+          fields: builder.fields.map((field) => field.value),
+          outputs,
+          ui: {
+            initialSearchCollapsed,
+            initialSearchToggle,
+            initialSearchSummaryHidden,
+            toggledSearchExpanded,
+            toggledSearchToggle,
+            requestPanelDisplayAfterInfo: requestPanel.style.display,
+            requestCollapsedAfterInfo,
+            requestToggleAfterInfo,
+          },
+        }));
         """
     )
     completed = subprocess.run(
@@ -250,6 +322,12 @@ def main() -> int:
     if missing_controls:
         raise AssertionError(f"console missing request controls: {missing_controls}")
 
+    missing_collapse_controls = [
+        control for control in sorted(REQUIRED_COLLAPSE_CONTROLS) if f'id="{control}"' not in html
+    ]
+    if missing_collapse_controls:
+        raise AssertionError(f"console missing collapse controls: {missing_collapse_controls}")
+
     builder_output = _extract_console_builder_output(html)
     missing_builder_fields = [
         field for field in sorted(REQUIRED_QUERY_FIELDS) if field not in set(builder_output["fields"])
@@ -268,6 +346,26 @@ def main() -> int:
                 f"expected={item['expected']!r}\nactual={actual['q']!r}"
             )
         build_search_dsl(SearchRequest(q=actual["q"]))
+
+    ui = builder_output["ui"]
+    if not ui["initialSearchCollapsed"]:
+        raise AssertionError("console search controls should be collapsed by default")
+    if ui["initialSearchToggle"] != "展开查询":
+        raise AssertionError(f"console search toggle should say 展开查询 by default, got {ui['initialSearchToggle']!r}")
+    if ui["initialSearchSummaryHidden"]:
+        raise AssertionError("console search summary should be visible while controls are collapsed")
+    if not ui["toggledSearchExpanded"]:
+        raise AssertionError("console search controls should expand after clicking the toggle")
+    if ui["toggledSearchToggle"] != "收起查询":
+        raise AssertionError(f"console search toggle should say 收起查询 after expansion, got {ui['toggledSearchToggle']!r}")
+    if ui["requestPanelDisplayAfterInfo"] != "block":
+        raise AssertionError("request panel header should appear after request info is written")
+    if not ui["requestCollapsedAfterInfo"]:
+        raise AssertionError("request info body should remain collapsed by default after request info is written")
+    if ui["requestToggleAfterInfo"] != "▶":
+        raise AssertionError(
+            f"request info toggle should show collapsed state by default, got {ui['requestToggleAfterInfo']!r}"
+        )
 
     print("console coverage checks passed")
     return 0
