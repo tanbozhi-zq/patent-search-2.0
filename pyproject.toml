@@ -1,0 +1,12 @@
+[tool.pytest.ini_options]
+norecursedirs = [
+    ".git",
+    ".tox",
+    ".nox",
+    ".venv",
+    "venv",
+    "build",
+    "dist",
+    "__pycache__",
+    "patent_harness_base_副本",
+]
