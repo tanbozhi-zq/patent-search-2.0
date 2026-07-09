@@ -32,119 +32,134 @@
             height: 100vh;
             overflow: hidden;
         }
-        .top-panel {
-            width: 100%;
-            max-height: 60vh;
+        /* 搜索区 */
+        .search-panel {
             background: var(--card-bg);
             border-bottom: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
+            padding: 16px 24px;
+            overflow-y: auto;
+            max-height: 58vh;
         }
-        .top-header {
-            padding: 12px 16px;
-            border-bottom: 1px solid var(--border);
+        .search-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 12px;
-        }
-        .top-header h1 {
-            margin: 0 0 4px;
-            font-size: 18px;
-        }
-        .top-header p {
-            margin: 0;
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-        .top-body {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px;
-        }
-        .top-body.collapsed {
-            display: none;
-        }
-        .results-panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            min-width: 0;
-            background: var(--bg);
-        }
-        .toolbar {
-            background: var(--card-bg);
-            border-bottom: 1px solid var(--border);
-            padding: 12px 16px;
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .toolbar h2 {
-            margin: 0;
-            font-size: 16px;
-            flex: 1;
-        }
-        .content {
-            flex: 1;
-            overflow: auto;
-            padding: 16px;
-        }
-        .search-layout {
-            display: block;
-            max-width: 100%;
-        }
-        .search-layout .builder-section {
-            margin-top: 0;
-        }
-        .card {
-            background: var(--card-bg);
-            border-radius: 8px;
-            border: 1px solid var(--border);
             margin-bottom: 16px;
         }
-        .card-header {
-            padding: 12px 16px;
-            border-bottom: 1px solid var(--border);
-            font-weight: 600;
+        .search-header h1 {
+            margin: 0;
+            font-size: 18px;
+            color: var(--text);
+        }
+        .search-header-actions {
             display: flex;
-            justify-content: space-between;
+            gap: 10px;
+        }
+        button {
+            padding: 8px 18px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: #fff;
+            color: var(--text);
+            font-size: 13px;
+            cursor: pointer;
+        }
+        button:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        button.primary {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #fff;
+        }
+        button.primary:hover {
+            background: var(--primary-hover);
+            border-color: var(--primary-hover);
+        }
+        button.small {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        button.icon {
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            border-radius: 50%;
+            display: inline-flex;
             align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            line-height: 1;
         }
-        .card-body {
-            padding: 16px;
+        button.icon.add {
+            border-color: var(--primary);
+            color: var(--primary);
         }
-        .form-row {
+        button.icon.add:hover {
+            background: var(--primary);
+            color: #fff;
+        }
+        button.icon.remove {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+        button.icon.remove:hover {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        .conditions-list {
             display: flex;
-            gap: 12px;
-            margin-bottom: 12px;
-            flex-wrap: wrap;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 16px;
         }
-        .form-group {
-            flex: 1;
-            min-width: 140px;
+        .condition-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px dashed #eee;
         }
-        .form-group.full {
-            flex: 100%;
-            min-width: 100%;
+        .condition-row:last-child {
+            border-bottom: none;
         }
-        .form-group.half {
-            flex: 1 1 48%;
-            min-width: 200px;
-        }
-        label {
-            display: block;
-            margin-bottom: 4px;
+        .condition-label {
+            width: 80px;
             font-size: 13px;
             color: var(--text-secondary);
-            font-weight: 500;
+            text-align: right;
+            flex-shrink: 0;
+        }
+        .condition-connector {
+            width: 70px;
+            flex-shrink: 0;
+        }
+        .condition-field {
+            width: 180px;
+            flex-shrink: 0;
+        }
+        .condition-value {
+            flex: 1;
+            min-width: 120px;
+        }
+        .condition-value-pair {
+            flex: 1;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .condition-actions {
+            width: 80px;
+            display: flex;
+            gap: 6px;
+            justify-content: flex-end;
+            flex-shrink: 0;
         }
         input, select, textarea {
             width: 100%;
-            padding: 8px 10px;
+            padding: 7px 10px;
             border: 1px solid var(--border);
             border-radius: 4px;
             font-size: 13px;
@@ -156,64 +171,90 @@
         }
         textarea {
             resize: vertical;
-            min-height: 60px;
         }
-        button {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            font-size: 13px;
-            cursor: pointer;
-            background: var(--primary);
-            color: #fff;
-        }
-        button:hover { background: var(--primary-hover); }
-        button.secondary {
-            background: #909399;
-        }
-        button.secondary:hover { background: #a6a9ad; }
-        button.small {
-            padding: 5px 10px;
+        .hint {
             font-size: 12px;
+            color: #909399;
+            margin-top: 4px;
         }
-        .summary {
-            background: #f0f9ff;
-            border-left: 4px solid var(--primary);
-            padding: 12px;
-            margin-bottom: 12px;
-            border-radius: 4px;
-            font-size: 13px;
-        }
-        .summary strong { margin-right: 16px; }
-        .record-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .record {
-            background: #fafafa;
+
+        .query-preview {
             border: 1px solid var(--border);
             border-radius: 6px;
             padding: 12px;
+            background: #fafafa;
+        }
+        .query-preview label {
+            display: block;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        .query-preview textarea {
+            background: #fff;
+            min-height: 60px;
+            margin-bottom: 8px;
+        }
+        .query-toolbar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .query-toolbar button {
+            padding: 5px 12px;
+            font-size: 12px;
+        }
+
+        /* 结果区 */
+        .results-panel {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg);
+        }
+        .results-header {
+            padding: 10px 24px;
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .results-header strong {
+            color: var(--primary);
+            font-size: 14px;
+        }
+        .results-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 24px;
+        }
+        .record {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 14px;
+            margin-bottom: 12px;
             cursor: pointer;
-            transition: border-color 0.2s;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
         .record:hover, .record.active {
             border-color: var(--primary);
-            background: #f0f9ff;
+            box-shadow: 0 2px 8px rgba(64, 158, 255, 0.1);
         }
         .record-title {
             font-weight: 600;
-            margin-bottom: 6px;
             font-size: 14px;
+            margin-bottom: 8px;
         }
         .record-meta {
             font-size: 12px;
             color: var(--text-secondary);
-            line-height: 1.7;
+            line-height: 1.8;
         }
         .record-meta span {
-            margin-right: 14px;
+            margin-right: 16px;
         }
         .record-abstract {
             margin-top: 8px;
@@ -225,7 +266,7 @@
             text-overflow: ellipsis;
         }
         .record-actions {
-            margin-top: 8px;
+            margin-top: 10px;
             display: flex;
             gap: 8px;
         }
@@ -234,28 +275,69 @@
             gap: 8px;
             align-items: center;
             justify-content: center;
-            margin-top: 16px;
+            padding: 12px;
+            background: var(--card-bg);
+            border-top: 1px solid var(--border);
         }
-        .error {
-            background: #fef0f0;
-            color: var(--danger);
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        /* 请求/错误区 */
+        .request-panel {
+            background: var(--card-bg);
+            border-top: 1px solid var(--border);
+        }
+        .request-header {
+            padding: 8px 24px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+        .request-header:hover {
+            background: #f5f7fa;
+        }
+        .request-body {
+            padding: 0 24px 16px;
+            max-height: 180px;
+            overflow: auto;
+        }
+        .request-body.collapsed {
+            display: none;
+        }
+        .request-body pre {
+            margin: 0;
+            background: #f8f8f8;
             padding: 12px;
             border-radius: 4px;
-            margin-top: 12px;
+            font-size: 11px;
+            border: 1px solid var(--border);
             white-space: pre-wrap;
-            font-size: 13px;
+            word-break: break-all;
         }
-        .loading {
-            color: var(--primary);
-            padding: 12px;
-            font-size: 13px;
+
+        /* 详情抽屉 */
+        .backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.3);
+            z-index: 99;
+            display: none;
         }
+        .backdrop.open { display: block; }
         .detail-overlay {
             position: fixed;
             top: 0;
             right: 0;
             bottom: 0;
-            width: min(680px, 100vw);
+            width: min(720px, 100vw);
             background: var(--card-bg);
             border-left: 1px solid var(--border);
             box-shadow: -4px 0 16px rgba(0,0,0,0.1);
@@ -269,7 +351,7 @@
             transform: translateX(0);
         }
         .detail-header {
-            padding: 16px;
+            padding: 14px 20px;
             border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
@@ -282,14 +364,28 @@
         .detail-body {
             flex: 1;
             overflow-y: auto;
-            padding: 16px;
+            padding: 16px 20px;
+        }
+        .detail-actions {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+        .detail-summary {
+            background: #f0f9ff;
+            border-left: 4px solid var(--primary);
+            padding: 10px 12px;
+            margin-bottom: 14px;
+            border-radius: 4px;
+            font-size: 13px;
         }
         .detail-section {
-            margin-bottom: 20px;
+            margin-bottom: 18px;
         }
         .detail-section h4 {
             margin: 0 0 8px;
-            font-size: 14px;
+            font-size: 13px;
             color: var(--text-secondary);
             border-bottom: 1px solid var(--border);
             padding-bottom: 4px;
@@ -308,39 +404,10 @@
             flex: 1;
             word-break: break-all;
         }
-        .detail-actions {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-        .backdrop {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.3);
-            z-index: 99;
-            display: none;
-        }
-        .backdrop.open { display: block; }
-        .request-info {
-            background: #f8f8f8;
-            border: 1px dashed var(--border);
-            border-radius: 4px;
-            padding: 10px;
-            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-            font-size: 12px;
-            max-height: 200px;
-            overflow: auto;
+        .detail-text {
+            font-size: 13px;
+            line-height: 1.7;
             white-space: pre-wrap;
-            word-break: break-all;
-        }
-        .badge {
-            display: inline-block;
-            padding: 1px 6px;
-            border-radius: 3px;
-            font-size: 11px;
-            margin-left: 6px;
-            background: #e4e7ed;
-            color: var(--text-secondary);
         }
         .tabs {
             display: flex;
@@ -368,266 +435,100 @@
             font-size: 12px;
             border: 1px solid var(--border);
         }
-        .builder-section {
-            border: 1px solid var(--border);
-            border-radius: 6px;
+        .error {
+            background: #fef0f0;
+            color: var(--danger);
             padding: 12px;
-            margin-top: 12px;
-            background: #fafafa;
-        }
-        .builder-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 8px;
-        }
-        .builder-header h4 {
-            margin: 0;
-            font-size: 14px;
-        }
-        .builder-body.collapsed {
-            display: none;
-        }
-        .builder-toolbar {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin: 10px 0;
-        }
-        .builder-group {
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--primary);
-            border-radius: 6px;
-            padding: 10px;
-            margin: 8px 0;
-            background: var(--card-bg);
-        }
-        .builder-group-level-1 { margin-left: 12px; border-left-color: var(--success); }
-        .builder-group-level-2 { margin-left: 24px; border-left-color: var(--warning); }
-        .builder-group-level-3 { margin-left: 36px; border-left-color: var(--danger); }
-        .builder-group-head {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            flex-wrap: wrap;
-            margin-bottom: 8px;
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-        .builder-group-actions {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-            margin-top: 8px;
-        }
-        .builder-row {
-            display: grid;
-            grid-template-columns: 100px 160px 90px 1fr 70px;
-            gap: 10px;
-            align-items: start;
-            padding: 10px;
-            margin-bottom: 10px;
-            background: #fafafa;
-            border: 1px solid #eee;
             border-radius: 4px;
             font-size: 13px;
-        }
-        .builder-row.group-node {
-            grid-template-columns: 100px 1fr 70px;
-            background: #f0f9ff;
-        }
-        .builder-row input, .builder-row select, .builder-row textarea {
-            font-size: 12px;
-            padding: 5px 6px;
-        }
-        .builder-row textarea {
-            min-height: 48px;
-            resize: vertical;
-        }
-        .builder-value-pair {
-            display: flex;
-            gap: 6px;
-        }
-        .builder-preview {
-            background: #f8f8f8;
-            padding: 8px;
-            border-radius: 4px;
-            border: 1px dashed var(--border);
-            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-            font-size: 12px;
             white-space: pre-wrap;
-            word-break: break-all;
-            margin: 8px 0;
         }
+        .loading {
+            color: var(--primary);
+            padding: 12px;
+            font-size: 13px;
+        }
+
         @media (max-width: 900px) {
-            .detail-overlay {
-                width: 100vw;
-            }
+            .condition-label { display: none; }
+            .condition-row { flex-wrap: wrap; }
+            .condition-connector { width: 80px; }
+            .condition-field { width: 140px; }
+            .condition-value { min-width: 100%; }
+            .detail-overlay { width: 100vw; }
+            .search-panel { padding: 12px; }
+            .results-list { padding: 12px; }
         }
     </style>
 </head>
 <body>
     <div class="app">
-        <div class="top-panel">
-            <div class="top-header">
-                <div>
-                    <h1>专利检索内部控制台</h1>
-                    <p>专利部专用 · 服务器 IP 直接访问</p>
+        <div class="search-panel">
+            <div class="search-header">
+                <h1>高级检索</h1>
+                <div class="search-header-actions">
+                    <button onclick="clearAllConditions()">清空</button>
+                    <button class="primary" onclick="doSearch()">检索</button>
                 </div>
-                <button class="secondary small" onclick="toggleTopPanel()">收起搜索区</button>
             </div>
-            <div class="top-body" id="topBody">
-                <div class="search-layout">
-                    <div class="card search-card">
-                        <div class="card-header">检索参数</div>
-                        <div class="card-body">
-                            <div class="form-row">
-                                <div class="form-group full">
-                                    <label for="q">查询式 q</label>
-                                    <textarea id="q" rows="2" placeholder="例如：阀门 或 ipc:H02M AND tscd:(均衡)">阀门</textarea>
-                                </div>
-                            </div>
-                            <div class="builder-section">
-                                <div class="builder-header">
-                                    <h4>布尔式快捷构建器</h4>
-                                    <button id="builderCollapseButton" class="secondary small" onclick="toggleBuilderCollapsed()">收起构建器</button>
-                                </div>
-                                <div class="hint">通过分组构建多层括号查询，自动生成复杂检索式。</div>
-                                <div class="builder-preview" id="builderPreview">尚未生成</div>
-                                <div id="builderError"></div>
-                                <div id="builderBody" class="builder-body">
-                                    <div class="builder-toolbar">
-                                        <button class="small secondary" onclick="applyBuilderTemplate('ipcClaims')">IPC + 权利要求</button>
-                                        <button class="small secondary" onclick="applyBuilderTemplate('titleOrAb')">标题 OR 摘要</button>
-                                        <button class="small secondary" onclick="applyBuilderTemplate('nestedTech')">文本 + IPC 分组</button>
-                                        <button class="small secondary" onclick="applyBuilderTemplate('nestedExclude')">多组 AND NOT</button>
-                                        <button class="small secondary" onclick="applyBuilderTemplate('dateKeyword')">申请日 + 关键词</button>
-                                    </div>
-                                    <div id="queryBuilderRows"></div>
-                                    <div class="builder-group-actions">
-                                        <button class="small" onclick="addBuilderCondition('root')">添加条件</button>
-                                        <button class="small" onclick="addBuilderGroup('root')">添加子分组</button>
-                                        <button class="small secondary" onclick="generateBuilderQuery()">生成 q</button>
-                                        <button class="small secondary" onclick="generateBuilderQuery(true)">生成并搜索</button>
-                                        <button class="small secondary" onclick="clearBuilder()">清空</button>
-                                    </div>
-                                    <div class="hint">文本字段“OR 词组”模式：每行一个词，生成 <code>claims:("均衡" OR "平衡")</code>。</div>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="ds">数据范围 ds</label>
-                                    <select id="ds">
-                                        <option value="cn" selected>cn（中国）</option>
-                                        <option value="all">all（全球）</option>
-                                        <option value="us">us（美国）</option>
-                                        <option value="jp">jp（日本）</option>
-                                        <option value="de">de（德国）</option>
-                                        <option value="ep">ep（欧洲专利局）</option>
-                                        <option value="wo">wo（WIPO）</option>
-                                        <option value="kr">kr（韩国）</option>
-                                        <option value="gb">gb（英国）</option>
-                                        <option value="fr">fr（法国）</option>
-                                        <option value="ca">ca（加拿大）</option>
-                                        <option value="au">au（澳大利亚）</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="sort">排序 sort</label>
-                                    <select id="sort">
-                                        <option value="relation" selected>relation</option>
-                                        <option value="!applicationDate">!applicationDate</option>
-                                        <option value="applicationDate">applicationDate</option>
-                                        <option value="!documentDate">!documentDate</option>
-                                        <option value="documentDate">documentDate</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="page">页码</label>
-                                    <input type="number" id="page" value="1" min="1">
-                                </div>
-                                <div class="form-group">
-                                    <label for="pageSize">每页条数</label>
-                                    <input type="number" id="pageSize" value="10" min="1" max="100">
-                                </div>
-                                <div class="form-group">
-                                    <label for="highlight">高亮</label>
-                                    <select id="highlight">
-                                        <option value="0" selected>0</option>
-                                        <option value="1">1</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="indexAnalyzerMode">分析模式</label>
-                                    <select id="indexAnalyzerMode">
-                                        <option value="compat" selected>compat</option>
-                                        <option value="normal">normal</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <button onclick="doSearch()">搜索</button>
-                                <button class="secondary" onclick="copyQuery()">复制检索式</button>
-                                <button class="secondary" onclick="resetForm()">重置</button>
-                            </div>
-                        </div>
-                    </div>
+
+            <div class="conditions-list" id="conditionsList"></div>
+
+            <div class="query-preview">
+                <label>检索式预览（可直接编辑）</label>
+                <textarea id="q" rows="2" placeholder="例如：阀门 或 ipc:H02M AND tscd:(均衡)"></textarea>
+                <div class="query-toolbar">
+                    <button onclick="insertOp('AND')">AND</button>
+                    <button onclick="insertOp('OR')">OR</button>
+                    <button onclick="insertOp('NOT')">NOT</button>
+                    <button onclick="insertOp('(')">(</button>
+                    <button onclick="insertOp(')')">)</button>
+                    <button onclick="copyQuery()">复制检索式</button>
                 </div>
             </div>
         </div>
 
-        <main class="results-panel">
-            <div class="toolbar">
-                <h2>搜索结果</h2>
-                <button class="secondary small" onclick="toggleRequestInfo()">请求/错误信息</button>
+        <div class="results-panel">
+            <div class="results-header">
+                <span>当前检索共 <strong id="resultCount">0</strong> 件</span>
             </div>
-            <div class="content">
-                <div id="status"></div>
-                <div id="requestInfoCard" class="card" style="display: none;">
-                    <div class="card-header">请求 / 错误信息</div>
-                    <div class="card-body">
-                        <div id="requestInfo" class="request-info">暂无请求</div>
-                    </div>
-                </div>
-                <div id="resultCard" class="card" style="display: none;">
-                    <div class="card-header">
-                        <span>结果列表</span>
-                        <span id="resultCount" class="badge">0</span>
-                    </div>
-                    <div class="card-body">
-                        <div id="summary"></div>
-                        <div id="records" class="record-list"></div>
-                        <div id="pagination" class="pagination"></div>
-                    </div>
-                </div>
+            <div class="results-list" id="records"></div>
+            <div class="pagination" id="pagination"></div>
+        </div>
+
+        <div class="request-panel" id="requestPanel" style="display: none;">
+            <div class="request-header" onclick="toggleRequestPanel()">
+                <span>请求 / 错误信息</span>
+                <span id="requestToggle">▼</span>
             </div>
-        </main>
+            <div class="request-body" id="requestBody">
+                <pre id="requestInfo">暂无请求</pre>
+            </div>
+        </div>
     </div>
 
     <div id="backdrop" class="backdrop" onclick="closeDetail()"></div>
     <div id="detailOverlay" class="detail-overlay">
         <div class="detail-header">
             <h3>专利详情</h3>
-            <button class="secondary small" onclick="closeDetail()">关闭</button>
+            <button onclick="closeDetail()">关闭</button>
         </div>
         <div class="detail-body">
             <div id="detailStatus"></div>
             <div id="detailContent" style="display: none;">
                 <div class="detail-actions">
                     <button class="small" onclick="copyPatentId()">复制专利 ID</button>
+                    <button class="small primary" onclick="loadFullDetail()">查看完整信息（含说明书）</button>
                     <button class="small" onclick="loadCitations()">引证信息</button>
                     <button class="small" onclick="loadLegalHistory()">法律历史</button>
-                    <button class="small secondary" onclick="toggleRawDetail()">原始 JSON</button>
+                    <button class="small" onclick="switchTab('detailRaw')">原始 JSON</button>
                 </div>
                 <div id="detailSummary"></div>
                 <div class="tabs">
-                    <div class="tab active" onclick="switchTab('detailMain')">主要信息</div>
-                    <div class="tab" onclick="switchTab('detailClaims')">权利要求</div>
-                    <div class="tab" onclick="switchTab('detailExtra')">引证 / 法律历史</div>
-                    <div class="tab" onclick="switchTab('detailRaw')">原始响应</div>
+                    <div class="tab active" data-tab="detailMain" onclick="switchTab('detailMain')">主要信息</div>
+                    <div class="tab" data-tab="detailClaims" onclick="switchTab('detailClaims')">权利要求</div>
+                    <div class="tab" data-tab="detailExtra" onclick="switchTab('detailExtra')">引证 / 法律历史</div>
+                    <div class="tab" data-tab="detailRaw" onclick="switchTab('detailRaw')">原始响应</div>
                 </div>
                 <div id="detailMain" class="tab-content active"></div>
                 <div id="detailClaims" class="tab-content"></div>
@@ -639,109 +540,358 @@
 
     <script>
         const API_BASE = '/console-api';
+        let conditions = [];
+        let nextConditionId = 1;
         let lastResponse = null;
         let currentDetailId = null;
         let currentDetailData = null;
         let currentExtraData = null;
+        let requestCollapsed = false;
 
-        const BUILDER_FIELDS = [
-            { value: 'keyword', label: '普通关键词', type: 'text' },
-            { value: 'title', label: '标题 title', type: 'text' },
-            { value: 'ab', label: '摘要 ab', type: 'text' },
-            { value: 'tscd', label: '全文 tscd', type: 'text' },
-            { value: 'mainClaim', label: '首权 mainClaim', type: 'text' },
-            { value: 'claims', label: '权利要求 claims', type: 'text' },
-            { value: 'description', label: '说明书 description', type: 'text' },
-            { value: 'ipc', label: 'IPC ipc', type: 'plain', placeholder: '例如 H02M' },
-            { value: 'mainIpc', label: '主 IPC mainIpc', type: 'plain', placeholder: '例如 H02M' },
-            { value: 'applicant', label: '申请人 applicant', type: 'text' },
-            { value: 'currentAssignee', label: '当前权利人 currentAssignee', type: 'text' },
-            { value: 'applicationNumber', label: '申请号 applicationNumber', type: 'plain', placeholder: 'CN202411108082.1' },
-            { value: 'documentNumber', label: '公开号 documentNumber', type: 'plain', placeholder: 'CN119188170B' },
-            { value: 'publicationNumber', label: '公开号 publicationNumber', type: 'plain', placeholder: 'CN119188170B' },
-            { value: 'patentId', label: '专利 ID patentId', type: 'plain', placeholder: 'cn-xxx' },
-            { value: 'legalStatus', label: '法律状态 legalStatus', type: 'enum', options: ['有效专利', '在审', '失效'] },
-            { value: 'type', label: '专利类型 type', type: 'enum', options: ['发明专利', '实用新型', '外观设计'] },
-            { value: 'ad', label: '申请日 ad', type: 'dateRange' },
-            { value: 'documentYear', label: '公开年 documentYear', type: 'yearRange' }
+        const CATEGORIES = [
+            { key: 'keyword', label: '技术关键词', fields: [
+                { value: 'tscd', label: '名称/摘要/权利要求' },
+                { value: 'title', label: '名称/标题' },
+                { value: 'ab', label: '摘要' },
+                { value: 'mainClaim', label: '首权' },
+                { value: 'claims', label: '权利要求' },
+                { value: 'description', label: '说明书' },
+                { value: 'keyword', label: '普通关键词' }
+            ]},
+            { key: 'classification', label: '分类号', fields: [
+                { value: 'ipc', label: 'IPC分类号' },
+                { value: 'mainIpc', label: '主IPC分类号' }
+            ]},
+            { key: 'party', label: '相关人', fields: [
+                { value: 'applicant', label: '申请人' },
+                { value: 'currentAssignee', label: '当前权利人' }
+            ]},
+            { key: 'number', label: '号码', fields: [
+                { value: 'applicationNumber', label: '申请号' },
+                { value: 'documentNumber', label: '公开(公告)号' },
+                { value: 'publicationNumber', label: '公开号' },
+                { value: 'patentId', label: '专利ID' }
+            ]},
+            { key: 'date', label: '日期', fields: [
+                { value: 'ad', label: '申请日', type: 'dateRange' },
+                { value: 'documentYear', label: '公开年', type: 'yearRange' }
+            ]},
+            { key: 'status', label: '法律状态', fields: [
+                { value: 'legalStatus', label: '专利状态', type: 'enum', options: ['有效专利', '在审', '失效'] }
+            ]},
+            { key: 'type', label: '类型', fields: [
+                { value: 'type', label: '专利类型', type: 'enum', options: ['发明专利', '实用新型', '外观设计'] }
+            ]}
         ];
 
-        let builderNodeId = 1;
-        let builderCollapsed = false;
-        let builderRoot = createBuilderGroup('root', 'AND');
+        const DS_OPTIONS = [
+            { value: 'cn', label: '中国' },
+            { value: 'all', label: '全球' },
+            { value: 'us', label: '美国' },
+            { value: 'jp', label: '日本' },
+            { value: 'de', label: '德国' },
+            { value: 'ep', label: '欧洲专利局' },
+            { value: 'wo', label: 'WIPO' },
+            { value: 'kr', label: '韩国' },
+            { value: 'gb', label: '英国' },
+            { value: 'fr', label: '法国' },
+            { value: 'ca', label: '加拿大' },
+            { value: 'au', label: '澳大利亚' }
+        ];
+
+        function getCategory(key) {
+            return CATEGORIES.find(c => c.key === key) || CATEGORIES[0];
+        }
+
+        function getFieldDef(categoryKey, fieldValue) {
+            const cat = getCategory(categoryKey);
+            return cat.fields.find(f => f.value === fieldValue) || cat.fields[0];
+        }
+
+        function createCondition(categoryKey, fieldValue) {
+            const cat = getCategory(categoryKey);
+            const field = fieldValue ? cat.fields.find(f => f.value === fieldValue) || cat.fields[0] : cat.fields[0];
+            return {
+                id: `cond-${nextConditionId++}`,
+                connector: conditions.length === 0 ? 'and' : 'and',
+                category: cat.key,
+                field: field.value,
+                value: '',
+                start: '',
+                end: ''
+            };
+        }
+
+        function init() {
+            conditions = [createCondition('keyword', 'tscd')];
+            renderConditions();
+            updateQueryPreview();
+            loadState();
+        }
+
+        function renderConditions() {
+            const container = document.getElementById('conditionsList');
+            container.innerHTML = conditions.map((cond, index) => renderConditionRow(cond, index)).join('');
+        }
+
+        function renderConditionRow(cond, index) {
+            const cat = getCategory(cond.category);
+            const field = getFieldDef(cond.category, cond.field);
+            return `
+                <div class="condition-row" data-id="${cond.id}">
+                    <div class="condition-label">${cat.label}</div>
+                    <div class="condition-connector">
+                        <select onchange="updateCondition('${cond.id}', 'connector', this.value)">
+                            ${renderOptions(['and', 'or', 'not'], cond.connector, v => ({ value: v, label: v }))}
+                        </select>
+                    </div>
+                    <div class="condition-field">
+                        <select onchange="changeConditionField('${cond.id}', this.value)">
+                            ${cat.fields.map(f => `<option value="${escapeHtml(f.value)}" ${f.value === cond.field ? 'selected' : ''}>${escapeHtml(f.label)}</option>`).join('')}
+                        </select>
+                    </div>
+                    ${renderConditionValue(cond, field)}
+                    <div class="condition-actions">
+                        <button class="icon add" title="添加同类型条件" onclick="addCondition('${cond.category}', '${cond.field}')">+</button>
+                        ${conditions.length > 1 ? `<button class="icon remove" title="删除" onclick="removeCondition('${cond.id}')">×</button>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderConditionValue(cond, field) {
+            if (field.type === 'dateRange') {
+                return `
+                    <div class="condition-value-pair">
+                        <input type="date" placeholder="开始" value="${escapeHtml(cond.start || '')}" onchange="updateCondition('${cond.id}', 'start', this.value)">
+                        <span>-</span>
+                        <input type="date" placeholder="结束" value="${escapeHtml(cond.end || '')}" onchange="updateCondition('${cond.id}', 'end', this.value)">
+                    </div>
+                `;
+            }
+            if (field.type === 'yearRange') {
+                return `
+                    <div class="condition-value-pair">
+                        <input type="number" min="1900" max="2100" placeholder="开始年" value="${escapeHtml(cond.start || '')}" onchange="updateCondition('${cond.id}', 'start', this.value)">
+                        <span>-</span>
+                        <input type="number" min="1900" max="2100" placeholder="结束年" value="${escapeHtml(cond.end || '')}" onchange="updateCondition('${cond.id}', 'end', this.value)">
+                    </div>
+                `;
+            }
+            if (field.type === 'enum') {
+                return `
+                    <div class="condition-value">
+                        <select onchange="updateCondition('${cond.id}', 'value', this.value)">
+                            ${field.options.map(opt => `<option value="${escapeHtml(opt)}" ${opt === cond.value ? 'selected' : ''}>${escapeHtml(opt)}</option>`).join('')}
+                        </select>
+                    </div>
+                `;
+            }
+            const placeholder = field.value === 'ipc' ? '例如：H02M' :
+                field.value === 'mainIpc' ? '例如：H02M' :
+                field.value === 'applicationNumber' ? 'CN202411108082.1' :
+                field.value === 'documentNumber' ? 'CN119188170B' :
+                field.value === 'publicationNumber' ? 'CN119188170B' :
+                field.value === 'patentId' ? 'cn-xxx' :
+                field.value === 'keyword' ? '无人机 AND 航拍' : '例如：格力';
+            return `
+                <div class="condition-value">
+                    <input type="text" value="${escapeHtml(cond.value || '')}" placeholder="${escapeHtml(placeholder)}" oninput="updateCondition('${cond.id}', 'value', this.value)">
+                </div>
+            `;
+        }
+
+        function renderOptions(values, selected, mapper) {
+            return values.map(v => {
+                const item = mapper(v);
+                return `<option value="${escapeHtml(item.value)}" ${item.value === selected ? 'selected' : ''}>${escapeHtml(item.label)}</option>`;
+            }).join('');
+        }
+
+        function addCondition(categoryKey, fieldValue) {
+            conditions.push(createCondition(categoryKey, fieldValue));
+            renderConditions();
+            updateQueryPreview();
+        }
+
+        function removeCondition(id) {
+            if (conditions.length <= 1) return;
+            conditions = conditions.filter(c => c.id !== id);
+            renderConditions();
+            updateQueryPreview();
+        }
+
+        function changeConditionField(id, fieldValue) {
+            const cond = conditions.find(c => c.id === id);
+            if (!cond) return;
+            cond.field = fieldValue;
+            cond.value = '';
+            cond.start = '';
+            cond.end = '';
+            renderConditions();
+            updateQueryPreview();
+        }
+
+        function updateCondition(id, key, value) {
+            const cond = conditions.find(c => c.id === id);
+            if (!cond) return;
+            cond[key] = value;
+            updateQueryPreview();
+        }
+
+        function clearAllConditions() {
+            conditions = [createCondition('keyword', 'tscd')];
+            conditions[0].value = '';
+            document.getElementById('q').value = '';
+            renderConditions();
+            updateQueryPreview();
+            clearResults();
+        }
+
+        function buildQueryClause(cond) {
+            const field = getFieldDef(cond.category, cond.field);
+            if (field.type === 'dateRange') {
+                if (!cond.start || !cond.end) return { error: `${field.label}起止日期都必须填写` };
+                return { q: `${cond.field}:[${cond.start} TO ${cond.end}]` };
+            }
+            if (field.type === 'yearRange') {
+                if (!/^\d{4}$/.test(cond.start || '') || !/^\d{4}$/.test(cond.end || '')) {
+                    return { error: `${field.label}必须是4位年份` };
+                }
+                return { q: `${cond.field}:[${cond.start} TO ${cond.end}]` };
+            }
+            if (field.type === 'enum') {
+                const value = (cond.value || '').trim();
+                if (!value) return { error: `${field.label}不能为空` };
+                return { q: `${cond.field}:(${formatTerm(value)})` };
+            }
+            const value = (cond.value || '').trim();
+            if (!value) return { error: `${field.label}不能为空` };
+            if (cond.field === 'keyword') {
+                return { q: value };
+            }
+            return { q: `${cond.field}:(${formatTerm(value)})` };
+        }
+
+        function formatTerm(value) {
+            const escaped = escapeQuery(value);
+            if (/\s/.test(escaped) && !/^".*"$/.test(escaped)) {
+                return `"${escaped}"`;
+            }
+            return escaped;
+        }
+
+        function escapeQuery(value) {
+            return value.replace(/"/g, '\\"');
+        }
+
+        function updateQueryPreview() {
+            const manual = document.getElementById('q');
+            if (document.activeElement === manual) return;
+            const result = buildFullQuery();
+            if (!result.error) {
+                manual.value = result.q;
+            }
+        }
+
+        function buildFullQuery() {
+            const parts = [];
+            for (let i = 0; i < conditions.length; i++) {
+                const cond = conditions[i];
+                const built = buildQueryClause(cond);
+                if (built.error) return built;
+                if (i === 0) {
+                    parts.push(built.q);
+                } else {
+                    const op = cond.connector === 'not' ? 'AND NOT' : cond.connector.toUpperCase();
+                    parts.push(`${op} ${built.q}`);
+                }
+            }
+            return { q: parts.join(' ') };
+        }
+
+        function insertOp(op) {
+            const el = document.getElementById('q');
+            const start = el.selectionStart;
+            const end = el.selectionEnd;
+            const value = el.value;
+            const before = value.substring(0, start);
+            const after = value.substring(end);
+            const insert = op.length === 1 ? op : ` ${op} `;
+            el.value = before + insert + after;
+            el.focus();
+            el.setSelectionRange(start + insert.length, start + insert.length);
+        }
 
         function getForm() {
             return {
                 q: document.getElementById('q').value.trim(),
-                ds: document.getElementById('ds').value,
-                sort: document.getElementById('sort').value,
-                page: parseInt(document.getElementById('page').value, 10) || 1,
-                page_size: parseInt(document.getElementById('pageSize').value, 10) || 10,
-                highlight: parseInt(document.getElementById('highlight').value, 10) || 0,
-                index_analyzer_mode: document.getElementById('indexAnalyzerMode').value,
+                ds: 'cn',
+                sort: 'relation',
+                page: 1,
+                page_size: 10,
+                highlight: 0,
+                index_analyzer_mode: 'compat'
             };
-        }
-
-        function setForm(values) {
-            if (values.q !== undefined) document.getElementById('q').value = values.q;
-            if (values.ds !== undefined) document.getElementById('ds').value = values.ds;
-            if (values.sort !== undefined) document.getElementById('sort').value = values.sort;
-            if (values.page !== undefined) document.getElementById('page').value = values.page;
-            if (values.page_size !== undefined) document.getElementById('pageSize').value = values.page_size;
-            if (values.highlight !== undefined) document.getElementById('highlight').value = values.highlight;
-            if (values.index_analyzer_mode !== undefined) document.getElementById('indexAnalyzerMode').value = values.index_analyzer_mode;
         }
 
         function saveState() {
             try {
-                localStorage.setItem('patentConsole:lastSearch', JSON.stringify({ form: getForm(), response: lastResponse }));
+                localStorage.setItem('patentConsole:lastSearch', JSON.stringify({ q: document.getElementById('q').value, response: lastResponse }));
             } catch (e) {}
         }
 
         function loadState() {
             try {
                 const raw = localStorage.getItem('patentConsole:lastSearch');
-                if (!raw) return null;
-                return JSON.parse(raw);
-            } catch (e) {
-                return null;
-            }
+                if (!raw) return;
+                const state = JSON.parse(raw);
+                if (state.q !== undefined) document.getElementById('q').value = state.q;
+                if (state.response) {
+                    lastResponse = state.response;
+                    renderResults(state.response);
+                }
+            } catch (e) {}
         }
 
         function setRequestInfo(text) {
-            const el = document.getElementById('requestInfo');
-            el.textContent = text;
-            document.getElementById('requestInfoCard').style.display = text ? 'block' : 'none';
+            const panel = document.getElementById('requestPanel');
+            const body = document.getElementById('requestBody');
+            document.getElementById('requestInfo').textContent = text;
+            panel.style.display = text ? 'block' : 'none';
+            body.classList.remove('collapsed');
+            document.getElementById('requestToggle').textContent = '▼';
         }
 
-        function toggleRequestInfo() {
-            const card = document.getElementById('requestInfoCard');
-            card.style.display = card.style.display === 'none' ? 'block' : 'none';
+        function toggleRequestPanel() {
+            requestCollapsed = !requestCollapsed;
+            const body = document.getElementById('requestBody');
+            body.classList.toggle('collapsed', requestCollapsed);
+            document.getElementById('requestToggle').textContent = requestCollapsed ? '▶' : '▼';
         }
 
-        function setStatus(html) {
-            document.getElementById('status').innerHTML = html;
+        function clearResults() {
+            document.getElementById('resultCount').textContent = '0';
+            document.getElementById('records').innerHTML = '';
+            document.getElementById('pagination').innerHTML = '';
+            lastResponse = null;
         }
 
-        async function doSearch() {
-            const form = getForm();
-            if (!form.q) {
-                setStatus('<div class="error">查询式 q 不能为空</div>');
+        async function doSearch(page) {
+            const q = document.getElementById('q').value.trim();
+            if (!q) {
+                setRequestInfo('查询式 q 不能为空');
                 return;
             }
 
-            setStatus('<div class="loading">查询中...</div>');
-            document.getElementById('resultCard').style.display = 'none';
-            setRequestInfo('');
-
             const payload = {
-                q: form.q,
-                ds: form.ds,
-                sort: form.sort,
-                page: form.page,
-                page_size: form.page_size,
-                highlight: form.highlight,
-                index_analyzer_mode: form.index_analyzer_mode,
+                q,
+                ds: 'cn',
+                sort: 'relation',
+                page: page || 1,
+                page_size: 10,
+                highlight: 0,
+                index_analyzer_mode: 'compat'
             };
 
             try {
@@ -749,15 +899,14 @@
                 const response = await fetch(`${API_BASE}/search`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload),
+                    body: JSON.stringify(payload)
                 });
                 const data = await response.json();
                 const elapsed = (performance.now() - started).toFixed(0);
 
                 if (!response.ok) {
                     const message = data.detail || data.message || JSON.stringify(data);
-                    setStatus(`<div class="error">HTTP ${response.status}\n${typeof message === 'object' ? JSON.stringify(message, null, 2) : message}</div>`);
-                    setRequestInfo(`POST ${API_BASE}/search\n${JSON.stringify(payload, null, 2)}\n\nHTTP ${response.status} (${elapsed}ms)\n${JSON.stringify(data, null, 2)}`);
+                    setRequestInfo(`POST ${API_BASE}/search\n${JSON.stringify(payload, null, 2)}\n\nHTTP ${response.status} (${elapsed}ms)\n${typeof message === 'object' ? JSON.stringify(message, null, 2) : message}`);
                     return;
                 }
 
@@ -766,57 +915,40 @@
                 renderResults(data);
                 setRequestInfo(`POST ${API_BASE}/search\n${JSON.stringify(payload, null, 2)}\n\nHTTP ${response.status} (${elapsed}ms)\n${JSON.stringify(data, null, 2).slice(0, 4000)}`);
             } catch (err) {
-                setStatus(`<div class="error">请求失败：${err.message}</div>`);
                 setRequestInfo(`POST ${API_BASE}/search\n${JSON.stringify(payload, null, 2)}\n\nError: ${err.message}`);
             }
         }
 
         function renderResults(data) {
-            const resultCard = document.getElementById('resultCard');
-            resultCard.style.display = 'block';
             document.getElementById('resultCount').textContent = data.total || 0;
-
-            document.getElementById('summary').innerHTML = `
-                <div class="summary">
-                    命中总数：<strong>${data.total || 0}</strong>
-                    当前页：<strong>${data.page || 1}</strong>
-                    每页条数：<strong>${data.page_size || 0}</strong>
-                    当前返回：<strong>${data.records ? data.records.length : 0}</strong>
-                    ${data.took_ms !== undefined ? `耗时：<strong>${data.took_ms}ms</strong>` : ''}
-                </div>
-            `;
-
             const recordsEl = document.getElementById('records');
             if (!data.records || data.records.length === 0) {
-                recordsEl.innerHTML = '<p>暂无结果</p>';
-            } else {
-                recordsEl.innerHTML = data.records.map((record, index) => `
-                    <div class="record" data-id="${escapeHtml(record.patent_id || '')}" onclick="openDetail('${escapeHtml(record.patent_id || '')}')">
-                        <div class="record-title">${(data.page - 1) * data.page_size + index + 1}. ${escapeHtml(record.title || '(无标题)')}</div>
-                        <div class="record-meta">
-                            <span>专利ID: ${escapeHtml(record.patent_id || '')}</span>
-                            <span>申请号: ${escapeHtml(record.applicationNumber || '')}</span>
-                            <span>公开号: ${escapeHtml(record.documentNumber || '')}</span>
-                        </div>
-                        <div class="record-meta">
-                            <span>申请人: ${escapeHtml(record.applicant || '')}</span>
-                            <span>当前权利人: ${escapeHtml(record.currentAssignee || '')}</span>
-                            <span>主IPC: ${escapeHtml(record.mainIpc || '')}</span>
-                        </div>
-                        <div class="record-meta">
-                            <span>申请日: ${escapeHtml(record.applicationDate || '')}</span>
-                            <span>公开日: ${escapeHtml(record.documentDate || '')}</span>
-                            <span>法律状态: ${escapeHtml(record.legalStatus || '')}</span>
-                            <span>类型: ${escapeHtml(record.type || '')}</span>
-                        </div>
-                        <div class="record-abstract">${escapeHtml(record.abstract || '')}</div>
-                        <div class="record-actions" onclick="event.stopPropagation()">
-                            <button class="small" onclick="copyText('${escapeHtml(record.patent_id || '')}')">复制 ID</button>
-                            <button class="small" onclick="openDetail('${escapeHtml(record.patent_id || '')}')">查看详情</button>
-                        </div>
-                    </div>
-                `).join('');
+                recordsEl.innerHTML = '<div class="empty-state">暂无结果</div>';
+                document.getElementById('pagination').innerHTML = '';
+                return;
             }
+
+            recordsEl.innerHTML = data.records.map((record, index) => `
+                <div class="record" onclick="openDetail('${escapeHtml(record.patent_id || '')}')">
+                    <div class="record-title">${(data.page - 1) * data.page_size + index + 1}. ${escapeHtml(record.title || '(无标题)')}</div>
+                    <div class="record-meta">
+                        <span>专利ID: ${escapeHtml(record.patent_id || '')}</span>
+                        <span>申请号: ${escapeHtml(record.applicationNumber || '')}</span>
+                        <span>公开号: ${escapeHtml(record.documentNumber || '')}</span>
+                    </div>
+                    <div class="record-meta">
+                        <span>申请人: ${escapeHtml(record.applicant || '')}</span>
+                        <span>主IPC: ${escapeHtml(record.mainIpc || '')}</span>
+                        <span>申请日: ${escapeHtml(record.applicationDate || '')}</span>
+                        <span>法律状态: ${escapeHtml(record.legalStatus || '')}</span>
+                    </div>
+                    <div class="record-abstract">${escapeHtml(record.abstract || '')}</div>
+                    <div class="record-actions" onclick="event.stopPropagation()">
+                        <button class="small" onclick="copyText('${escapeHtml(record.patent_id || '')}')">复制 ID</button>
+                        <button class="small primary" onclick="openDetail('${escapeHtml(record.patent_id || '')}')">查看详情</button>
+                    </div>
+                </div>
+            `).join('');
 
             renderPagination(data);
         }
@@ -829,30 +961,11 @@
                 el.innerHTML = '';
                 return;
             }
-
             let html = '';
-            if (page > 1) html += `<button class="secondary small" onclick="goPage(${page - 1})">上一页</button>`;
+            if (page > 1) html += `<button onclick="doSearch(${page - 1})">上一页</button>`;
             html += `<span>第 ${page} / ${totalPages} 页</span>`;
-            if (page < totalPages) html += `<button class="secondary small" onclick="goPage(${page + 1})">下一页</button>`;
+            if (page < totalPages) html += `<button onclick="doSearch(${page + 1})">下一页</button>`;
             el.innerHTML = html;
-        }
-
-        function goPage(p) {
-            document.getElementById('page').value = p;
-            doSearch();
-        }
-
-        function resetForm() {
-            document.getElementById('q').value = '';
-            document.getElementById('ds').value = 'cn';
-            document.getElementById('sort').value = 'relation';
-            document.getElementById('page').value = 1;
-            document.getElementById('pageSize').value = 10;
-            document.getElementById('highlight').value = 0;
-            document.getElementById('indexAnalyzerMode').value = 'compat';
-            document.getElementById('resultCard').style.display = 'none';
-            setStatus('');
-            setRequestInfo('');
         }
 
         function copyQuery() {
@@ -866,8 +979,7 @@
         function copyText(text) {
             if (!text) return;
             navigator.clipboard.writeText(text).then(() => {
-                setStatus('<div class="summary">已复制到剪贴板</div>');
-                setTimeout(() => setStatus(''), 1500);
+                alert('已复制到剪贴板');
             });
         }
 
@@ -883,8 +995,18 @@
             document.getElementById('detailStatus').innerHTML = '<div class="loading">加载详情中...</div>';
             switchTab('detailMain');
 
+            await fetchDetail(patentId, false);
+        }
+
+        async function loadFullDetail() {
+            if (!currentDetailId) return;
+            document.getElementById('detailStatus').innerHTML = '<div class="loading">加载完整信息（含说明书）...</div>';
+            await fetchDetail(currentDetailId, true);
+        }
+
+        async function fetchDetail(patentId, includeDescription) {
             try {
-                const response = await fetch(`${API_BASE}/detail/${encodeURIComponent(patentId)}`);
+                const response = await fetch(`${API_BASE}/detail/${encodeURIComponent(patentId)}?include_description=${includeDescription}`);
                 const data = await response.json();
                 if (!response.ok) {
                     document.getElementById('detailStatus').innerHTML = `<div class="error">HTTP ${response.status}\n${data.message || JSON.stringify(data)}</div>`;
@@ -907,16 +1029,18 @@
         function switchTab(tabId) {
             document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            event.currentTarget.classList.add('active');
+            const targetTab = document.querySelector(`.tab[data-tab="${tabId}"]`) || event.currentTarget;
+            if (targetTab) targetTab.classList.add('active');
             document.getElementById(tabId).classList.add('active');
         }
 
         function renderDetail(data) {
             document.getElementById('detailSummary').innerHTML = `
-                <div class="summary">
+                <div class="detail-summary">
                     标题：<strong>${escapeHtml(data.title || '')}</strong>
                     申请号：<strong>${escapeHtml(data.applicationNumber || '')}</strong>
                     公开号：<strong>${escapeHtml(data.documentNumber || '')}</strong>
+                    ${data.description ? '含说明书：<strong>是</strong>' : ''}
                 </div>
             `;
 
@@ -934,30 +1058,32 @@
                 ['IPC 列表', (data.ipcMainList || data.ipc_main_list || []).join('; ')],
                 ['法律状态', data.legalStatus || data.legal_status || ''],
                 ['当前状态', data.currentStatus || data.current_status || ''],
-                ['类型', data.type || ''],
+                ['类型', data.type || '']
             ]);
 
             document.getElementById('detailClaims').innerHTML = `
                 <div class="detail-section">
                     <h4>首权 / 主权利要求</h4>
-                    <div style="font-size:13px;line-height:1.6;">${escapeHtml(data.mainClaim || data.main_claim || '') || '（无）'}</div>
+                    <div class="detail-text">${escapeHtml(data.mainClaim || data.main_claim || '') || '（无）'}</div>
                 </div>
                 <div class="detail-section">
                     <h4>独立权利要求</h4>
-                    <div style="font-size:13px;line-height:1.6;">${escapeHtml(data.independentClaims || data.independent_claims || '') || '（无）'}</div>
+                    <div class="detail-text">${escapeHtml(data.independentClaims || data.independent_claims || '') || '（无）'}</div>
                 </div>
                 <div class="detail-section">
                     <h4>完整权利要求书</h4>
-                    <div style="font-size:13px;line-height:1.6;">${escapeHtml(data.claims || '') || '（无）'}</div>
+                    <div class="detail-text">${escapeHtml(data.claims || '') || '（无）'}</div>
                 </div>
                 ${data.description ? `
                 <div class="detail-section">
                     <h4>说明书</h4>
-                    <div style="font-size:13px;line-height:1.6;">${escapeHtml(data.description || '')}</div>
+                    <div class="detail-text">${escapeHtml(data.description || '')}</div>
                 </div>` : ''}
             `;
 
-            document.getElementById('detailExtra').innerHTML = '<div class="hint">点击上方“引证信息”或“法律历史”加载。</div>';
+            if (!currentExtraData) {
+                document.getElementById('detailExtra').innerHTML = '<div class="hint">点击“引证信息”或“法律历史”加载。</div>';
+            }
             document.getElementById('detailRaw').innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
         }
 
@@ -983,18 +1109,9 @@
                     return;
                 }
                 document.getElementById('detailExtra').innerHTML = `
-                    <div class="detail-section">
-                        <h4>被引专利 (${data.cited_by ? data.cited_by.length : 0})</h4>
-                        <pre>${JSON.stringify(data.cited_by || [], null, 2)}</pre>
-                    </div>
-                    <div class="detail-section">
-                        <h4>引用专利 (${data.patent_references ? data.patent_references.length : 0})</h4>
-                        <pre>${JSON.stringify(data.patent_references || [], null, 2)}</pre>
-                    </div>
-                    <div class="detail-section">
-                        <h4>非专利引用</h4>
-                        <pre>${JSON.stringify(data.non_patent_references || [], null, 2)}</pre>
-                    </div>
+                    <div class="detail-section"><h4>被引专利 (${data.cited_by ? data.cited_by.length : 0})</h4><pre>${JSON.stringify(data.cited_by || [], null, 2)}</pre></div>
+                    <div class="detail-section"><h4>引用专利 (${data.patent_references ? data.patent_references.length : 0})</h4><pre>${JSON.stringify(data.patent_references || [], null, 2)}</pre></div>
+                    <div class="detail-section"><h4>非专利引用</h4><pre>${JSON.stringify(data.non_patent_references || [], null, 2)}</pre></div>
                 `;
             } catch (err) {
                 document.getElementById('detailExtra').innerHTML = `<div class="error">请求失败：${err.message}</div>`;
@@ -1014,18 +1131,11 @@
                     return;
                 }
                 document.getElementById('detailExtra').innerHTML = `
-                    <div class="detail-section">
-                        <h4>法律历史 (${data.transactions ? data.transactions.length : 0})</h4>
-                        <pre>${JSON.stringify(data.transactions || [], null, 2)}</pre>
-                    </div>
+                    <div class="detail-section"><h4>法律历史 (${data.transactions ? data.transactions.length : 0})</h4><pre>${JSON.stringify(data.transactions || [], null, 2)}</pre></div>
                 `;
             } catch (err) {
                 document.getElementById('detailExtra').innerHTML = `<div class="error">请求失败：${err.message}</div>`;
             }
-        }
-
-        function toggleRawDetail() {
-            switchTab('detailRaw');
         }
 
         function escapeHtml(text) {
@@ -1035,448 +1145,7 @@
             return div.innerHTML;
         }
 
-        function escapeQueryTerm(value) {
-            return String(value || '').replace(/"/g, '\\"');
-        }
-
-        function formatQueryTerm(value) {
-            const escaped = escapeQueryTerm(value.trim());
-            if (/\s/.test(escaped)) {
-                return `"${escaped}"`;
-            }
-            return escaped;
-        }
-
-        function createBuilderGroup(id, connector) {
-            return { type: 'group', id: id || nextBuilderId(), connector: connector || 'AND', children: [] };
-        }
-
-        function createBuilderCondition(connector, fieldValue) {
-            return defaultConditionForField(getBuilderField(fieldValue || 'title'), connector || 'AND');
-        }
-
-        function nextBuilderId() {
-            builderNodeId += 1;
-            return `node-${builderNodeId}`;
-        }
-
-        function getBuilderField(value) {
-            return BUILDER_FIELDS.find(item => item.value === value) || BUILDER_FIELDS[1];
-        }
-
-        function defaultConditionForField(field, connector) {
-            const base = { type: 'condition', id: nextBuilderId(), connector: connector || 'AND', field: field.value, mode: 'single', value: '', values: [], start: '', end: '' };
-            if (field.type === 'text') {
-                return { ...base, value: field.value === 'keyword' ? '阀门' : '均衡', values: ['均衡', '平衡'] };
-            }
-            if (field.type === 'plain') {
-                const defaults = { ipc: 'H02M', mainIpc: 'H02M', applicationNumber: 'CN202411108082.1', documentNumber: 'CN119188170B', publicationNumber: 'CN119188170B', patentId: 'cn-xxx' };
-                return { ...base, value: defaults[field.value] || '' };
-            }
-            if (field.type === 'enum') {
-                return { ...base, value: field.options[0] };
-            }
-            if (field.type === 'dateRange') {
-                return { ...base, start: '2020-01-01', end: '2020-12-31' };
-            }
-            if (field.type === 'yearRange') {
-                return { ...base, start: '2020', end: '2024' };
-            }
-            return base;
-        }
-
-        function addBuilderCondition(parentId) {
-            const group = findBuilderNode(parentId || 'root');
-            if (!group || group.type !== 'group') return;
-            group.children.push(createBuilderCondition(group.children.length === 0 ? 'AND' : 'AND'));
-            renderBuilder();
-            updateBuilderPreview();
-        }
-
-        function addBuilderGroup(parentId) {
-            const group = findBuilderNode(parentId || 'root');
-            if (!group || group.type !== 'group') return;
-            const child = createBuilderGroup(nextBuilderId(), group.children.length === 0 ? 'AND' : 'AND');
-            child.children.push(createBuilderCondition('AND', 'title'));
-            group.children.push(child);
-            renderBuilder();
-            updateBuilderPreview();
-        }
-
-        function renderBuilder() {
-            const rowsEl = document.getElementById('queryBuilderRows');
-            if (!rowsEl) return;
-            rowsEl.innerHTML = renderBuilderGroup(builderRoot, 0, true);
-        }
-
-        function renderBuilderGroup(group, depth, isRoot) {
-            const levelClass = `builder-group-level-${Math.min(depth, 3)}`;
-            const children = group.children.length === 0
-                ? '<p class="hint">暂无条件，点击本分组下方按钮添加条件或子分组。</p>'
-                : group.children.map((child, index) => renderBuilderNode(child, group.id, index, depth + 1)).join('');
-            return `
-                <div class="builder-group ${isRoot ? '' : levelClass}">
-                    <div class="builder-group-head">
-                        <span>${isRoot ? '根分组' : '子分组'} ${isRoot ? '' : '（自动加括号）'}</span>
-                        <span class="hint">层级 ${depth}，组内按上到下顺序拼接</span>
-                    </div>
-                    ${children}
-                    <div class="builder-group-actions">
-                        <button class="small" onclick="addBuilderCondition('${group.id}')">本组添加条件</button>
-                        <button class="small" onclick="addBuilderGroup('${group.id}')">本组添加子分组</button>
-                    </div>
-                </div>
-            `;
-        }
-
-        function renderBuilderNode(node, parentId, index, depth) {
-            if (node.type === 'group') {
-                return `
-                    <div class="builder-row group-node">
-                        <div>
-                            <label>连接符</label>
-                            ${renderConnectorSelect(node, parentId, index)}
-                        </div>
-                        <div>
-                            <label>子分组</label>
-                            <div class="hint">该分组会生成一层括号，可继续嵌套。</div>
-                        </div>
-                        <div>
-                            <label>&nbsp;</label>
-                            <button class="small secondary" onclick="removeBuilderNode('${parentId}', ${index})">删除</button>
-                        </div>
-                    </div>
-                    ${renderBuilderGroup(node, depth, false)}
-                `;
-            }
-            const field = getBuilderField(node.field);
-            return `
-                <div class="builder-row">
-                    <div>
-                        <label>连接符</label>
-                        ${renderConnectorSelect(node, parentId, index)}
-                    </div>
-                    <div>
-                        <label>字段</label>
-                        <select onchange="changeBuilderField('${parentId}', ${index}, this.value)">
-                            ${BUILDER_FIELDS.map(item => builderOption(item.value, item.label, node.field)).join('')}
-                        </select>
-                    </div>
-                    <div>
-                        <label>模式</label>
-                        ${renderBuilderMode(parentId, index, node, field)}
-                    </div>
-                    <div>
-                        <label>值</label>
-                        ${renderBuilderValue(parentId, index, node, field)}
-                    </div>
-                    <div>
-                        <label>&nbsp;</label>
-                        <button class="small secondary" onclick="removeBuilderNode('${parentId}', ${index})">删除</button>
-                    </div>
-                </div>
-            `;
-        }
-
-        function renderConnectorSelect(node, parentId, index) {
-            return `
-                <select onchange="updateBuilderNode('${parentId}', ${index}, 'connector', this.value)" ${index === 0 ? 'disabled' : ''}>
-                    ${builderOption('AND', 'AND', node.connector)}
-                    ${builderOption('OR', 'OR', node.connector)}
-                    ${builderOption('AND NOT', 'AND NOT', node.connector)}
-                </select>
-            `;
-        }
-
-        function renderBuilderMode(parentId, index, condition, field) {
-            if (field.type !== 'text') {
-                return '<input type="text" value="固定" disabled>';
-            }
-            return `
-                <select onchange="changeBuilderMode('${parentId}', ${index}, this.value)">
-                    ${builderOption('single', '单值', condition.mode)}
-                    ${builderOption('or', 'OR 词组', condition.mode)}
-                </select>
-            `;
-        }
-
-        function renderBuilderValue(parentId, index, condition, field) {
-            if (field.type === 'text') {
-                if (condition.mode === 'or') {
-                    return `<textarea placeholder="每行一个词" oninput="updateBuilderValues('${parentId}', ${index}, this.value)">${escapeHtml((condition.values || []).join('\n'))}</textarea>`;
-                }
-                return `<input type="text" value="${escapeHtml(condition.value || '')}" placeholder="请输入关键词" oninput="updateBuilderNode('${parentId}', ${index}, 'value', this.value)">`;
-            }
-            if (field.type === 'plain') {
-                return `<input type="text" value="${escapeHtml(condition.value || '')}" placeholder="${escapeHtml(field.placeholder || '')}" oninput="updateBuilderNode('${parentId}', ${index}, 'value', this.value)">`;
-            }
-            if (field.type === 'enum') {
-                const value = condition.value || field.options[0];
-                return `
-                    <select onchange="updateBuilderNode('${parentId}', ${index}, 'value', this.value)">
-                        ${field.options.map(item => builderOption(item, item, value)).join('')}
-                    </select>
-                `;
-            }
-            if (field.type === 'dateRange') {
-                return `
-                    <div class="builder-value-pair">
-                        <input type="date" value="${escapeHtml(condition.start || '')}" onchange="updateBuilderNode('${parentId}', ${index}, 'start', this.value)">
-                        <input type="date" value="${escapeHtml(condition.end || '')}" onchange="updateBuilderNode('${parentId}', ${index}, 'end', this.value)">
-                    </div>
-                `;
-            }
-            if (field.type === 'yearRange') {
-                return `
-                    <div class="builder-value-pair">
-                        <input type="number" value="${escapeHtml(condition.start || '')}" min="1900" max="2100" placeholder="2020" oninput="updateBuilderNode('${parentId}', ${index}, 'start', this.value)">
-                        <input type="number" value="${escapeHtml(condition.end || '')}" min="1900" max="2100" placeholder="2024" oninput="updateBuilderNode('${parentId}', ${index}, 'end', this.value)">
-                    </div>
-                `;
-            }
-            return '';
-        }
-
-        function builderOption(value, label, selected) {
-            return `<option value="${escapeHtml(value)}" ${value === selected ? 'selected' : ''}>${escapeHtml(label)}</option>`;
-        }
-
-        function changeBuilderField(parentId, index, fieldValue) {
-            const parent = findBuilderNode(parentId);
-            if (!parent || !parent.children[index]) return;
-            const field = getBuilderField(fieldValue);
-            parent.children[index] = defaultConditionForField(field, parent.children[index].connector);
-            renderBuilder();
-            updateBuilderPreview();
-        }
-
-        function updateBuilderNode(parentId, index, key, value) {
-            const parent = findBuilderNode(parentId);
-            if (!parent || !parent.children[index]) return;
-            parent.children[index][key] = value;
-            updateBuilderPreview();
-        }
-
-        function changeBuilderMode(parentId, index, value) {
-            const parent = findBuilderNode(parentId);
-            if (!parent || !parent.children[index]) return;
-            parent.children[index].mode = value;
-            renderBuilder();
-            updateBuilderPreview();
-        }
-
-        function updateBuilderValues(parentId, index, raw) {
-            const parent = findBuilderNode(parentId);
-            if (!parent || !parent.children[index]) return;
-            parent.children[index].values = raw.split('\n').map(item => item.trim()).filter(Boolean);
-            updateBuilderPreview();
-        }
-
-        function removeBuilderNode(parentId, index) {
-            const parent = findBuilderNode(parentId);
-            if (!parent) return;
-            parent.children.splice(index, 1);
-            if (parent.children[0]) {
-                parent.children[0].connector = 'AND';
-            }
-            renderBuilder();
-            updateBuilderPreview();
-        }
-
-        function clearBuilder() {
-            builderRoot = createBuilderGroup('root', 'AND');
-            renderBuilder();
-            setBuilderPreview('尚未生成');
-            setBuilderError('');
-        }
-
-        function findBuilderNode(id, node) {
-            const current = node || builderRoot;
-            if (current.id === id) return current;
-            if (current.type !== 'group') return null;
-            for (const child of current.children) {
-                if (child.id === id) return child;
-                if (child.type === 'group') {
-                    const found = findBuilderNode(id, child);
-                    if (found) return found;
-                }
-            }
-            return null;
-        }
-
-        function toggleBuilderCollapsed() {
-            builderCollapsed = !builderCollapsed;
-            const body = document.getElementById('builderBody');
-            const button = document.getElementById('builderCollapseButton');
-            if (body) body.classList.toggle('collapsed', builderCollapsed);
-            if (button) button.textContent = builderCollapsed ? '展开构建器' : '收起构建器';
-        }
-
-        let topPanelCollapsed = false;
-        function toggleTopPanel() {
-            topPanelCollapsed = !topPanelCollapsed;
-            const body = document.getElementById('topBody');
-            const panel = document.querySelector('.top-panel');
-            const button = event.currentTarget;
-            if (body) body.classList.toggle('collapsed', topPanelCollapsed);
-            if (panel) panel.style.maxHeight = topPanelCollapsed ? '60px' : '55vh';
-            if (button) button.textContent = topPanelCollapsed ? '展开搜索区' : '收起搜索区';
-        }
-
-        function applyBuilderTemplate(name) {
-            builderRoot = createBuilderGroup('root', 'AND');
-            if (name === 'ipcClaims') {
-                builderRoot.children = [condition('AND', 'ipc', 'single', 'H02M'), condition('AND', 'claims', 'single', '均衡')];
-            } else if (name === 'titleOrAb') {
-                const group = groupNode('AND', [condition('AND', 'title', 'single', '阀门'), condition('OR', 'ab', 'single', '缓冲')]);
-                builderRoot.children = [group];
-            } else if (name === 'nestedTech') {
-                const textGroup = groupNode('AND', [condition('AND', 'title', 'single', '电池'), condition('OR', 'ab', 'single', '电池')]);
-                const ipcGroup = groupNode('AND', [condition('AND', 'ipc', 'single', 'H01M'), condition('OR', 'ipc', 'single', 'H02J')]);
-                builderRoot.children = [textGroup, { ...ipcGroup, connector: 'AND' }];
-            } else if (name === 'nestedExclude') {
-                const textGroup = groupNode('AND', [condition('AND', 'title', 'single', '均衡'), condition('OR', 'ab', 'single', '均衡')]);
-                const ipcGroup = groupNode('AND', [condition('AND', 'ipc', 'single', 'H02M'), condition('OR', 'ipc', 'single', 'F16K')]);
-                const excludeGroup = groupNode('AND NOT', [condition('AND', 'description', 'single', '外观'), condition('OR', 'type', 'single', '外观设计')]);
-                builderRoot.children = [textGroup, ipcGroup, excludeGroup];
-            } else if (name === 'dateKeyword') {
-                const date = condition('AND', 'ad', 'single', '');
-                date.start = '2020-01-01';
-                date.end = '2020-12-31';
-                builderRoot.children = [date, condition('AND', 'keyword', 'single', '阀门')];
-            }
-            renderBuilder();
-            generateBuilderQuery(false);
-        }
-
-        function condition(connector, field, mode, value, values) {
-            const item = defaultConditionForField(getBuilderField(field), connector);
-            item.mode = mode || 'single';
-            item.value = value || item.value;
-            if (values) item.values = values;
-            return item;
-        }
-
-        function groupNode(connector, children) {
-            const group = createBuilderGroup(nextBuilderId(), connector);
-            group.children = children || [];
-            if (group.children[0]) group.children[0].connector = 'AND';
-            return group;
-        }
-
-        function generateBuilderQuery(searchAfterGenerate) {
-            const result = buildBuilderQuery();
-            if (result.error) {
-                setBuilderError(result.error);
-                return;
-            }
-            setBuilderError('');
-            document.getElementById('q').value = result.q;
-            setBuilderPreview(result.q);
-            if (searchAfterGenerate) {
-                doSearch();
-            }
-        }
-
-        function updateBuilderPreview() {
-            const result = buildBuilderQuery();
-            if (result.error) {
-                setBuilderPreview(result.error);
-                return;
-            }
-            setBuilderPreview(result.q || '尚未生成');
-        }
-
-        function buildBuilderQuery() {
-            if (builderRoot.children.length === 0) {
-                return { error: '请至少添加一个查询条件' };
-            }
-            const built = buildBuilderGroupQuery(builderRoot, true);
-            if (built.error) return built;
-            return { q: built.q };
-        }
-
-        function buildBuilderGroupQuery(group, isRoot) {
-            if (group.children.length === 0) return { error: '分组不能为空' };
-            const parts = [];
-            for (let index = 0; index < group.children.length; index += 1) {
-                const child = group.children[index];
-                const built = child.type === 'group' ? buildBuilderGroupQuery(child, false) : buildBuilderCondition(child);
-                if (built.error) {
-                    return { error: `分组 ${group.id} 第 ${index + 1} 项：${built.error}` };
-                }
-                if (index === 0) {
-                    parts.push(built.q);
-                } else {
-                    parts.push(`${child.connector || 'AND'} ${built.q}`);
-                }
-            }
-            const q = parts.join(' ');
-            return { q: isRoot ? q : `(${q})` };
-        }
-
-        function buildBuilderCondition(condition) {
-            const field = getBuilderField(condition.field);
-            if (field.type === 'text') {
-                if (condition.mode === 'or') {
-                    const values = (condition.values || []).map(item => item.trim()).filter(Boolean);
-                    if (values.length === 0) return { error: 'OR 词组不能为空' };
-                    const expression = values.map(item => `"${escapeQueryTerm(item)}"`).join(' OR ');
-                    if (field.value === 'keyword') return { q: `(${expression})` };
-                    return { q: `${field.value}:(${expression})` };
-                }
-                const value = (condition.value || '').trim();
-                if (!value) return { error: '关键词不能为空' };
-                if (field.value === 'keyword') return { q: formatQueryTerm(value) };
-                return { q: `${field.value}:(${formatQueryTerm(value)})` };
-            }
-            if (field.type === 'plain') {
-                const value = (condition.value || '').trim();
-                if (!value) return { error: `${field.label} 不能为空` };
-                return { q: `${field.value}:${value}` };
-            }
-            if (field.type === 'enum') {
-                const value = (condition.value || '').trim();
-                if (!value) return { error: `${field.label} 不能为空` };
-                return { q: `${field.value}:(${formatQueryTerm(value)})` };
-            }
-            if (field.type === 'dateRange') {
-                if (!condition.start || !condition.end) return { error: '申请日起止日期都必须填写' };
-                return { q: `${field.value}:[${condition.start} TO ${condition.end}]` };
-            }
-            if (field.type === 'yearRange') {
-                if (!/^\d{4}$/.test(condition.start || '') || !/^\d{4}$/.test(condition.end || '')) {
-                    return { error: '公开年必须是 4 位年份' };
-                }
-                return { q: `${field.value}:[${condition.start} TO ${condition.end}]` };
-            }
-            return { error: '不支持的字段类型' };
-        }
-
-        function setBuilderPreview(message) {
-            const previewEl = document.getElementById('builderPreview');
-            if (previewEl) previewEl.textContent = message;
-        }
-
-        function setBuilderError(message) {
-            const errorEl = document.getElementById('builderError');
-            if (!errorEl) return;
-            errorEl.innerHTML = message ? `<div class="error">${escapeHtml(message)}</div>` : '';
-        }
-
-        // Restore previous search state on load
-        (function init() {
-            renderBuilder();
-            updateBuilderPreview();
-            const state = loadState();
-            if (state && state.form) {
-                setForm(state.form);
-                if (state.response) {
-                    lastResponse = state.response;
-                    renderResults(state.response);
-                }
-            }
-        })();
+        init();
     </script>
 </body>
 </html>
