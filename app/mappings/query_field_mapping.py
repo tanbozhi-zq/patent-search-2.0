@@ -40,9 +40,31 @@ RISKY_ANALYZER_FIELDS_BY_QUERY_FIELD = {
 }
 
 IPC_FIELDS = ["IPC", "IPCList", "IPCSmallCategory", "IPCLargeGroup", "IPCSmallGroup"]
+MAIN_IPC_FIELD = "mainIpc"
+IDENTIFIER_FIELD_MAPPING = {
+    "applicationNumber": ["ApplicationNumber", "ApplicationNumberAliases"],
+    "documentNumber": [
+        "PublicationNumber",
+        "PublicationNumberAliases",
+        "FirstPublicationNumber",
+        "GrantPublicationNumber",
+    ],
+    "publicationNumber": [
+        "PublicationNumber",
+        "PublicationNumberAliases",
+        "FirstPublicationNumber",
+        "GrantPublicationNumber",
+    ],
+    "patentId": ["patent_id"],
+}
 RANGE_FIELDS = {"ad", "documentYear"}
 LEGAL_STATUS_FIELD = "legalStatus"
-SUPPORTED_FIELDS = set(TEXT_FIELD_MAPPING) | {"ipc", LEGAL_STATUS_FIELD} | RANGE_FIELDS
+SUPPORTED_FIELDS = (
+    set(TEXT_FIELD_MAPPING)
+    | {"ipc", MAIN_IPC_FIELD, LEGAL_STATUS_FIELD}
+    | set(IDENTIFIER_FIELD_MAPPING)
+    | RANGE_FIELDS
+)
 
 
 def get_normal_analyzer_fields(query_field: str) -> list[str]:

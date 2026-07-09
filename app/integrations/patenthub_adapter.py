@@ -302,6 +302,8 @@ class PatentHubToolAdapter:
             "type": record.get("type"),
             "legal_status": record.get("legal_status") or record.get("legalStatus"),
             "main_ipc": record.get("main_ipc") or record.get("mainIpc"),
+            "main_claim": record.get("main_claim") or record.get("mainClaim", ""),
+            "independent_claims": record.get("independent_claims") or record.get("independentClaims", ""),
             "rank": record.get("rank"),
             "inventor": record.get("inventor"),
             "summary": record.get("summary", ""),
