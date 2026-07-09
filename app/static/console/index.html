@@ -365,6 +365,98 @@
             font-size: 12px;
             border: 1px solid var(--border);
         }
+        .builder-section {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 12px;
+            background: #fafafa;
+        }
+        .builder-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+        .builder-header h4 {
+            margin: 0;
+            font-size: 14px;
+        }
+        .builder-body.collapsed {
+            display: none;
+        }
+        .builder-toolbar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 10px 0;
+        }
+        .builder-group {
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--primary);
+            border-radius: 6px;
+            padding: 10px;
+            margin: 8px 0;
+            background: var(--card-bg);
+        }
+        .builder-group-level-1 { margin-left: 12px; border-left-color: var(--success); }
+        .builder-group-level-2 { margin-left: 24px; border-left-color: var(--warning); }
+        .builder-group-level-3 { margin-left: 36px; border-left-color: var(--danger); }
+        .builder-group-head {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        .builder-group-actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+        .builder-row {
+            display: grid;
+            grid-template-columns: 90px 130px 90px 1fr 60px;
+            gap: 8px;
+            align-items: start;
+            padding: 8px;
+            margin-bottom: 8px;
+            background: #fafafa;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .builder-row.group-node {
+            grid-template-columns: 90px 1fr 60px;
+            background: #f0f9ff;
+        }
+        .builder-row input, .builder-row select, .builder-row textarea {
+            font-size: 12px;
+            padding: 5px 6px;
+        }
+        .builder-row textarea {
+            min-height: 48px;
+            resize: vertical;
+        }
+        .builder-value-pair {
+            display: flex;
+            gap: 6px;
+        }
+        .builder-preview {
+            background: #f8f8f8;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px dashed var(--border);
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            margin: 8px 0;
+        }
         @media (max-width: 900px) {
             .app { flex-direction: column; }
             .sidebar {
@@ -398,6 +490,35 @@
                                 <textarea id="q" rows="2" placeholder="例如：阀门 或 ipc:H02M AND tscd:(均衡)">阀门</textarea>
                             </div>
                         </div>
+
+                        <div class="builder-section">
+                            <div class="builder-header">
+                                <h4>布尔式快捷构建器</h4>
+                                <button id="builderCollapseButton" class="secondary small" onclick="toggleBuilderCollapsed()">收起构建器</button>
+                            </div>
+                            <div class="hint">通过分组构建多层括号查询，自动生成复杂检索式。</div>
+                            <div class="builder-preview" id="builderPreview">尚未生成</div>
+                            <div id="builderError"></div>
+                            <div id="builderBody" class="builder-body">
+                                <div class="builder-toolbar">
+                                    <button class="small secondary" onclick="applyBuilderTemplate('ipcClaims')">IPC + 权利要求</button>
+                                    <button class="small secondary" onclick="applyBuilderTemplate('titleOrAb')">标题 OR 摘要</button>
+                                    <button class="small secondary" onclick="applyBuilderTemplate('nestedTech')">文本 + IPC 分组</button>
+                                    <button class="small secondary" onclick="applyBuilderTemplate('nestedExclude')">多组 AND NOT</button>
+                                    <button class="small secondary" onclick="applyBuilderTemplate('dateKeyword')">申请日 + 关键词</button>
+                                </div>
+                                <div id="queryBuilderRows"></div>
+                                <div class="builder-group-actions">
+                                    <button class="small" onclick="addBuilderCondition('root')">添加条件</button>
+                                    <button class="small" onclick="addBuilderGroup('root')">添加子分组</button>
+                                    <button class="small secondary" onclick="generateBuilderQuery()">生成 q</button>
+                                    <button class="small secondary" onclick="generateBuilderQuery(true)">生成并搜索</button>
+                                    <button class="small secondary" onclick="clearBuilder()">清空</button>
+                                </div>
+                                <div class="hint">文本字段“OR 词组”模式：每行一个词，生成 <code>claims:("均衡" OR "平衡")</code>。</div>
+                            </div>
+                        </div>
+
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="ds">数据范围 ds</label>
@@ -541,6 +662,32 @@
         let currentDetailId = null;
         let currentDetailData = null;
         let currentExtraData = null;
+
+        const BUILDER_FIELDS = [
+            { value: 'keyword', label: '普通关键词', type: 'text' },
+            { value: 'title', label: '标题 title', type: 'text' },
+            { value: 'ab', label: '摘要 ab', type: 'text' },
+            { value: 'tscd', label: '全文 tscd', type: 'text' },
+            { value: 'mainClaim', label: '首权 mainClaim', type: 'text' },
+            { value: 'claims', label: '权利要求 claims', type: 'text' },
+            { value: 'description', label: '说明书 description', type: 'text' },
+            { value: 'ipc', label: 'IPC ipc', type: 'plain', placeholder: '例如 H02M' },
+            { value: 'mainIpc', label: '主 IPC mainIpc', type: 'plain', placeholder: '例如 H02M' },
+            { value: 'applicant', label: '申请人 applicant', type: 'text' },
+            { value: 'currentAssignee', label: '当前权利人 currentAssignee', type: 'text' },
+            { value: 'applicationNumber', label: '申请号 applicationNumber', type: 'plain', placeholder: 'CN202411108082.1' },
+            { value: 'documentNumber', label: '公开号 documentNumber', type: 'plain', placeholder: 'CN119188170B' },
+            { value: 'publicationNumber', label: '公开号 publicationNumber', type: 'plain', placeholder: 'CN119188170B' },
+            { value: 'patentId', label: '专利 ID patentId', type: 'plain', placeholder: 'cn-xxx' },
+            { value: 'legalStatus', label: '法律状态 legalStatus', type: 'enum', options: ['有效专利', '在审', '失效'] },
+            { value: 'type', label: '专利类型 type', type: 'enum', options: ['发明专利', '实用新型', '外观设计'] },
+            { value: 'ad', label: '申请日 ad', type: 'dateRange' },
+            { value: 'documentYear', label: '公开年 documentYear', type: 'yearRange' }
+        ];
+
+        let builderNodeId = 1;
+        let builderCollapsed = false;
+        let builderRoot = createBuilderGroup('root', 'AND');
 
         const TEMPLATES = {
             ipcH02M: { q: 'ipc:H02M', ds: 'cn' },
@@ -926,8 +1073,428 @@
             return div.innerHTML;
         }
 
+        function escapeQueryTerm(value) {
+            return String(value || '').replace(/"/g, '\\"');
+        }
+
+        function formatQueryTerm(value) {
+            const escaped = escapeQueryTerm(value.trim());
+            if (/\s/.test(escaped)) {
+                return `"${escaped}"`;
+            }
+            return escaped;
+        }
+
+        function createBuilderGroup(id, connector) {
+            return { type: 'group', id: id || nextBuilderId(), connector: connector || 'AND', children: [] };
+        }
+
+        function createBuilderCondition(connector, fieldValue) {
+            return defaultConditionForField(getBuilderField(fieldValue || 'title'), connector || 'AND');
+        }
+
+        function nextBuilderId() {
+            builderNodeId += 1;
+            return `node-${builderNodeId}`;
+        }
+
+        function getBuilderField(value) {
+            return BUILDER_FIELDS.find(item => item.value === value) || BUILDER_FIELDS[1];
+        }
+
+        function defaultConditionForField(field, connector) {
+            const base = { type: 'condition', id: nextBuilderId(), connector: connector || 'AND', field: field.value, mode: 'single', value: '', values: [], start: '', end: '' };
+            if (field.type === 'text') {
+                return { ...base, value: field.value === 'keyword' ? '阀门' : '均衡', values: ['均衡', '平衡'] };
+            }
+            if (field.type === 'plain') {
+                const defaults = { ipc: 'H02M', mainIpc: 'H02M', applicationNumber: 'CN202411108082.1', documentNumber: 'CN119188170B', publicationNumber: 'CN119188170B', patentId: 'cn-xxx' };
+                return { ...base, value: defaults[field.value] || '' };
+            }
+            if (field.type === 'enum') {
+                return { ...base, value: field.options[0] };
+            }
+            if (field.type === 'dateRange') {
+                return { ...base, start: '2020-01-01', end: '2020-12-31' };
+            }
+            if (field.type === 'yearRange') {
+                return { ...base, start: '2020', end: '2024' };
+            }
+            return base;
+        }
+
+        function addBuilderCondition(parentId) {
+            const group = findBuilderNode(parentId || 'root');
+            if (!group || group.type !== 'group') return;
+            group.children.push(createBuilderCondition(group.children.length === 0 ? 'AND' : 'AND'));
+            renderBuilder();
+            updateBuilderPreview();
+        }
+
+        function addBuilderGroup(parentId) {
+            const group = findBuilderNode(parentId || 'root');
+            if (!group || group.type !== 'group') return;
+            const child = createBuilderGroup(nextBuilderId(), group.children.length === 0 ? 'AND' : 'AND');
+            child.children.push(createBuilderCondition('AND', 'title'));
+            group.children.push(child);
+            renderBuilder();
+            updateBuilderPreview();
+        }
+
+        function renderBuilder() {
+            const rowsEl = document.getElementById('queryBuilderRows');
+            if (!rowsEl) return;
+            rowsEl.innerHTML = renderBuilderGroup(builderRoot, 0, true);
+        }
+
+        function renderBuilderGroup(group, depth, isRoot) {
+            const levelClass = `builder-group-level-${Math.min(depth, 3)}`;
+            const children = group.children.length === 0
+                ? '<p class="hint">暂无条件，点击本分组下方按钮添加条件或子分组。</p>'
+                : group.children.map((child, index) => renderBuilderNode(child, group.id, index, depth + 1)).join('');
+            return `
+                <div class="builder-group ${isRoot ? '' : levelClass}">
+                    <div class="builder-group-head">
+                        <span>${isRoot ? '根分组' : '子分组'} ${isRoot ? '' : '（自动加括号）'}</span>
+                        <span class="hint">层级 ${depth}，组内按上到下顺序拼接</span>
+                    </div>
+                    ${children}
+                    <div class="builder-group-actions">
+                        <button class="small" onclick="addBuilderCondition('${group.id}')">本组添加条件</button>
+                        <button class="small" onclick="addBuilderGroup('${group.id}')">本组添加子分组</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderBuilderNode(node, parentId, index, depth) {
+            if (node.type === 'group') {
+                return `
+                    <div class="builder-row group-node">
+                        <div>
+                            <label>连接符</label>
+                            ${renderConnectorSelect(node, parentId, index)}
+                        </div>
+                        <div>
+                            <label>子分组</label>
+                            <div class="hint">该分组会生成一层括号，可继续嵌套。</div>
+                        </div>
+                        <div>
+                            <label>&nbsp;</label>
+                            <button class="small secondary" onclick="removeBuilderNode('${parentId}', ${index})">删除</button>
+                        </div>
+                    </div>
+                    ${renderBuilderGroup(node, depth, false)}
+                `;
+            }
+            const field = getBuilderField(node.field);
+            return `
+                <div class="builder-row">
+                    <div>
+                        <label>连接符</label>
+                        ${renderConnectorSelect(node, parentId, index)}
+                    </div>
+                    <div>
+                        <label>字段</label>
+                        <select onchange="changeBuilderField('${parentId}', ${index}, this.value)">
+                            ${BUILDER_FIELDS.map(item => builderOption(item.value, item.label, node.field)).join('')}
+                        </select>
+                    </div>
+                    <div>
+                        <label>模式</label>
+                        ${renderBuilderMode(parentId, index, node, field)}
+                    </div>
+                    <div>
+                        <label>值</label>
+                        ${renderBuilderValue(parentId, index, node, field)}
+                    </div>
+                    <div>
+                        <label>&nbsp;</label>
+                        <button class="small secondary" onclick="removeBuilderNode('${parentId}', ${index})">删除</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderConnectorSelect(node, parentId, index) {
+            return `
+                <select onchange="updateBuilderNode('${parentId}', ${index}, 'connector', this.value)" ${index === 0 ? 'disabled' : ''}>
+                    ${builderOption('AND', 'AND', node.connector)}
+                    ${builderOption('OR', 'OR', node.connector)}
+                    ${builderOption('AND NOT', 'AND NOT', node.connector)}
+                </select>
+            `;
+        }
+
+        function renderBuilderMode(parentId, index, condition, field) {
+            if (field.type !== 'text') {
+                return '<input type="text" value="固定" disabled>';
+            }
+            return `
+                <select onchange="changeBuilderMode('${parentId}', ${index}, this.value)">
+                    ${builderOption('single', '单值', condition.mode)}
+                    ${builderOption('or', 'OR 词组', condition.mode)}
+                </select>
+            `;
+        }
+
+        function renderBuilderValue(parentId, index, condition, field) {
+            if (field.type === 'text') {
+                if (condition.mode === 'or') {
+                    return `<textarea placeholder="每行一个词" oninput="updateBuilderValues('${parentId}', ${index}, this.value)">${escapeHtml((condition.values || []).join('\n'))}</textarea>`;
+                }
+                return `<input type="text" value="${escapeHtml(condition.value || '')}" placeholder="请输入关键词" oninput="updateBuilderNode('${parentId}', ${index}, 'value', this.value)">`;
+            }
+            if (field.type === 'plain') {
+                return `<input type="text" value="${escapeHtml(condition.value || '')}" placeholder="${escapeHtml(field.placeholder || '')}" oninput="updateBuilderNode('${parentId}', ${index}, 'value', this.value)">`;
+            }
+            if (field.type === 'enum') {
+                const value = condition.value || field.options[0];
+                return `
+                    <select onchange="updateBuilderNode('${parentId}', ${index}, 'value', this.value)">
+                        ${field.options.map(item => builderOption(item, item, value)).join('')}
+                    </select>
+                `;
+            }
+            if (field.type === 'dateRange') {
+                return `
+                    <div class="builder-value-pair">
+                        <input type="date" value="${escapeHtml(condition.start || '')}" onchange="updateBuilderNode('${parentId}', ${index}, 'start', this.value)">
+                        <input type="date" value="${escapeHtml(condition.end || '')}" onchange="updateBuilderNode('${parentId}', ${index}, 'end', this.value)">
+                    </div>
+                `;
+            }
+            if (field.type === 'yearRange') {
+                return `
+                    <div class="builder-value-pair">
+                        <input type="number" value="${escapeHtml(condition.start || '')}" min="1900" max="2100" placeholder="2020" oninput="updateBuilderNode('${parentId}', ${index}, 'start', this.value)">
+                        <input type="number" value="${escapeHtml(condition.end || '')}" min="1900" max="2100" placeholder="2024" oninput="updateBuilderNode('${parentId}', ${index}, 'end', this.value)">
+                    </div>
+                `;
+            }
+            return '';
+        }
+
+        function builderOption(value, label, selected) {
+            return `<option value="${escapeHtml(value)}" ${value === selected ? 'selected' : ''}>${escapeHtml(label)}</option>`;
+        }
+
+        function changeBuilderField(parentId, index, fieldValue) {
+            const parent = findBuilderNode(parentId);
+            if (!parent || !parent.children[index]) return;
+            const field = getBuilderField(fieldValue);
+            parent.children[index] = defaultConditionForField(field, parent.children[index].connector);
+            renderBuilder();
+            updateBuilderPreview();
+        }
+
+        function updateBuilderNode(parentId, index, key, value) {
+            const parent = findBuilderNode(parentId);
+            if (!parent || !parent.children[index]) return;
+            parent.children[index][key] = value;
+            updateBuilderPreview();
+        }
+
+        function changeBuilderMode(parentId, index, value) {
+            const parent = findBuilderNode(parentId);
+            if (!parent || !parent.children[index]) return;
+            parent.children[index].mode = value;
+            renderBuilder();
+            updateBuilderPreview();
+        }
+
+        function updateBuilderValues(parentId, index, raw) {
+            const parent = findBuilderNode(parentId);
+            if (!parent || !parent.children[index]) return;
+            parent.children[index].values = raw.split('\n').map(item => item.trim()).filter(Boolean);
+            updateBuilderPreview();
+        }
+
+        function removeBuilderNode(parentId, index) {
+            const parent = findBuilderNode(parentId);
+            if (!parent) return;
+            parent.children.splice(index, 1);
+            if (parent.children[0]) {
+                parent.children[0].connector = 'AND';
+            }
+            renderBuilder();
+            updateBuilderPreview();
+        }
+
+        function clearBuilder() {
+            builderRoot = createBuilderGroup('root', 'AND');
+            renderBuilder();
+            setBuilderPreview('尚未生成');
+            setBuilderError('');
+        }
+
+        function findBuilderNode(id, node) {
+            const current = node || builderRoot;
+            if (current.id === id) return current;
+            if (current.type !== 'group') return null;
+            for (const child of current.children) {
+                if (child.id === id) return child;
+                if (child.type === 'group') {
+                    const found = findBuilderNode(id, child);
+                    if (found) return found;
+                }
+            }
+            return null;
+        }
+
+        function toggleBuilderCollapsed() {
+            builderCollapsed = !builderCollapsed;
+            const body = document.getElementById('builderBody');
+            const button = document.getElementById('builderCollapseButton');
+            if (body) body.classList.toggle('collapsed', builderCollapsed);
+            if (button) button.textContent = builderCollapsed ? '展开构建器' : '收起构建器';
+        }
+
+        function applyBuilderTemplate(name) {
+            builderRoot = createBuilderGroup('root', 'AND');
+            if (name === 'ipcClaims') {
+                builderRoot.children = [condition('AND', 'ipc', 'single', 'H02M'), condition('AND', 'claims', 'single', '均衡')];
+            } else if (name === 'titleOrAb') {
+                const group = groupNode('AND', [condition('AND', 'title', 'single', '阀门'), condition('OR', 'ab', 'single', '缓冲')]);
+                builderRoot.children = [group];
+            } else if (name === 'nestedTech') {
+                const textGroup = groupNode('AND', [condition('AND', 'title', 'single', '电池'), condition('OR', 'ab', 'single', '电池')]);
+                const ipcGroup = groupNode('AND', [condition('AND', 'ipc', 'single', 'H01M'), condition('OR', 'ipc', 'single', 'H02J')]);
+                builderRoot.children = [textGroup, { ...ipcGroup, connector: 'AND' }];
+            } else if (name === 'nestedExclude') {
+                const textGroup = groupNode('AND', [condition('AND', 'title', 'single', '均衡'), condition('OR', 'ab', 'single', '均衡')]);
+                const ipcGroup = groupNode('AND', [condition('AND', 'ipc', 'single', 'H02M'), condition('OR', 'ipc', 'single', 'F16K')]);
+                const excludeGroup = groupNode('AND NOT', [condition('AND', 'description', 'single', '外观'), condition('OR', 'type', 'single', '外观设计')]);
+                builderRoot.children = [textGroup, ipcGroup, excludeGroup];
+            } else if (name === 'dateKeyword') {
+                const date = condition('AND', 'ad', 'single', '');
+                date.start = '2020-01-01';
+                date.end = '2020-12-31';
+                builderRoot.children = [date, condition('AND', 'keyword', 'single', '阀门')];
+            }
+            renderBuilder();
+            generateBuilderQuery(false);
+        }
+
+        function condition(connector, field, mode, value, values) {
+            const item = defaultConditionForField(getBuilderField(field), connector);
+            item.mode = mode || 'single';
+            item.value = value || item.value;
+            if (values) item.values = values;
+            return item;
+        }
+
+        function groupNode(connector, children) {
+            const group = createBuilderGroup(nextBuilderId(), connector);
+            group.children = children || [];
+            if (group.children[0]) group.children[0].connector = 'AND';
+            return group;
+        }
+
+        function generateBuilderQuery(searchAfterGenerate) {
+            const result = buildBuilderQuery();
+            if (result.error) {
+                setBuilderError(result.error);
+                return;
+            }
+            setBuilderError('');
+            document.getElementById('q').value = result.q;
+            setBuilderPreview(result.q);
+            if (searchAfterGenerate) {
+                doSearch();
+            }
+        }
+
+        function updateBuilderPreview() {
+            const result = buildBuilderQuery();
+            if (result.error) {
+                setBuilderPreview(result.error);
+                return;
+            }
+            setBuilderPreview(result.q || '尚未生成');
+        }
+
+        function buildBuilderQuery() {
+            if (builderRoot.children.length === 0) {
+                return { error: '请至少添加一个查询条件' };
+            }
+            const built = buildBuilderGroupQuery(builderRoot, true);
+            if (built.error) return built;
+            return { q: built.q };
+        }
+
+        function buildBuilderGroupQuery(group, isRoot) {
+            if (group.children.length === 0) return { error: '分组不能为空' };
+            const parts = [];
+            for (let index = 0; index < group.children.length; index += 1) {
+                const child = group.children[index];
+                const built = child.type === 'group' ? buildBuilderGroupQuery(child, false) : buildBuilderCondition(child);
+                if (built.error) {
+                    return { error: `分组 ${group.id} 第 ${index + 1} 项：${built.error}` };
+                }
+                if (index === 0) {
+                    parts.push(built.q);
+                } else {
+                    parts.push(`${child.connector || 'AND'} ${built.q}`);
+                }
+            }
+            const q = parts.join(' ');
+            return { q: isRoot ? q : `(${q})` };
+        }
+
+        function buildBuilderCondition(condition) {
+            const field = getBuilderField(condition.field);
+            if (field.type === 'text') {
+                if (condition.mode === 'or') {
+                    const values = (condition.values || []).map(item => item.trim()).filter(Boolean);
+                    if (values.length === 0) return { error: 'OR 词组不能为空' };
+                    const expression = values.map(item => `"${escapeQueryTerm(item)}"`).join(' OR ');
+                    if (field.value === 'keyword') return { q: `(${expression})` };
+                    return { q: `${field.value}:(${expression})` };
+                }
+                const value = (condition.value || '').trim();
+                if (!value) return { error: '关键词不能为空' };
+                if (field.value === 'keyword') return { q: formatQueryTerm(value) };
+                return { q: `${field.value}:(${formatQueryTerm(value)})` };
+            }
+            if (field.type === 'plain') {
+                const value = (condition.value || '').trim();
+                if (!value) return { error: `${field.label} 不能为空` };
+                return { q: `${field.value}:${value}` };
+            }
+            if (field.type === 'enum') {
+                const value = (condition.value || '').trim();
+                if (!value) return { error: `${field.label} 不能为空` };
+                return { q: `${field.value}:(${formatQueryTerm(value)})` };
+            }
+            if (field.type === 'dateRange') {
+                if (!condition.start || !condition.end) return { error: '申请日起止日期都必须填写' };
+                return { q: `${field.value}:[${condition.start} TO ${condition.end}]` };
+            }
+            if (field.type === 'yearRange') {
+                if (!/^\d{4}$/.test(condition.start || '') || !/^\d{4}$/.test(condition.end || '')) {
+                    return { error: '公开年必须是 4 位年份' };
+                }
+                return { q: `${field.value}:[${condition.start} TO ${condition.end}]` };
+            }
+            return { error: '不支持的字段类型' };
+        }
+
+        function setBuilderPreview(message) {
+            const previewEl = document.getElementById('builderPreview');
+            if (previewEl) previewEl.textContent = message;
+        }
+
+        function setBuilderError(message) {
+            const errorEl = document.getElementById('builderError');
+            if (!errorEl) return;
+            errorEl.innerHTML = message ? `<div class="error">${escapeHtml(message)}</div>` : '';
+        }
+
         // Restore previous search state on load
         (function init() {
+            renderBuilder();
+            updateBuilderPreview();
             const state = loadState();
             if (state && state.form) {
                 setForm(state.form);
