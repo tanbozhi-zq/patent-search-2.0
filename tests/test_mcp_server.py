@@ -43,6 +43,8 @@ def test_mcp_server_lists_patent_tools():
             "patent_get_citations",
             "patent_get_legal_history",
         }
+        search_tool = next(tool for tool in tools if tool.name == "patent_search")
+        assert "index_analyzer_mode" not in search_tool.inputSchema.get("properties", {})
 
     anyio.run(run)
 

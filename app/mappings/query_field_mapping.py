@@ -12,7 +12,6 @@ TEXT_FIELD_MAPPING = {
     "type": ["Type", "PatentTypeCode", "Kind"],
 }
 
-IPC_FIELDS = ["IPC", "IPCList", "IPCSmallCategory", "IPCLargeGroup", "IPCSmallGroup"]
 MAIN_IPC_FIELD = "mainIpc"
 IDENTIFIER_FIELD_MAPPING = {
     "applicationNumber": ["ApplicationNumber", "ApplicationNumberAliases"],

@@ -13,7 +13,7 @@
 | 能力 | 入口 | 说明 |
 |---|---|---|
 | 服务健康检查 | `GET /health` | 用于部署后存活检查。 |
-| 专利检索 | `POST /api/patent/search` | 支持布尔查询、数据集、排序、分页、分析器兼容模式。 |
+| 专利检索 | `POST /api/patent/search` | 支持布尔查询、数据集、排序、分页和统一的 v2 查询语义。 |
 | 专利详情 | `GET /api/patent/detail/{patent_id}` | 可选返回说明书。 |
 | 引证信息 | `GET /api/patent/citations/{patent_id}` | 返回引用与被引摘要。 |
 | 法律状态历史 | `GET /api/patent/legal-history/{patent_id}` | 返回法律状态基础结构。 |
