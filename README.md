@@ -83,8 +83,8 @@ Tracked, project-level documentation:
 
 Historical process and duplicate delivery documents were intentionally removed.
 The tracked documents listed in docs/README.md are the only engineering source
-of truth; external delivery records and test reports are not part of the code
-repository.
+of truth. External delivery records, meeting notes, and manual test evidence
+are local-only archives under `local/`, not part of the code repository.
 
 ## Local Setup
 
