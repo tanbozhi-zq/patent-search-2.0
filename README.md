@@ -2,11 +2,13 @@
 
 Self-hosted patent search backend service based on FastAPI and OpenSearch.
 
-## Stage
+## Current State
 
-Current status: Stage 12 remote HTTP MCP delivery is in progress.
+The Stage 12 FastAPI + remote HTTP MCP delivery is deployed. The next active
+workstream is adapting the service to the new OpenSearch v2 index while keeping
+the existing production search path recoverable.
 
-Implemented so far:
+Implemented and deployed:
 
 - FastAPI app
 - `GET /health`
@@ -23,45 +25,67 @@ Implemented so far:
 - flat error responses for validation, business, auth, and OpenSearch failures
 - search record snake_case compatibility aliases
 - SaaS PatentHub tool adapter for self-hosted search/detail/citations/legal-history
-- Stage 12.4 MCP stdio server under `mcp_server/`
-- systemd deployment template for the FastAPI service
+- MCP server under `mcp_server/`, with stdio and remote HTTP transports
+- HTTP MCP bearer-token authentication and smoke script
+- systemd templates for the FastAPI and MCP services
 
-Current delivery mainline:
+Current runtime shape:
 
 - FastAPI patent search service under `app/`
 - Remote HTTP MCP Server under `mcp_server/`
-- Company DeerFlow / workspace connects to the public MCP URL through `type: "http"`
+- External workspaces connect to the public MCP URL through `type: "http"`
 
-The local DeerFlow Tool plugin path is not part of the current delivery scope.
+The local DeerFlow Tool plugin path is not part of the deployable scope.
 
-Next stage:
+### OpenSearch v2 Adaptation
 
-- Add remote HTTP MCP transport, MCP bearer-token authentication, `patent-mcp.service`, HTTP MCP smoke verification, and updated company workspace integration documentation.
-- Stage 12 no longer uses a separate test environment, tester assignment, test acceptance sheet, or test report; quality gates are developer self-check, project-control review, real integration records, and delivery-doc review.
+Two physical indexes currently exist:
+
+- `patent_index`: the current API/MCP read target configured through
+  `OPENSEARCH_INDEX`.
+- `patent_index_v2_20260716`: the new mapping target for the ongoing data
+  migration and ingestion transition.
+
+Creating or reindexing a new OpenSearch index does not mirror subsequent
+writes from the old one. Before moving the read path to v2, the project must:
+
+1. Confirm v2 has the required historical data and all incremental updates.
+2. Update query compatibility for the v2 mapping, especially `IPCList`, which
+   is a direct `keyword` field in v2 rather than `IPCList.keyword`.
+3. Set an appropriate serving posture for v2, including refresh and replica
+   settings, then verify fixed search, detail, citation, and legal-history
+   cases.
+4. Switch the read target atomically through an OpenSearch read alias; retain
+   the old index for rollback.
+
+The current code reads exactly the index named by `OPENSEARCH_INDEX`; it does
+not automatically select the newest physical index.
 
 Project boundaries:
 
 - `patent_harness_base_副本/` is a local read-only SaaS contract reference.
 - `app/` is the core FastAPI service and must not depend on MCP Server packaging.
 - MCP Server must call the self-hosted HTTP API instead of querying OpenSearch directly.
-- Do not modify OpenSearch mapping or rebuild the index in the current stage.
+- OpenSearch mapping changes are delivered through a new physical index and a
+  controlled cutover, never by changing an existing field's analyzer or type
+  in place.
 
 ## Documentation
 
-Current documentation index:
+Tracked, project-level documentation:
 
-```text
-docs/README.md
-```
+- `PROJECT_OVERVIEW.md`: 功能、技术组成、架构边界、当前数据演进与版本发布规则。
+- `README.md`: current architecture, runtime boundary, and active migration
+  status.
+- `docs/README.md`: document-versioning boundary.
+- `docs/ops/deployment_runbook.md` and `docs/ops/deploy_env_check.md`:
+  deployment procedures and prerequisites.
+- `mcp_server/README.md`: MCP tools, transports, and authentication.
 
-Key Stage 12 documents:
-
-- `docs/delivery/stage12_deerflow_tool_mcp_work_plan.md`
-- `docs/delivery/mcp_integration_guide.md`
-- `docs/delivery/api_spec.md`
-- `docs/delivery/query_syntax.md`
-- `docs/delivery/field_mapping.md`
-- `docs/ops/deployment_runbook.md`
+Historical process and duplicate delivery documents were intentionally removed.
+The tracked documents listed in docs/README.md are the only engineering source
+of truth. External delivery records, meeting notes, and manual test evidence
+are local-only archives under `local/`, not part of the code repository.
 
 ## Local Setup
 
@@ -70,6 +94,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
+make check
 uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
@@ -80,15 +105,19 @@ curl http://127.0.0.1:8000/health
 python3 scripts/smoke_health.py http://127.0.0.1:8000
 ```
 
+See docs/development.md for the required local check, branch, release, and
+index-cutover workflow.
+
 ## Production Deployment Shape
 
-The first deployment uses:
+The deployed service uses:
 
 - `work` Linux user
 - Python venv
 - FastAPI/Uvicorn
 - systemd
-- port `8000`
+- FastAPI/Uvicorn on port `8000`
+- HTTP MCP on port `9000` at `/mcp`
 - `.env` for secrets
 
 OpenSearch credentials must not be committed to Git.

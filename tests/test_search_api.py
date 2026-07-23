@@ -1,0 +1,170 @@
+from pydantic import ValidationError
+import pytest
+
+from app.schemas.search import SearchRequest
+
+
+def test_search_request_defaults():
+    request = SearchRequest(q="阀门")
+
+    assert request.ds == "cn"
+    assert request.sort == "relation"
+    assert request.page == 1
+    assert request.page_size == 50
+    assert request.highlight == 0
+    assert request.offset == 0
+
+
+def test_search_request_rejects_invalid_page_size():
+    with pytest.raises(ValidationError):
+        SearchRequest(q="阀门", page_size=101)
+
+
+@pytest.mark.parametrize(
+    "sort",
+    [
+        "relation",
+        "rank",
+        "relevance",
+        "score",
+        "!applicationDate",
+        "applicationDate",
+        "!documentDate",
+        "documentDate",
+    ],
+)
+def test_search_request_accepts_stage_12_sort_values(sort):
+    assert SearchRequest(q="阀门", sort=sort).sort == sort
+
+
+def test_search_request_rejects_unknown_sort_value():
+    with pytest.raises(ValidationError):
+        SearchRequest(q="阀门", sort="unknown")
+
+
+from app.api.search import get_search_service
+from app.core.exceptions import OpenSearchQueryError
+from app.core.security import require_api_key
+from app.main import app
+from app.services.search_service import SearchService
+
+
+class FakeSearchService:
+    def search(self, request):
+        return {
+            "total": 0,
+            "page": request.page,
+            "page_size": request.page_size,
+            "total_pages": 0,
+            "next_page": None,
+            "took_ms": None,
+            "records": [],
+        }
+
+
+class OpenSearchFailingService:
+    def search(self, request):
+        raise OpenSearchQueryError("OpenSearch 查询异常")
+
+
+def test_search_endpoint_returns_vendor_like_shape(client):
+    app.dependency_overrides[get_search_service] = lambda: FakeSearchService()
+    app.dependency_overrides[require_api_key] = lambda: None
+    try:
+        response = client().post("/api/patent/search", json={"q": "阀门"})
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "total": 0,
+        "page": 1,
+        "page_size": 50,
+        "total_pages": 0,
+        "next_page": None,
+        "took_ms": None,
+        "records": [],
+    }
+
+
+def test_search_api_returns_50001_on_opensearch_failure(client):
+    app.dependency_overrides[get_search_service] = lambda: OpenSearchFailingService()
+    app.dependency_overrides[require_api_key] = lambda: None
+    try:
+        response = client().post("/api/patent/search", json={"q": "阀门"})
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 502
+    assert response.json()["success"] is False
+    assert response.json()["code"] == 50001
+    assert "OpenSearch 查询异常" == response.json()["message"]
+    assert response.json()["data"] is None
+    assert "connection refused" not in response.text
+
+
+def test_standalone_not_query_returns_200(client):
+    app.dependency_overrides[get_search_service] = lambda: FakeSearchService()
+    app.dependency_overrides[require_api_key] = lambda: None
+    try:
+        response = client().post("/api/patent/search", json={"q": "NOT title:(外观)"})
+    finally:
+        app.dependency_overrides.clear()
+    assert response.status_code == 200
+
+
+class ExplodingRepository:
+    def search(self, body):
+        raise AssertionError("OpenSearch must not be called for invalid query syntax")
+
+
+@pytest.mark.parametrize(
+    "q",
+    [
+        "ipc:H02M AND AND tscd:(均衡)",
+        "AND tscd:(均衡)",
+        "tscd:(均衡) OR",
+        'tscd:("均衡)',
+        "tscd:()",
+        "ipc:",
+        "foo:(均衡)",
+        "mainClaim:",
+        "claims:()",
+        "description:(均衡) AND AND ipc:H02M",
+        "ad:[2020-01-01 2020-12-31]",
+        "ad:[2020-13-01 TO 2020-12-31]",
+        "ad:[2021-01-01 TO 2020-12-31]",
+        "documentYear:[2024 TO 2020]",
+        "NOT",
+        "tscd:(均衡) NOT",
+    ],
+)
+def test_invalid_stage_six_queries_return_40001_without_repository_call(client, q):
+    app.dependency_overrides[get_search_service] = lambda: SearchService(repository=ExplodingRepository())
+    app.dependency_overrides[require_api_key] = lambda: None
+    try:
+        response = client().post("/api/patent/search", json={"q": q})
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 400
+    assert response.json()["success"] is False
+    assert response.json()["code"] == 40001
+    assert response.json()["data"] is None
+
+
+def test_search_request_defaults_to_index_analyzer_compat_mode():
+    request = SearchRequest(q="阀门")
+
+    assert request.index_analyzer_mode == "compat"
+
+
+def test_search_request_accepts_normal_index_analyzer_mode():
+    request = SearchRequest(q="阀门", index_analyzer_mode="normal")
+
+    assert request.index_analyzer_mode == "normal"
+
+
+def test_search_request_rejects_invalid_index_analyzer_mode():
+    with pytest.raises(ValidationError):
+        SearchRequest(q="阀门", index_analyzer_mode="broken")

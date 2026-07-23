@@ -1,32 +1,26 @@
-# 专利检索 2.0 云端文档索引
+# 文档索引
 
-本仓库上云内容只保留部署和协作所需的最小文档。开发过程资料、测试数据、会议记录和交付材料可以继续放在同一个本地工作文件夹内，但不进入 GitHub。
+本仓库只保留会影响代码、发布或运行决策的文档。README 是项目入口；其余文档按开发与运维职责划分。
 
-## 云端保留
-
-| 路径 | 用途 |
+| 文档 | 用途 |
 |---|---|
-| `README.md` | 项目概览、本地启动、服务接口和当前交付边界 |
-| `.env.example` | 环境变量模板，不包含真实密钥 |
-| `docs/README.md` | 云端文档范围说明 |
-| `docs/ops/deployment_runbook.md` | systemd 部署、日志、验证和回滚步骤 |
-| `docs/ops/deploy_env_check.md` | 部署前环境检查项 |
-| `deployment/` | systemd 服务模板 |
+| PROJECT_OVERVIEW.md | 项目功能、技术组成、架构边界与版本发布规则 |
+| README.md | 架构边界、当前运行状态、接口入口与 OpenSearch v2 改造范围 |
+| docs/development.md | 本地开发、检查、分支与发布流程 |
+| docs/ops/deployment_runbook.md | 服务发布、日志和代码回滚 |
+| docs/ops/opensearch_v2_cutover.md | v2 数据对齐、读 alias、切换与回滚 |
+| mcp_server/README.md | MCP tools、传输和鉴权 |
 
-## 本地保留
+## 本地档案
 
-以下内容属于本地工作材料，默认不提交到 GitHub：
+不随源代码提交的材料统一放在仓库根目录的 `local/`（已被 Git 忽略）：
 
-- `会议记录/`
-- `相关测试/`
-- `test数据集/`
-- `对外交付文档/`
-- `docs/archive/`
-- `docs/delivery/`
-- `docs/internal/`
-- `docs/superpowers/`
-- `frontend/`
-- `tests/`
-- `artifacts/`、`outputs/`、`reports/`
+| 目录 | 内容 |
+|---|---|
+| `local/delivery/` | 对外交付材料 |
+| `local/meeting-notes/` | 会议记录 |
+| `local/test-evidence/` | 手工测试报告与验证附件 |
+| `local/test-data/` | 原始测试数据（需要时创建） |
 
-这些文件不会被删除，只是不再作为云端仓库内容维护。
+这些材料可用于追溯，但不作为工程事实来源。若其中的结论会影响代码、发布或运行决策，应提炼并更新到本目录的正式工程文档。
+历史的 archive、internal、delivery、superpowers 和重要文档副本已清除；不要重新创建平行文档体系。
