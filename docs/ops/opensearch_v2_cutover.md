@@ -6,7 +6,8 @@
 服务配置和验收顺序；不包含任何真实凭据。
 
 当前实现中，app/repositories/opensearch_repo.py 将 OPENSEARCH_INDEX 原样传给 OpenSearch。
-因此服务不需要为 read alias 重构，但必须先修正与 v2 mapping 不兼容的查询 DSL。
+服务代码已经使用 v2 查询语义，不需要再为 read alias 重构；切换前剩余工作是数据对齐、
+serving 设置恢复、固定样本验收和 alias 验证。
 
 ## 2. 已知 v2 差异
 

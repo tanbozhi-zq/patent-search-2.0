@@ -4,11 +4,12 @@ Self-hosted patent search backend service based on FastAPI and OpenSearch.
 
 ## Current State
 
-The Stage 12 FastAPI + remote HTTP MCP delivery is deployed. The next active
-workstream is adapting the service to the new OpenSearch v2 index while keeping
-the existing production search path recoverable.
+The Stage 12 FastAPI + remote HTTP MCP delivery is deployed. The service code
+now uses the OpenSearch v2 query semantics, while the production read path
+remains unchanged until data, serving settings, fixed samples, and the read
+alias have passed the controlled cutover checks.
 
-Implemented and deployed:
+Implemented capabilities:
 
 - FastAPI app
 - `GET /health`
