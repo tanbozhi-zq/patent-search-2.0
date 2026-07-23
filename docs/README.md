@@ -4,6 +4,7 @@
 
 | 文档 | 用途 |
 |---|---|
+| PROJECT_OVERVIEW.md | 项目功能、技术组成、架构边界与版本发布规则 |
 | README.md | 架构边界、当前运行状态、接口入口与 OpenSearch v2 改造范围 |
 | docs/development.md | 本地开发、检查、分支与发布流程 |
 | docs/ops/deployment_runbook.md | 服务发布、日志和代码回滚 |

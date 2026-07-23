@@ -74,6 +74,7 @@ Project boundaries:
 
 Tracked, project-level documentation:
 
+- `PROJECT_OVERVIEW.md`: 功能、技术组成、架构边界、当前数据演进与版本发布规则。
 - `README.md`: current architecture, runtime boundary, and active migration
   status.
 - `docs/README.md`: document-versioning boundary.
