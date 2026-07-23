@@ -6,7 +6,7 @@ from app.schemas.search import SearchRequest
 
 
 def test_plain_keyword_searches_title_and_abstract():
-    dsl = build_search_dsl(SearchRequest(q="阀门", index_analyzer_mode="normal"))
+    dsl = build_search_dsl(SearchRequest(q="阀门"))
 
     assert dsl["query"]["bool"]["must"][0]["multi_match"]["query"] == "阀门"
     assert dsl["query"]["bool"]["must"][0]["multi_match"]["fields"] == ["Title", "Abstract"]
@@ -17,8 +17,8 @@ def test_bare_ipc_searches_ipc_fields():
 
     should = dsl["query"]["bool"]["must"][0]["bool"]["should"]
     assert {"term": {"IPC": "H02M"}} in should
-    assert {"term": {"IPCList.keyword": "H02M"}} in should
-    assert {"match_phrase": {"IPCList": "H02M"}} in should
+    assert {"term": {"IPCList": "H02M"}} in should
+    assert all("IPCList.keyword" not in str(clause) for clause in should)
 
 
 def test_bare_ipc_with_group_searches_ipc_fields():
@@ -26,20 +26,27 @@ def test_bare_ipc_with_group_searches_ipc_fields():
 
     should = dsl["query"]["bool"]["must"][0]["bool"]["should"]
     assert {"term": {"IPC": "H02M7/483"}} in should
-    assert {"term": {"IPCList.keyword": "H02M7/483"}} in should
-    assert {"match_phrase": {"IPCList": "H02M7/483"}} in should
+    assert {"term": {"IPCList": "H02M7/483"}} in should
 
 
 def test_plain_chinese_keyword_is_not_bare_ipc():
-    dsl = build_search_dsl(SearchRequest(q="阀门", index_analyzer_mode="normal"))
+    dsl = build_search_dsl(SearchRequest(q="阀门"))
 
     assert dsl["query"]["bool"]["must"][0] == {
         "multi_match": {"query": "阀门", "fields": ["Title", "Abstract"]}
     }
 
 
+def test_quoted_plain_keyword_uses_phrase_matching():
+    dsl = build_search_dsl(SearchRequest(q='"阀门"'))
+
+    assert dsl["query"]["bool"]["must"][0] == {
+        "multi_match": {"query": "阀门", "fields": ["Title", "Abstract"], "type": "phrase"}
+    }
+
+
 def test_title_query_uses_title_fields():
-    dsl = build_search_dsl(SearchRequest(q="title:(阀门)", index_analyzer_mode="normal"))
+    dsl = build_search_dsl(SearchRequest(q="title:(阀门)"))
 
     fields = dsl["query"]["bool"]["must"][0]["multi_match"]["fields"]
     assert fields == ["Title", "TitleCN", "TitleEN"]
@@ -50,8 +57,7 @@ def test_ipc_query_uses_should_terms():
 
     should = dsl["query"]["bool"]["must"][0]["bool"]["should"]
     assert {"term": {"IPC": "H02M"}} in should
-    assert {"term": {"IPCList.keyword": "H02M"}} in should
-    assert {"match_phrase": {"IPCList": "H02M"}} in should
+    assert {"term": {"IPCList": "H02M"}} in should
 
 
 def test_application_date_range_query():
@@ -64,7 +70,7 @@ def test_application_date_range_query():
 
 
 def test_tscd_query_searches_title_abstract_claim_and_instructions():
-    dsl = build_search_dsl(SearchRequest(q="tscd:(均衡)", index_analyzer_mode="normal"))
+    dsl = build_search_dsl(SearchRequest(q="tscd:(均衡)"))
 
     multi_match = dsl["query"]["bool"]["must"][0]["multi_match"]
     assert multi_match["query"] == "均衡"

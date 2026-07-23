@@ -153,18 +153,8 @@ def test_invalid_stage_six_queries_return_40001_without_repository_call(client, 
     assert response.json()["data"] is None
 
 
-def test_search_request_defaults_to_index_analyzer_compat_mode():
-    request = SearchRequest(q="阀门")
+def test_search_request_schema_does_not_expose_index_analyzer_mode():
+    assert "index_analyzer_mode" not in SearchRequest.model_json_schema()["properties"]
 
-    assert request.index_analyzer_mode == "compat"
-
-
-def test_search_request_accepts_normal_index_analyzer_mode():
-    request = SearchRequest(q="阀门", index_analyzer_mode="normal")
-
-    assert request.index_analyzer_mode == "normal"
-
-
-def test_search_request_rejects_invalid_index_analyzer_mode():
     with pytest.raises(ValidationError):
-        SearchRequest(q="阀门", index_analyzer_mode="broken")
+        SearchRequest(q="阀门", index_analyzer_mode="compat")

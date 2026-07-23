@@ -42,7 +42,6 @@ REQUIRED_REQUEST_CONTROLS = {
     "page",
     "pageSize",
     "highlight",
-    "indexAnalyzerMode",
 }
 
 REQUIRED_COLLAPSE_CONTROLS = {
@@ -321,6 +320,8 @@ def main() -> int:
     missing_controls = [control for control in sorted(REQUIRED_REQUEST_CONTROLS) if f'id="{control}"' not in html]
     if missing_controls:
         raise AssertionError(f"console missing request controls: {missing_controls}")
+    if 'id="indexAnalyzerMode"' in html or "index_analyzer_mode" in html:
+        raise AssertionError("console must not expose the removed analyzer mode")
 
     missing_collapse_controls = [
         control for control in sorted(REQUIRED_COLLAPSE_CONTROLS) if f'id="{control}"' not in html

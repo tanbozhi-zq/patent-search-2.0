@@ -9,8 +9,6 @@ from app.mappings.query_field_mapping import (
     MAIN_IPC_FIELD,
     SUPPORTED_FIELDS,
     TEXT_FIELD_MAPPING,
-    get_normal_analyzer_fields,
-    get_risky_analyzer_fields,
 )
 from app.query.ast import AndNode, FieldQuery, NotNode, OrNode, PhraseNode, QueryNode, RangeQuery, WordNode
 from app.query.parser import parse_query
@@ -18,7 +16,7 @@ from app.schemas.search import SearchRequest
 
 
 def build_search_dsl(request: SearchRequest) -> dict:
-    must = [_build_node_clause(parse_query(request.q), request.index_analyzer_mode)]
+    must = [_build_node_clause(parse_query(request.q))]
     filters = []
 
     ds = request.ds.lower()
@@ -39,23 +37,23 @@ def build_search_dsl(request: SearchRequest) -> dict:
     }
 
 
-def _build_node_clause(node: QueryNode, index_analyzer_mode: str) -> dict:
+def _build_node_clause(node: QueryNode) -> dict:
     if isinstance(node, WordNode):
         if _is_bare_ipc(node.value):
-            return _build_ipc_clause(node.value.upper(), index_analyzer_mode)
+            return _build_ipc_clause(node.value.upper())
         return _multi_match(node.value, ["Title", "Abstract"])
     if isinstance(node, PhraseNode):
-        return _multi_match(node.value, ["Title", "Abstract"])
+        return _phrase_multi_match(node.value, ["Title", "Abstract"])
     if isinstance(node, FieldQuery):
-        return _build_field_clause(node, index_analyzer_mode)
+        return _build_field_clause(node)
     if isinstance(node, RangeQuery):
         return _build_range_clause(node)
     if isinstance(node, AndNode):
         return {
             "bool": {
                 "must": [
-                    _build_node_clause(node.left, index_analyzer_mode),
-                    _build_node_clause(node.right, index_analyzer_mode),
+                    _build_node_clause(node.left),
+                    _build_node_clause(node.right),
                 ]
             }
         }
@@ -63,18 +61,18 @@ def _build_node_clause(node: QueryNode, index_analyzer_mode: str) -> dict:
         return {
             "bool": {
                 "should": [
-                    _build_node_clause(node.left, index_analyzer_mode),
-                    _build_node_clause(node.right, index_analyzer_mode),
+                    _build_node_clause(node.left),
+                    _build_node_clause(node.right),
                 ],
                 "minimum_should_match": 1,
             }
         }
     if isinstance(node, NotNode):
-        return {"bool": {"must_not": [_build_node_clause(node.child, index_analyzer_mode)]}}
+        return {"bool": {"must_not": [_build_node_clause(node.child)]}}
     raise QuerySyntaxError("q 查询语法错误：无法解析查询式")
 
 
-def _build_field_clause(node: FieldQuery, index_analyzer_mode: str) -> dict:
+def _build_field_clause(node: FieldQuery) -> dict:
     field = node.field
     if field not in SUPPORTED_FIELDS:
         raise QuerySyntaxError(f"q 查询语法错误：不支持字段 {field}")
@@ -84,9 +82,9 @@ def _build_field_clause(node: FieldQuery, index_analyzer_mode: str) -> dict:
         raise QuerySyntaxError(f"q 查询语法错误：字段 {field} 的值不能为空")
 
     if field in TEXT_FIELD_MAPPING:
-        return _build_field_value_clause(node.value, field, index_analyzer_mode)
+        return _build_field_value_clause(node.value, field)
     if field == "ipc":
-        return _build_ipc_clause(value, index_analyzer_mode)
+        return _build_ipc_clause(value)
     if field == MAIN_IPC_FIELD:
         return _build_main_ipc_value_clause(node.value, field)
     if field in IDENTIFIER_FIELD_MAPPING:
@@ -97,17 +95,21 @@ def _build_field_clause(node: FieldQuery, index_analyzer_mode: str) -> dict:
     raise QuerySyntaxError(f"q 查询语法错误：不支持字段 {field}")
 
 
-def _build_field_value_clause(value_node: QueryNode, query_field: str, index_analyzer_mode: str) -> dict:
+def _build_field_value_clause(value_node: QueryNode, query_field: str) -> dict:
     if isinstance(value_node, (WordNode, PhraseNode)):
-        if index_analyzer_mode == "compat":
-            return _compat_multi_match(value_node.value, query_field)
+        if query_field in {"applicant", "currentAssignee", "agency", "agent"}:
+            return _phrase_multi_match(value_node.value, TEXT_FIELD_MAPPING[query_field])
+        if query_field == "type":
+            return _build_keyword_clause(value_node.value, TEXT_FIELD_MAPPING[query_field])
+        if isinstance(value_node, PhraseNode):
+            return _phrase_multi_match(value_node.value, TEXT_FIELD_MAPPING[query_field])
         return _multi_match(value_node.value, TEXT_FIELD_MAPPING[query_field])
     if isinstance(value_node, AndNode):
         return {
             "bool": {
                 "must": [
-                    _build_field_value_clause(value_node.left, query_field, index_analyzer_mode),
-                    _build_field_value_clause(value_node.right, query_field, index_analyzer_mode),
+                    _build_field_value_clause(value_node.left, query_field),
+                    _build_field_value_clause(value_node.right, query_field),
                 ]
             }
         }
@@ -115,32 +117,15 @@ def _build_field_value_clause(value_node: QueryNode, query_field: str, index_ana
         return {
             "bool": {
                 "should": [
-                    _build_field_value_clause(value_node.left, query_field, index_analyzer_mode),
-                    _build_field_value_clause(value_node.right, query_field, index_analyzer_mode),
+                    _build_field_value_clause(value_node.left, query_field),
+                    _build_field_value_clause(value_node.right, query_field),
                 ],
                 "minimum_should_match": 1,
             }
         }
     if isinstance(value_node, NotNode):
-        return {"bool": {"must_not": [_build_field_value_clause(value_node.child, query_field, index_analyzer_mode)]}}
+        return {"bool": {"must_not": [_build_field_value_clause(value_node.child, query_field)]}}
     raise QuerySyntaxError("q 查询语法错误：字段值不支持该表达式")
-
-
-def _compat_multi_match(query: str, query_field: str) -> dict:
-    normal_fields = get_normal_analyzer_fields(query_field)
-    risky_fields = get_risky_analyzer_fields(query_field)
-
-    clauses = []
-    if normal_fields:
-        clauses.append(_multi_match(query, normal_fields))
-    if risky_fields:
-        clauses.append(_phrase_multi_match(query, risky_fields))
-
-    if not clauses:
-        return _multi_match(query, TEXT_FIELD_MAPPING[query_field])
-    if len(clauses) == 1:
-        return clauses[0]
-    return {"bool": {"should": clauses, "minimum_should_match": 1}}
 
 
 def _phrase_multi_match(query: str, fields: list[str]) -> dict:
@@ -172,17 +157,12 @@ def _build_range_clause(node: RangeQuery) -> dict:
     raise QuerySyntaxError(f"q 查询语法错误：不支持字段 {node.field}")
 
 
-def _build_ipc_clause(code: str, index_analyzer_mode: str) -> dict:
+def _build_ipc_clause(code: str) -> dict:
     if not code:
         raise QuerySyntaxError("q 查询语法错误：字段 ipc 的值不能为空")
-    ipc_list_clause = (
-        [{"term": {"IPCList.keyword": code}}, {"match_phrase": {"IPCList": code}}]
-        if index_analyzer_mode == "compat"
-        else [{"match": {"IPCList": code}}]
-    )
     should = [
         {"term": {"IPC": code}},
-        *ipc_list_clause,
+        {"term": {"IPCList": code}},
         {"term": {"IPCSmallCategory": code}},
         {"term": {"IPCLargeGroup": code}},
         {"term": {"IPCSmallGroup": code}},
@@ -251,16 +231,16 @@ def _build_identifier_value_clause(value_node: QueryNode, fields: list[str], que
 
 
 def _build_identifier_clause(value: str, fields: list[str]) -> dict:
-    should = []
-    for field in fields:
-        should.extend(
-            [
-                {"term": {field: value}},
-                {"term": {f"{field}.keyword": value}},
-                {"match_phrase": {field: value}},
-            ]
-        )
-    return {"bool": {"should": should, "minimum_should_match": 1}}
+    return _build_keyword_clause(value, fields)
+
+
+def _build_keyword_clause(value: str, fields: list[str]) -> dict:
+    return {
+        "bool": {
+            "should": [{"term": {field: value}} for field in fields],
+            "minimum_should_match": 1,
+        }
+    }
 
 
 def _node_value(node: QueryNode) -> str:

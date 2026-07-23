@@ -63,9 +63,7 @@ def test_repository_get_patent_by_identifier_uses_patent_id_first():
     assert hit["_source"]["patent_id"] == "cn-1"
     assert repository.client.calls[0]["index"] == "patent_index"
     assert repository.client.calls[0]["body"]["size"] == 1
-    assert repository.client.calls[0]["body"]["query"]["bool"]["should"][0] == {
-        "term": {"patent_id": "cn-1"}
-    }
+    assert repository.client.calls[0]["body"]["query"] == {"term": {"patent_id": "cn-1"}}
 
 
 def test_repository_get_patent_by_identifier_falls_back_to_publication_number():
@@ -93,12 +91,8 @@ def test_repository_get_patent_by_identifier_falls_back_to_publication_number():
     hit = repository.get_patent_by_identifier("CN2A")
 
     assert hit["_source"]["patent_id"] == "cn-2"
-    assert repository.client.calls[0]["body"]["query"]["bool"]["should"][0] == {
-        "term": {"patent_id": "CN2A"}
-    }
-    assert repository.client.calls[1]["body"]["query"]["bool"]["should"][0] == {
-        "term": {"PublicationNumber": "CN2A"}
-    }
+    assert repository.client.calls[0]["body"]["query"] == {"term": {"patent_id": "CN2A"}}
+    assert repository.client.calls[1]["body"]["query"] == {"term": {"PublicationNumber": "CN2A"}}
 
 
 def test_repository_get_patent_by_identifier_falls_back_to_application_number():
@@ -127,9 +121,7 @@ def test_repository_get_patent_by_identifier_falls_back_to_application_number():
     hit = repository.get_patent_by_identifier("CN2024000001")
 
     assert hit["_source"]["patent_id"] == "cn-3"
-    assert repository.client.calls[2]["body"]["query"]["bool"]["should"][0] == {
-        "term": {"ApplicationNumber": "CN2024000001"}
-    }
+    assert repository.client.calls[2]["body"]["query"] == {"term": {"ApplicationNumber": "CN2024000001"}}
 
 
 def test_repository_get_patent_by_identifier_returns_none_when_not_found():

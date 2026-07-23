@@ -69,13 +69,13 @@ FastAPI 是唯一直接访问 OpenSearch 的服务。MCP 服务通过 `PATENT_SE
 
 ### 服务版本
 
-当前 FastAPI 对外声明的版本为 `0.1.0`，定义在 `app/main.py`。仓库暂未建立统一的版本元数据、变更日志或 Git tag 发布流程；在建立前，不应把该字符串误认为已经具备完整的发布管理。
+当前服务版本为 `0.2.0`，唯一来源是 `app/version.py`，FastAPI 从该模块读取版本。面向使用者的变更记录在 `CHANGELOG.md`；正式发布仍必须由 Git tag 指向实际部署的提交。
 
 ### OpenSearch v2
 
 服务的读目标由 `OPENSEARCH_INDEX` 决定。代码会将该值原样传给 OpenSearch；它不会自动选择最新创建的物理索引，也不会自动复制旧索引的新写入。
 
-目前的 v2 切换仍是未完成的改造：v2 的 `IPCList` 为直接 `keyword`，而现有兼容 DSL 仍会在相关分支使用 `IPCList.keyword`。在读路径切换前，必须完成 DSL 兼容、历史与增量数据对齐、serving 设置恢复、固定样本验收，并通过稳定读 alias 原子切换。详细步骤见 [docs/ops/opensearch_v2_cutover.md](docs/ops/opensearch_v2_cutover.md)。
+v2 查询语义已在服务代码中适配：`IPCList` 使用直接 keyword 查询，普通文本、引号短语、实体字段和其他 keyword 字段各自采用固定 DSL。读路径切换仍须完成历史与增量数据对齐、serving 设置恢复、固定样本验收，并通过稳定读 alias 原子切换。详细步骤见 [docs/ops/opensearch_v2_cutover.md](docs/ops/opensearch_v2_cutover.md)。
 
 这里的“v2”是**索引/mapping 版本**，不是服务软件版本。一个新的物理索引不等于一个新的服务发布版本。
 
@@ -111,13 +111,7 @@ FastAPI 是唯一直接访问 OpenSearch 的服务。MCP 服务通过 `PATENT_SE
 
 ### 6.3 下一步应补齐的发布基础设施
 
-在下一次需要正式发布服务版本前，应单独完成以下小改造：
-
-1. 在 `pyproject.toml` 设定唯一服务版本源，并让 FastAPI 从该来源读取版本。
-2. 新建 `CHANGELOG.md`，按版本记录面向使用者的变更、升级动作和回滚注意事项。
-3. 在 CI 或发布检查中校验 Git tag、版本号与变更日志的一致性。
-
-这三项完成前，每次发布仍应至少记录 Git 提交号、`app/main.py` 中声明的版本、部署时间和验证结果，避免“同一个版本号对应多套代码”。
+版本源和变更日志已建立。每次正式发布仍应在 CI 或发布检查中核对 Git tag、版本号与变更日志的一致性，并记录 Git 提交号、部署时间和验证结果。
 
 ## 7. 文档导航与维护原则
 

@@ -10,14 +10,17 @@ def build_legal_status_clause(value: str) -> dict:
     if keywords:
         return {
             "bool": {
-                "should": [{"match": {"LatestLegalStatus": keyword}} for keyword in keywords],
+                "should": [{"term": {"LatestLegalStatus": keyword}} for keyword in keywords],
                 "minimum_should_match": 1,
             }
         }
 
     return {
-        "multi_match": {
-            "query": value,
-            "fields": ["LatestLegalStatus", "LegalStatus"],
+        "bool": {
+            "should": [
+                {"term": {"LatestLegalStatus": value}},
+                {"term": {"LegalStatus": value}},
+            ],
+            "minimum_should_match": 1,
         }
     }

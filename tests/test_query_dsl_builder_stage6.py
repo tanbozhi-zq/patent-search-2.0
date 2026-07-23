@@ -6,7 +6,7 @@ from app.schemas.search import SearchRequest
 
 
 def query_clause(q: str) -> dict:
-    return build_search_dsl(SearchRequest(q=q, index_analyzer_mode="normal"))["query"]["bool"]["must"][0]
+    return build_search_dsl(SearchRequest(q=q))["query"]["bool"]["must"][0]
 
 
 def test_and_query_maps_to_bool_must():
@@ -46,41 +46,71 @@ def test_parenthesized_grouping_combines_with_and():
     assert clause["bool"]["must"][1]["bool"]["minimum_should_match"] == 1
 
 
-def test_applicant_current_assignee_and_type_fields():
-    assert query_clause("applicant:(华为技术有限公司)")["multi_match"]["fields"] == [
-        "Applicant",
-        "ApplicantNormalized",
-        "FirstApplicant",
-    ]
-    assert query_clause("currentAssignee:(华为技术有限公司)")["multi_match"]["fields"] == [
-        "Assignee",
-        "AssigneeNormalized",
-    ]
-    assert query_clause("type:(发明专利)")["multi_match"]["fields"] == ["Type", "PatentTypeCode", "Kind"]
+def test_entity_fields_always_use_phrase_matching():
+    assert query_clause("applicant:(华为技术有限公司)") == {
+        "multi_match": {
+            "query": "华为技术有限公司",
+            "fields": ["Applicant", "ApplicantNormalized", "FirstApplicant"],
+            "type": "phrase",
+        }
+    }
+    assert query_clause("currentAssignee:(华为技术有限公司)") == {
+        "multi_match": {
+            "query": "华为技术有限公司",
+            "fields": ["Assignee", "AssigneeNormalized"],
+            "type": "phrase",
+        }
+    }
 
 
-def test_stage_12_agency_and_agent_fields():
-    assert query_clause("agency:(知识产权代理)")["multi_match"]["fields"] == ["Agency", "AgencyRaw"]
-    assert query_clause("agent:(张)")["multi_match"]["fields"] == ["Agent"]
+def test_agency_and_agent_fields_always_use_phrase_matching():
+    assert query_clause("agency:(知识产权代理)")["multi_match"] == {
+        "query": "知识产权代理",
+        "fields": ["Agency", "AgencyRaw"],
+        "type": "phrase",
+    }
+    assert query_clause("agent:(张)")["multi_match"] == {
+        "query": "张",
+        "fields": ["Agent"],
+        "type": "phrase",
+    }
 
 
-def test_stage_10_5_fine_grained_text_fields_in_normal_mode():
+def test_fine_grained_text_fields_use_multi_match_for_words():
     assert query_clause("mainClaim:(均衡)")["multi_match"]["fields"] == ["MainClaim"]
     assert query_clause("claims:(均衡)")["multi_match"]["fields"] == ["Requirement"]
     assert query_clause("description:(均衡)")["multi_match"]["fields"] == ["Instructions"]
 
 
-def test_stage_10_5_or_phrase_queries_in_normal_mode():
+def test_quoted_text_values_use_phrase_matching():
     clause = query_clause('claims:("均衡" OR "平衡")')
 
     assert clause["bool"]["minimum_should_match"] == 1
     assert clause["bool"]["should"] == [
-        {"multi_match": {"query": "均衡", "fields": ["Requirement"]}},
-        {"multi_match": {"query": "平衡", "fields": ["Requirement"]}},
+        {"multi_match": {"query": "均衡", "fields": ["Requirement"], "type": "phrase"}},
+        {"multi_match": {"query": "平衡", "fields": ["Requirement"], "type": "phrase"}},
     ]
 
 
-def test_stage_10_5_combines_with_ipc_and_not_in_normal_mode():
+def test_keyword_type_and_identifiers_use_exact_terms():
+    assert query_clause("type:(发明专利)") == {
+        "bool": {
+            "should": [
+                {"term": {"Type": "发明专利"}},
+                {"term": {"PatentTypeCode": "发明专利"}},
+                {"term": {"Kind": "发明专利"}},
+            ],
+            "minimum_should_match": 1,
+        }
+    }
+    identifier_clause = query_clause("applicationNumber:(CN202410000001.0)")
+    assert identifier_clause["bool"]["should"] == [
+        {"term": {"ApplicationNumber": "CN202410000001.0"}},
+        {"term": {"ApplicationNumberAliases": "CN202410000001.0"}},
+    ]
+
+
+def test_boolean_nodes_combine_v2_field_clauses():
     ipc_claims = query_clause("ipc:H02M AND claims:(均衡)")
     assert ipc_claims["bool"]["must"][1]["multi_match"]["fields"] == ["Requirement"]
 

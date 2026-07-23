@@ -10,13 +10,14 @@ from app.api.legal_history import router as legal_history_router
 from app.api.search import router as search_router
 from app.core.error_handlers import register_error_handlers
 from app.core.logging import configure_logging
+from app.version import __version__
 
 
 configure_logging()
 
 app = FastAPI(
     title="patent-search-service",
-    version="0.1.0",
+    version=__version__,
     docs_url="/docs",
     redoc_url="/redoc",
 )

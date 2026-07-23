@@ -17,7 +17,7 @@ Implemented and deployed:
 - OpenSearch client construction
 - `POST /api/patent/search`
 - Boolean `q` parser and OpenSearch DSL builder
-- analyzer compatibility mode through `index_analyzer_mode`
+- v2-specific unified query semantics for text, entities, and keyword fields
 - `GET /api/patent/detail/{patent_id}`
 - `GET /api/patent/detail/{patent_id}?include_description=true`
 - `GET /api/patent/citations/{patent_id}`
@@ -50,12 +50,10 @@ Creating or reindexing a new OpenSearch index does not mirror subsequent
 writes from the old one. Before moving the read path to v2, the project must:
 
 1. Confirm v2 has the required historical data and all incremental updates.
-2. Update query compatibility for the v2 mapping, especially `IPCList`, which
-   is a direct `keyword` field in v2 rather than `IPCList.keyword`.
-3. Set an appropriate serving posture for v2, including refresh and replica
+2. Set an appropriate serving posture for v2, including refresh and replica
    settings, then verify fixed search, detail, citation, and legal-history
    cases.
-4. Switch the read target atomically through an OpenSearch read alias; retain
+3. Switch the read target atomically through an OpenSearch read alias; retain
    the old index for rollback.
 
 The current code reads exactly the index named by `OPENSEARCH_INDEX`; it does

@@ -47,15 +47,7 @@ class OpenSearchRepository:
         return None
 
     def _identifier_query(self, field: str, identifier: str) -> dict:
-        return {
-            "bool": {
-                "should": [
-                    {"term": {field: identifier}},
-                    {"match_phrase": {field: identifier}},
-                ],
-                "minimum_should_match": 1,
-            }
-        }
+        return {"term": {field: identifier}}
 
     def _first_hit(self, raw: dict) -> Optional[dict]:
         hits = raw.get("hits", {}).get("hits", [])

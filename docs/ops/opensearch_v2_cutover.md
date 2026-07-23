@@ -18,8 +18,8 @@
 | 中文分词字段 | 部分 standard | 多个中文字段调整为 ik_max_word |
 | 批量加载设置 | serving 设置 | 允许临时 0 副本、关闭自动 refresh |
 
-当前 compat DSL 仍含 IPCList.keyword。切换读路径前，应将 v2 的 IPC 精确分支改为 term/terms on
-IPCList，并以真实样本比较命中差异。
+服务已使用 v2 查询语义：IPC 精确分支为直接 `term` 查询 `IPCList`，不再使用
+`IPCList.keyword` 或 analyzer 模式。切换读路径前仍须以真实样本比较命中差异。
 
 ## 3. 切换顺序
 
