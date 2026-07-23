@@ -44,10 +44,12 @@ REQUIRED_REQUEST_CONTROLS = {
     "highlight",
 }
 
-REQUIRED_COLLAPSE_CONTROLS = {
-    "searchBody",
-    "searchToggle",
-    "searchSummary",
+REQUIRED_INTERACTION_CONTROLS = {
+    "searchForm",
+    "searchButton",
+    "queryStatus",
+    "advancedPanel",
+    "advancedToggle",
     "requestBody",
     "requestToggle",
 }
@@ -261,18 +263,14 @@ def _extract_console_builder_output(html: str) -> dict:
           };
         });
 
-        const searchBody = context.document.getElementById('searchBody');
-        const searchToggle = context.document.getElementById('searchToggle');
-        const searchSummary = context.document.getElementById('searchSummary');
-        const initialSearchCollapsed = searchBody.classList.contains('collapsed');
-        const initialSearchToggle = searchToggle.textContent;
-        const initialSearchSummaryHidden = searchSummary.style.display === 'none';
-
-        if (typeof context.toggleSearchPanel === 'function') {
-          context.toggleSearchPanel();
+        const advancedPanel = context.document.getElementById('advancedPanel');
+        const advancedToggle = context.document.getElementById('advancedToggle');
+        advancedPanel.hidden = true;
+        if (typeof context.toggleAdvancedPanel === 'function') {
+          context.toggleAdvancedPanel();
         }
-        const toggledSearchExpanded = !searchBody.classList.contains('collapsed');
-        const toggledSearchToggle = searchToggle.textContent;
+        const advancedExpanded = !advancedPanel.hidden;
+        const advancedAriaExpanded = advancedToggle.attributes['aria-expanded'];
 
         if (typeof context.setRequestInfo === 'function') {
           context.setRequestInfo('probe request');
@@ -280,19 +278,16 @@ def _extract_console_builder_output(html: str) -> dict:
         const requestBody = context.document.getElementById('requestBody');
         const requestToggle = context.document.getElementById('requestToggle');
         const requestPanel = context.document.getElementById('requestPanel');
-        const requestCollapsedAfterInfo = requestBody.classList.contains('collapsed');
-        const requestToggleAfterInfo = requestToggle.textContent;
+        const requestCollapsedAfterInfo = requestBody.hidden;
+        const requestToggleAfterInfo = requestToggle.attributes['aria-expanded'];
 
         console.log(JSON.stringify({
           fields: builder.fields.map((field) => field.value),
           outputs,
           ui: {
-            initialSearchCollapsed,
-            initialSearchToggle,
-            initialSearchSummaryHidden,
-            toggledSearchExpanded,
-            toggledSearchToggle,
-            requestPanelDisplayAfterInfo: requestPanel.style.display,
+            advancedExpanded,
+            advancedAriaExpanded,
+            requestPanelHiddenAfterInfo: requestPanel.hidden,
             requestCollapsedAfterInfo,
             requestToggleAfterInfo,
           },
@@ -323,11 +318,17 @@ def main() -> int:
     if 'id="indexAnalyzerMode"' in html or "index_analyzer_mode" in html:
         raise AssertionError("console must not expose the removed analyzer mode")
 
-    missing_collapse_controls = [
-        control for control in sorted(REQUIRED_COLLAPSE_CONTROLS) if f'id="{control}"' not in html
+    missing_interaction_controls = [
+        control for control in sorted(REQUIRED_INTERACTION_CONTROLS) if f'id="{control}"' not in html
     ]
-    if missing_collapse_controls:
-        raise AssertionError(f"console missing collapse controls: {missing_collapse_controls}")
+    if missing_interaction_controls:
+        raise AssertionError(f"console missing interaction controls: {missing_interaction_controls}")
+    if 'onclick="doSearch()"' in html or '生成并检索' in html:
+        raise AssertionError("console must expose one primary search action")
+    if 'role="status"' not in html or 'aria-live="polite"' not in html:
+        raise AssertionError("console must expose an immediate live query status")
+    if 'role="tablist"' not in html or 'role="tab"' not in html:
+        raise AssertionError("console detail tabs must use semantic tab controls")
 
     builder_output = _extract_console_builder_output(html)
     missing_builder_fields = [
@@ -349,24 +350,14 @@ def main() -> int:
         build_search_dsl(SearchRequest(q=actual["q"]))
 
     ui = builder_output["ui"]
-    if not ui["initialSearchCollapsed"]:
-        raise AssertionError("console search controls should be collapsed by default")
-    if ui["initialSearchToggle"] != "展开查询":
-        raise AssertionError(f"console search toggle should say 展开查询 by default, got {ui['initialSearchToggle']!r}")
-    if ui["initialSearchSummaryHidden"]:
-        raise AssertionError("console search summary should be visible while controls are collapsed")
-    if not ui["toggledSearchExpanded"]:
-        raise AssertionError("console search controls should expand after clicking the toggle")
-    if ui["toggledSearchToggle"] != "收起查询":
-        raise AssertionError(f"console search toggle should say 收起查询 after expansion, got {ui['toggledSearchToggle']!r}")
-    if ui["requestPanelDisplayAfterInfo"] != "block":
-        raise AssertionError("request panel header should appear after request info is written")
+    if not ui["advancedExpanded"] or ui["advancedAriaExpanded"] != "true":
+        raise AssertionError("advanced controls must expose their expanded state")
+    if ui["requestPanelHiddenAfterInfo"]:
+        raise AssertionError("request panel should appear after request info is written")
     if not ui["requestCollapsedAfterInfo"]:
         raise AssertionError("request info body should remain collapsed by default after request info is written")
-    if ui["requestToggleAfterInfo"] != "▶":
-        raise AssertionError(
-            f"request info toggle should show collapsed state by default, got {ui['requestToggleAfterInfo']!r}"
-        )
+    if ui["requestToggleAfterInfo"] != "false":
+        raise AssertionError(f"request info toggle should expose collapsed state, got {ui['requestToggleAfterInfo']!r}")
 
     print("console coverage checks passed")
     return 0
