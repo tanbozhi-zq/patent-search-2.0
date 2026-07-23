@@ -1,186 +1,70 @@
-# 部署环境确认清单
+# 部署与 OpenSearch v2 环境确认
 
-## 1. 当前结论
+## 1. 当前状态
 
-部署环境按生产环境处理，服务器、OpenSearch 连通性、服务端口和第一阶段部署方式已完成初步确认。
+专利检索 HTTP API 与远程 HTTP MCP 已在生产服务器以 systemd 方式运行：
 
-当前生产约束：
+- patent-search-service.service：FastAPI/Uvicorn，端口 8000。
+- patent-mcp.service：Streamable HTTP MCP，端口 9000、路径 /mcp。
+- API 健康检查可用；MCP 在未带 Bearer Token 时返回 401。
 
-1. 服务器公网 `8000` 端口已验证可访问，但生产环境不建议长期使用公网 IP + 裸端口暴露服务。
-2. 第一版服务必须预留并支持 `X-API-Key` 鉴权。
-3. OpenSearch 使用 HTTPS，但当前存在自签名证书链问题；测试和初期联调可使用 `verify_certs=False`，生产长期运行建议配置可信 CA 证书。
-4. 当前 Docker 和 Nginx 未安装，第一阶段部署方式采用 `work` 用户 + Python venv + FastAPI/Uvicorn + systemd。
-5. SaaS 后端正式访问方式仍需确认：内网直连 / Nginx / 公司 API 网关。
+服务配置仍通过 OPENSEARCH_INDEX 直接决定读取的物理索引或读 alias。当前部署读取
+patent_index；新索引 patent_index_v2_20260716 已用于入库迁移，但尚未完成 API/MCP
+读路径切换。
 
-## 2. 服务器环境
+不要把“新索引已创建”或“新索引正在写入”视为服务已切换：OpenSearch 的两个物理索引不会自动
+同步。
 
-| 类别 | 确认项 | 当前状态 |
-|---|---|---|
-| 部署环境 | 生产环境 | 已确认 |
-| 公网 IP | `124.174.76.216` | 已确认 |
-| 内网 IP | `192.168.1.149` | 已确认，SaaS 是否可内网访问待确认 |
-| 主机名 | `patent-search-mcp` | 已确认 |
-| 操作系统 | CentOS Stream 9 | 已确认 |
-| 内核版本 | `5.14.0-312.el9.x86_64` | 已确认 |
-| 架构 | `x86_64` | 已确认 |
-| CPU | 4 vCPU | 已确认 |
-| 内存 | 15 GiB | 已确认 |
-| 磁盘 | 根目录约 394G，可用约 375G | 已确认 |
-| root SSH | 可登录 | 已确认 |
-| work SSH | 可登录 | 已确认 |
-| 推荐部署账号 | `work` | 已确认 |
-| 凭据处理 | root、work、OpenSearch 密码只写入安全凭据或服务器 `.env`，不写入 Git 文档 | 已确认 |
-| Python | Python 3.9.19 | 已确认 |
-| pip / venv | 可用 | 已确认 |
-| Docker | 未安装 | 当前不可用 |
-| Docker Compose | 未安装 | 当前不可用 |
-| systemd | 可用，版本 250 | 已确认 |
-| sudo 权限 | `work` 用户可通过 sudo 配置 systemd | 已确认 |
-| Nginx | 未安装 | 当前不可用 |
-| 服务端口 | `8000` | 已确认 |
-| 8000 占用情况 | 未被占用 | 已确认 |
-| firewalld | inactive / dead | 已确认 |
-| 8000 公网访问 | `http://124.174.76.216:8000` 已验证可访问 | 已确认 |
-| 鉴权 | 第一版预留 `X-API-Key` | 已确认 |
-| 日志目录 | `/var/log/patent-search-service` | 建议值 |
-| 代码目录 | `/opt/patent-search-service` | 建议值 |
+## 2. 服务器与安全边界
 
-## 3. OpenSearch 连接信息
-
-当前 `.env.example` 中约定如下：
-
-```env
-OPENSEARCH_HOST=opensearch-o-00gcv9almneh.escloud.volces.com
-OPENSEARCH_PORT=9200
-OPENSEARCH_USE_HTTPS=true
-OPENSEARCH_USER=admin
-OPENSEARCH_PASS=
-OPENSEARCH_INDEX=patent_index
-OPENSEARCH_VERIFY_CERTS=false
-OPENSEARCH_TIMEOUT_SECONDS=30
-```
-
-需要确认：
-
-| 确认项 | 当前建议 | 当前状态 |
-|---|---|---|
-| OpenSearch Host | `opensearch-o-00gcv9almneh.escloud.volces.com` | 已确认 |
-| OpenSearch Port | `9200` | 已确认 |
-| 是否 HTTPS | `true` | 已确认 |
-| 用户名 | `admin` | 已确认 |
-| 密码 | 通过 `.env` 配置，不提交 Git | 已确认处理方式 |
-| 索引名 | `patent_index` | 已确认 |
-| 索引存在 | `patent_index` 存在 | 已确认 |
-| 索引可查询 | `_count` 和 `match_all size=1` 成功 | 已确认 |
-| 连通性 | 部署服务器可访问 OpenSearch | 已验证 |
-| 查询权限 | 服务账号可读取索引 | 已验证 |
-| 数据量 | 143,773,810 条 | 已确认 |
-| OpenSearch 版本 | 3.3.0 | 已确认 |
-| 证书 | 自签名证书链，普通校验失败 | 待生产化处理 |
-
-## 4. 建议执行的环境命令
-
-### 4.1 服务器登录信息
-
-服务器公网 IP：
-
-```text
-124.174.76.216
-```
-
-推荐部署用户：
-
-```text
-work
-```
-
-root 用户仅用于必要的系统管理操作，不作为长期部署维护用户。root、work 和 OpenSearch 密码不得写入 Git 文档；开发或运维需要时，由项目总控通过安全方式提供，或直接写入服务器 `/opt/patent-search-service/.env`。
-
-服务器基础信息：
-
-```bash
-uname -a
-cat /etc/os-release
-lscpu
-free -h
-df -h
-ip addr
-```
-
-运行环境：
-
-```bash
-python3 --version
-pip3 --version
-docker --version
-systemctl --version
-nginx -v
-```
-
-OpenSearch 连通性：
-
-```bash
-curl -k -u "$OPENSEARCH_USER:$OPENSEARCH_PASS" "https://$OPENSEARCH_HOST:$OPENSEARCH_PORT"
-curl -k -u "$OPENSEARCH_USER:$OPENSEARCH_PASS" "https://$OPENSEARCH_HOST:$OPENSEARCH_PORT/patent_index/_count"
-```
-
-端口检查：
-
-```bash
-ss -lntp
-```
-
-## 5. 推荐部署约定
-
-第一版建议：
-
-| 项 | 建议 |
+| 项目 | 当前约定 |
 |---|---|
-| 服务名称 | `patent-search-service` |
-| 运行方式 | `work` 用户 + Python venv + FastAPI/Uvicorn + systemd |
-| 默认端口 | `8000` |
-| 健康检查 | `GET /health` |
-| 配置方式 | `.env` |
-| 日志输出 | 控制台 + 文件日志，后续接入日志平台 |
-| 代码目录 | `/opt/patent-search-service` |
-| 日志目录 | `/var/log/patent-search-service` |
-| 鉴权 | `ENABLE_AUTH=true/false` + `X-API-Key` |
-| OpenSearch 证书 | 初期可 `verify_certs=False`，生产长期建议配置 CA |
+| 运行账号 | work |
+| 项目目录 | /opt/patent-search-service |
+| 运行方式 | Python venv + systemd |
+| API 鉴权 | X-API-Key |
+| MCP 鉴权 | Authorization: Bearer <MCP_ACCESS_TOKEN> |
+| 密钥存放 | 仅服务器 .env 或认可的密钥管理系统 |
 
-## 6. 阻塞项判断
+不得把 API Token、MCP Token、OpenSearch 密码或私钥写入 Git、交付文档、日志或聊天记录。
 
-以下任一项未确认时，不进入生产正式流量：
+## 3. OpenSearch v2 现状
 
-1. SaaS 后端正式访问方式未确认。
-2. 生产入口仍使用公网 IP + `8000` 裸端口。
-3. 接口鉴权未启用。
-4. OpenSearch 证书校验长期关闭且无运维确认。
-5. 缺少 systemd 服务配置和运行日志路径。
-6. 缺少服务异常恢复、重启策略和运维交接说明。
+| 项目 | 旧索引 | v2 目标索引 |
+|---|---|---|
+| 名称 | patent_index | patent_index_v2_20260716 |
+| IPCList | text + .keyword | 直接 keyword |
+| mapping 动态策略 | true | strict |
+| 当前服务读路径 | 是 | 否 |
+| serving 前目标副本数 | 1 | 1 |
+| serving 前目标刷新周期 | 10s | 10s |
 
-## 7. 当前仍需确认
+v2 在批量加载阶段可以使用 number_of_replicas=0、refresh_interval=-1，但这不是可直接
+承接检索流量的设置。切换前必须恢复 serving 设置并显式 refresh。
 
-1. SaaS 后端是否能访问服务器内网 IP `192.168.1.149`。
-2. 生产入口采用内网直连、Nginx 反向代理，还是公司 API 网关。
-3. 是否安装 Nginx 并提供 HTTPS 入口。
-4. 是否由运维提供 OpenSearch CA 证书。
-5. 生产 API Token 的生成、保存和轮换责任人。
-6. 服务器 `.env` 的最终维护责任人。
+## 4. v2 切换前检查
 
-## 8. 部署结论
+1. 核对 v2 的文档数、增量更新和删除结果，不只比较 _count。
+2. 对 dynamic: strict 做真实入库样本验证；未知字段必须显式处理，不能依赖旧索引自动扩展 mapping。
+3. 修改并测试 IPC DSL：v2 使用 term/terms 查询 IPCList，不能依赖 IPCList.keyword。
+4. 在 v2 上执行固定检索、详情、引证、法律历史和 MCP smoke。
+5. 设置副本与刷新、检查分片健康，再建立稳定读 alias。
+6. 仅在业务验收通过后，把 OPENSEARCH_INDEX 切换为读 alias；旧索引保留用于回滚。
 
-阶段二“部署环境前置确认”可以进入初步验收状态。
+详细流程见 docs/ops/opensearch_v2_cutover.md。
 
-允许进入阶段三冻结和阶段四骨架准备的依据：
+## 5. 只读检查命令
 
-1. 生产服务器资源满足第一版服务部署。
-2. `work` 用户、Python、pip、venv、systemd 可用。
-3. OpenSearch 可访问，`patent_index` 可查询。
-4. `8000` 端口可用并已验证公网可访问。
-5. 第一阶段部署方式明确为 venv + systemd。
+    systemctl is-active patent-search-service.service patent-mcp.service
+    curl -fsS http://127.0.0.1:8000/health
+    ss -ltnp | grep -E ':(8000|9000)[[:space:]]'
 
-不允许直接承接生产正式流量的原因：
+OpenSearch 检查应使用服务器安全环境中已有的变量，且不要回显密码：
 
-1. SaaS 正式访问路径未确认。
-2. 生产入口安全方案未最终确认。
-3. OpenSearch CA 证书问题未生产化解决。
+    curl -k -u "$OPENSEARCH_USER:$OPENSEARCH_PASS" \
+      "https://$OPENSEARCH_HOST:$OPENSEARCH_PORT/$OPENSEARCH_INDEX/_count"
+
+## 6. 放行条件
+
+只有当 API/MCP 健康、v2 增量数据对齐、查询兼容性通过、serving 设置恢复、读 alias 已验证且回滚
+步骤可执行时，才允许将生产读路径切至 v2。
