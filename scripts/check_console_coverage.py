@@ -106,6 +106,22 @@ BUILDER_CONTRACT_CASES = [
         "expected": 'claims:("均衡" OR "平衡") AND ad:[2020-01-01 TO 2020-12-31]',
     },
     {
+        "name": "strict phrase normalizes Chinese quotes",
+        "tree": {
+            "type": "group",
+            "children": [
+                {
+                    "type": "condition",
+                    "connector": "AND",
+                    "field": "ab",
+                    "mode": "phrase",
+                    "value": "“口腔数字印模仪器”",
+                }
+            ],
+        },
+        "expected": 'ab:"口腔数字印模仪器"',
+    },
+    {
         "name": "identifier or group",
         "tree": {
             "type": "group",
@@ -329,6 +345,8 @@ def main() -> int:
         raise AssertionError("console must expose an immediate live query status")
     if 'role="tablist"' not in html or 'role="tab"' not in html:
         raise AssertionError("console detail tabs must use semantic tab controls")
+    if "完整短语（严格）" not in html or "normalizePhraseQuotes" not in html:
+        raise AssertionError("console must make strict phrase matching discoverable and normalize Chinese quotes")
 
     builder_output = _extract_console_builder_output(html)
     missing_builder_fields = [

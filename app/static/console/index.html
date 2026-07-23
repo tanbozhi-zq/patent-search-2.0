@@ -253,7 +253,7 @@
         }
         .builder-node {
             display: grid;
-            grid-template-columns: 112px minmax(150px, 190px) 118px minmax(220px, 1fr) 76px;
+            grid-template-columns: 112px minmax(150px, 190px) 168px minmax(180px, 1fr) 76px;
             gap: 8px;
             align-items: end;
             padding: 10px;
@@ -916,7 +916,16 @@
         }
 
         function renderModeControl(parentId, index, node, field) {
-            if (field.kind === 'text' || field.kind === 'keyword') {
+            if (field.kind === 'text') {
+                return `
+                    <select onchange="changeBuilderMode('${parentId}', ${index}, this.value)">
+                        ${optionHtml('single', '普通全文', node.mode)}
+                        ${optionHtml('phrase', '完整短语（严格）', node.mode)}
+                        ${optionHtml('or', 'OR 短语', node.mode)}
+                    </select>
+                `;
+            }
+            if (field.kind === 'keyword') {
                 return `
                     <select onchange="changeBuilderMode('${parentId}', ${index}, this.value)">
                         ${optionHtml('single', '单值', node.mode)}
@@ -948,8 +957,12 @@
                 return `<textarea placeholder="每行一个词" oninput="updateBuilderValues('${parentId}', ${index}, this.value)">${escapeHtml((node.values || []).join('\n'))}</textarea>`;
             }
             const listAttr = field.list ? ` list="${field.list}"` : '';
+            const phraseHint = field.kind === 'text' && node.mode === 'phrase'
+                ? '<div class="hint">按分词结果连续匹配；预览会生成带英文引号的短语查询。</div>'
+                : '';
             return `
                 <input type="text"${listAttr} value="${escapeHtml(node.value || '')}" placeholder="${escapeHtml(field.placeholder || '')}" oninput="updateBuilderNode('${parentId}', ${index}, 'value', this.value)">
+                ${phraseHint}
             `;
         }
 
@@ -1136,6 +1149,9 @@
                 }
                 const value = normalizedValue(node.value);
                 if (!value) return { error: `${field.label}不能为空` };
+                if (node.mode === 'phrase') {
+                    return { q: `${field.value}:${quoteTerm(value)}` };
+                }
                 return { q: `${field.value}:(${formatTerm(value)})` };
             }
             if (field.kind === 'classification') {
@@ -1171,7 +1187,7 @@
         }
 
         function normalizedValue(value) {
-            return String(value || '').trim();
+            return normalizePhraseQuotes(value).trim();
         }
 
         function normalizedValues(values) {
@@ -1189,7 +1205,11 @@
         }
 
         function escapeQuery(value) {
-            return String(value || '').replace(/"/g, '');
+            return normalizePhraseQuotes(value).replace(/"/g, '');
+        }
+
+        function normalizePhraseQuotes(value) {
+            return String(value || '').replace(/[“”]/g, '"');
         }
 
         function updateBuilderPreview() {
@@ -1241,8 +1261,11 @@
         }
 
         function getForm() {
+            const qEl = document.getElementById('q');
+            const q = normalizePhraseQuotes(qEl.value).trim();
+            if (q !== qEl.value) qEl.value = q;
             return {
-                q: document.getElementById('q').value.trim(),
+                q,
                 ds: document.getElementById('ds').value,
                 sort: document.getElementById('sort').value,
                 page: parseInt(document.getElementById('page').value, 10) || 1,
