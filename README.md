@@ -76,15 +76,11 @@ Tracked, project-level documentation:
 - `PROJECT_OVERVIEW.md`: 功能、技术组成、架构边界、当前数据演进与版本发布规则。
 - `README.md`: current architecture, runtime boundary, and active migration
   status.
-- `docs/README.md`: document-versioning boundary.
-- `docs/ops/deployment_runbook.md` and `docs/ops/deploy_env_check.md`:
-  deployment procedures and prerequisites.
-- `mcp_server/README.md`: MCP tools, transports, and authentication.
+- `docs/api.md`: HTTP API、查询语法、错误码与 MCP 对接契约。
+- `docs/development.md` and `docs/ops/`: 开发、发布与索引切换手册。
 
-Historical process and duplicate delivery documents were intentionally removed.
 The tracked documents listed in docs/README.md are the only engineering source
-of truth. External delivery records, meeting notes, and manual test evidence
-are local-only archives under `local/`, not part of the code repository.
+of truth. `local/` is not an interface-document archive.
 
 ## Local Setup
 
@@ -121,57 +117,4 @@ The deployed service uses:
 
 OpenSearch credentials must not be committed to Git.
 
-## Error Responses
-
-Business interfaces return successful payloads directly. All errors use the flat envelope below, without an outer `detail` wrapper:
-
-```json
-{
-  "success": false,
-  "code": 40002,
-  "message": "参数非法：...",
-  "data": null
-}
-```
-
-Current codes:
-
-| Code | Scenario | HTTP |
-|---|---|---|
-| `40001` | query syntax error | 400 |
-| `40002` | invalid general parameter | 400 |
-| `40003` | invalid `page` or `page_size` | 400 |
-| `40101` | missing or invalid `X-API-Key` | 401 |
-| `40401` | patent not found | 404 |
-| `50001` | OpenSearch query failure | 502 |
-| `50002` | internal service failure | 500 |
-
-Stage 8 compatibility notes: `page_size` is capped at 100; `highlight=1` is accepted for compatibility but does not return highlight fragments; search records keep `records` and include snake_case aliases for `application_number`, `document_number`, `application_date`, `document_date`, `legal_status`, and `main_ipc`.
-
-## SaaS Tool Adapter
-
-Stage 10+ provides `app.integrations.patenthub_adapter.PatentHubToolAdapter` for SaaS/Agent integration. It exposes PatentHub-like `patent_search`, `patent_get_detail`, `patent_get_citations`, and `patent_get_legal_history` methods, maps self-hosted `records` to tool-layer `patents`, and converts service errors to `{error, code}`.
-
-Key environment variables:
-
-```bash
-export PATENT_SEARCH_BASE_URL=http://127.0.0.1:8000
-export PATENT_SEARCH_API_TOKEN="$API_TOKEN"
-export PATENT_SEARCH_USE_SELF_HOSTED=true
-export PATENT_SEARCH_PAGE_SIZE_LIMIT=50
-```
-
-Local self-check:
-
-```bash
-python3 scripts/smoke_saas_adapter.py http://127.0.0.1:8000 "$API_TOKEN"
-python3 scripts/smoke_mcp_server.py http://127.0.0.1:8000 "$API_TOKEN"
-```
-
-## MCP Server
-
-Stage 12.4 provides `mcp_server/server.py` for MCP clients. It exposes `patent_search`, `patent_get_detail`, `patent_get_citations`, and `patent_get_legal_history`, and calls the self-hosted HTTP API instead of OpenSearch.
-
-```bash
-python3 mcp_server/server.py --transport stdio
-```
+HTTP API、MCP 工具、错误码、查询语法和 smoke 方式统一见 [docs/api.md](docs/api.md)。
