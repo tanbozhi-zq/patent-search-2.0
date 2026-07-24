@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Request
 
 from app.core.exceptions import OpenSearchQueryError, QuerySyntaxError, service_error
-from app.schemas.search import SearchRequest
+from app.schemas.search import SearchRequest, TargetRankRequest
 from app.services.citation_service import CitationService
 from app.services.detail_service import DetailService
 from app.services.legal_history_service import LegalHistoryService
@@ -34,6 +34,19 @@ async def console_search(
 ):
     try:
         return service.search(request)
+    except QuerySyntaxError as exc:
+        raise service_error(400, 40001, str(exc)) from exc
+    except OpenSearchQueryError as exc:
+        raise service_error(502, 50001, str(exc)) from exc
+
+
+@router.post("/test/target-rank")
+async def console_target_rank(
+    request: TargetRankRequest,
+    service: SearchService = Depends(get_search_service),
+):
+    try:
+        return service.target_rank(request)
     except QuerySyntaxError as exc:
         raise service_error(400, 40001, str(exc)) from exc
     except OpenSearchQueryError as exc:

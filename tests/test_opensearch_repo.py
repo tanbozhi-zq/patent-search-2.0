@@ -139,3 +139,56 @@ def test_repository_get_patent_by_identifier_returns_none_when_not_found():
 
     assert hit is None
     assert len(repository.client.calls) == 3
+
+
+def test_repository_find_target_prefers_exact_patent_id():
+    settings = Settings(opensearch_index="patent_index")
+    repository = OpenSearchRepository(settings=settings)
+    repository.client = FakeSearchClient(
+        [{"hits": {"total": {"value": 1}, "hits": [{"_source": {"patent_id": "cn-1"}}]}}]
+    )
+
+    field, target, count = repository.find_target("cn-1")
+
+    assert field == "patent_id"
+    assert target["_source"]["patent_id"] == "cn-1"
+    assert count == 1
+    assert repository.client.calls[0]["body"]["query"] == {"term": {"patent_id": "cn-1"}}
+
+
+def test_repository_find_target_uppercases_publication_number_without_application_fallback():
+    settings = Settings(opensearch_index="patent_index")
+    repository = OpenSearchRepository(settings=settings)
+    repository.client = FakeSearchClient(
+        [
+            {"hits": {"total": {"value": 0}, "hits": []}},
+            {
+                "hits": {
+                    "total": {"value": 1},
+                    "hits": [{"_source": {"patent_id": "cn-2", "PublicationNumber": "CN2B"}}],
+                }
+            },
+        ]
+    )
+
+    field, target, count = repository.find_target("cn2b")
+
+    assert field == "PublicationNumber"
+    assert target["_source"]["patent_id"] == "cn-2"
+    assert count == 1
+    assert len(repository.client.calls) == 2
+    assert repository.client.calls[1]["body"]["query"] == {"term": {"PublicationNumber": "CN2B"}}
+
+
+def test_repository_find_in_query_keeps_identity_out_of_score():
+    settings = Settings(opensearch_index="patent_index")
+    repository = OpenSearchRepository(settings=settings)
+    repository.client = FakeSearchClient([{"hits": {"hits": []}}])
+    query = {"multi_match": {"query": "阀门", "fields": ["Title", "Abstract"]}}
+    identity = {"term": {"patent_id": "cn-1"}}
+
+    repository.find_in_query(query, identity)
+
+    combined = repository.client.calls[0]["body"]["query"]["bool"]
+    assert combined["must"] == [query]
+    assert combined["filter"] == [identity]

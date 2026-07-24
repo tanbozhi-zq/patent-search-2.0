@@ -65,7 +65,6 @@
         .advanced-toggle { margin-top: 14px; padding: 0; border: 0; background: transparent; color: #175cd3; font-weight: 600; }
         .advanced-panel { margin-top: 12px; padding-top: 16px; border-top: 1px solid var(--border); }
         .advanced-panel[hidden] { display: none; }
-        }
         button {
             padding: 8px 18px;
             border: 1px solid var(--border);
@@ -406,18 +405,6 @@
         }
 
         /* 详情抽屉 */
-        .backdrop {
-            position: fixed;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            padding: 0;
-            border: 0;
-            background: rgba(0,0,0,0.3);
-            z-index: 99;
-            display: none;
-        }
-        .backdrop.open { display: block; }
         .detail-overlay {
             position: fixed;
             top: 0;
@@ -536,6 +523,100 @@
             font-size: 13px;
         }
 
+        .workspace {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(340px, 420px);
+            gap: 18px;
+            width: min(1440px, 100%);
+            margin: 0 auto;
+            padding: 18px 24px 28px;
+            align-items: start;
+        }
+        .results-panel, .inspector {
+            min-width: 0;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+        .results-header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 12px 12px 0 0;
+        }
+        .results-list { padding: 14px; }
+        .results-time { color: var(--text-secondary); font-size: 12px; }
+        .record { border-radius: 10px; box-shadow: none; }
+        .record:hover, .record.active { box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08); }
+        .inspector {
+            position: sticky;
+            top: 16px;
+            max-height: calc(100vh - 32px);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .inspector-tabs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            border-bottom: 1px solid var(--border);
+            flex: 0 0 auto;
+        }
+        .inspector-tab {
+            border: 0;
+            border-bottom: 2px solid transparent;
+            border-radius: 0;
+            padding: 13px 8px 11px;
+            background: #fff;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+        .inspector-tab.active {
+            color: #175cd3;
+            border-bottom-color: #175cd3;
+        }
+        .inspector-panel { display: none; min-height: 280px; overflow: auto; }
+        .inspector-panel.active { display: block; }
+        .inspector-section { padding: 18px; }
+        .inspector-section h2 { margin: 0 0 6px; font-size: 15px; }
+        .inspector-section > p { margin: 0 0 16px; color: var(--text-secondary); font-size: 12px; line-height: 1.6; }
+        .target-form { display: grid; gap: 10px; }
+        .target-actions { display: flex; gap: 8px; }
+        .target-actions .primary { flex: 1; }
+        .target-result {
+            margin-top: 16px;
+            padding: 14px;
+            border: 1px solid #d0d5dd;
+            border-radius: 10px;
+            background: #f8fafc;
+            font-size: 13px;
+            line-height: 1.65;
+        }
+        .target-result.success { border-color: #a6d7bd; background: #f0faf5; color: #05603a; }
+        .target-result.warning { border-color: #f3cf8a; background: #fffaeb; color: #854a0e; }
+        .target-result.error { border-color: #f1b4b4; background: #fff5f5; color: #9f1b1b; }
+        .target-result.stale { border-color: #b9c8dc; background: #f5f8fc; color: #475467; }
+        .target-result strong { display: block; margin-bottom: 3px; font-size: 15px; color: inherit; }
+        .detail-overlay {
+            position: static;
+            width: auto;
+            min-height: 280px;
+            border: 0;
+            box-shadow: none;
+            transform: none;
+            transition: none;
+            display: none;
+        }
+        .inspector-panel.active .detail-overlay { display: flex; }
+        .detail-overlay.open { transform: none; }
+        .detail-header { padding: 14px 18px; }
+        .detail-body { overflow: visible; padding: 16px 18px; }
+        .request-panel { border: 0; }
+        .request-body { max-height: none; padding: 16px 18px; overflow: visible; }
+        .request-body pre { max-height: none; }
+
         @media (max-width: 900px) {
             .query-workbench { grid-template-columns: 1fr; }
             .request-params { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
@@ -549,6 +630,9 @@
             .search-entry { grid-template-columns: 1fr; }
             .search-actions { justify-content: space-between; }
             .results-list { padding: 12px; }
+            .workspace { grid-template-columns: 1fr; padding: 12px; }
+            .inspector { position: static; max-height: none; overflow: visible; }
+            .inspector-panel { overflow: visible; }
         }
     </style>
 </head>
@@ -557,7 +641,7 @@
         <header class="console-topbar">
             <div>
                 <h1>专利检索</h1>
-                <p>输入关键词或检索式，按 Enter 或使用检索按钮开始。</p>
+                <p>输入关键词或检索式，按 Ctrl / Command + Enter 或使用检索按钮开始。</p>
             </div>
         </header>
         <main>
@@ -567,11 +651,59 @@
                     <div class="search-entry">
                         <textarea id="q" rows="2" aria-describedby="queryStatus" placeholder="例如：阀门、ipc:H02M 或 title:(&quot;均衡&quot; OR &quot;平衡&quot;)"></textarea>
                         <div class="search-actions">
+                            <button type="button" onclick="copyQuery()">复制检索式</button>
                             <button type="button" onclick="clearAllConditions()">清空</button>
                             <button class="primary" id="searchButton" type="submit">检索</button>
                         </div>
                     </div>
                     <div class="query-status" id="queryStatus" role="status" aria-live="polite">输入检索条件后开始检索。</div>
+                    <div class="request-params">
+                        <div class="request-param">
+                            <label for="ds">数据范围</label>
+                            <select id="ds">
+                                <option value="cn" selected>中国</option>
+                                <option value="all">全球</option>
+                                <option value="us">美国</option>
+                                <option value="jp">日本</option>
+                                <option value="de">德国</option>
+                                <option value="ep">欧洲专利局</option>
+                                <option value="wo">WIPO</option>
+                                <option value="kr">韩国</option>
+                                <option value="gb">英国</option>
+                                <option value="fr">法国</option>
+                                <option value="ca">加拿大</option>
+                                <option value="au">澳大利亚</option>
+                            </select>
+                        </div>
+                        <div class="request-param">
+                            <label for="sort">排序</label>
+                            <select id="sort">
+                                <option value="relation" selected>相关性</option>
+                                <option value="rank">相关性（rank）</option>
+                                <option value="relevance">相关性（relevance）</option>
+                                <option value="score">相关性（score）</option>
+                                <option value="applicationDate">申请日升序</option>
+                                <option value="!applicationDate">申请日降序</option>
+                                <option value="documentDate">公开日升序</option>
+                                <option value="!documentDate">公开日降序</option>
+                            </select>
+                        </div>
+                        <div class="request-param">
+                            <label for="page">页码</label>
+                            <input id="page" type="number" value="1" min="1">
+                        </div>
+                        <div class="request-param">
+                            <label for="pageSize">每页数量</label>
+                            <input id="pageSize" type="number" value="10" min="1" max="100">
+                        </div>
+                        <div class="request-param">
+                            <label for="highlight">高亮</label>
+                            <select id="highlight">
+                                <option value="0" selected>关闭</option>
+                                <option value="1">开启</option>
+                            </select>
+                        </div>
+                    </div>
                     <button class="advanced-toggle" id="advancedToggle" type="button" onclick="toggleAdvancedPanel()" aria-controls="advancedPanel" aria-expanded="false">显示高级构建与参数</button>
                     <div class="advanced-panel" id="advancedPanel" hidden>
                         <div class="query-toolbar" aria-label="插入布尔操作符">
@@ -580,56 +712,7 @@
                             <button type="button" onclick="insertOp('NOT')">NOT</button>
                             <button type="button" onclick="insertOp('(')">(</button>
                             <button type="button" onclick="insertOp(')')">)</button>
-                            <button type="button" onclick="copyQuery()">复制检索式</button>
                         </div>
-                        <div class="request-params">
-                        <div class="request-param">
-                            <label for="ds">数据范围 ds</label>
-                            <select id="ds">
-                                <option value="cn" selected>cn（中国）</option>
-                                <option value="all">all（全球）</option>
-                                <option value="us">us（美国）</option>
-                                <option value="jp">jp（日本）</option>
-                                <option value="de">de（德国）</option>
-                                <option value="ep">ep（欧洲专利局）</option>
-                                <option value="wo">wo（WIPO）</option>
-                                <option value="kr">kr（韩国）</option>
-                                <option value="gb">gb（英国）</option>
-                                <option value="fr">fr（法国）</option>
-                                <option value="ca">ca（加拿大）</option>
-                                <option value="au">au（澳大利亚）</option>
-                            </select>
-                        </div>
-                        <div class="request-param">
-                            <label for="sort">排序 sort</label>
-                            <select id="sort">
-                                <option value="relation" selected>relation</option>
-                                <option value="rank">rank</option>
-                                <option value="relevance">relevance</option>
-                                <option value="score">score</option>
-                                <option value="applicationDate">applicationDate</option>
-                                <option value="!applicationDate">!applicationDate</option>
-                                <option value="documentDate">documentDate</option>
-                                <option value="!documentDate">!documentDate</option>
-                            </select>
-                        </div>
-                        <div class="request-param">
-                            <label for="page">页码 page</label>
-                            <input id="page" type="number" value="1" min="1">
-                        </div>
-                        <div class="request-param">
-                            <label for="pageSize">每页 page_size</label>
-                            <input id="pageSize" type="number" value="10" min="1" max="100">
-                        </div>
-                        <div class="request-param">
-                            <label for="highlight">高亮 highlight</label>
-                            <select id="highlight">
-                                <option value="0" selected>0（关闭）</option>
-                                <option value="1">1（开启）</option>
-                            </select>
-                        </div>
-                        </div>
-
                         <div class="builder-panel">
                     <div class="builder-header">
                         <h2>布尔构建器</h2>
@@ -667,56 +750,85 @@
                 </form>
             </section>
 
-        <div class="results-panel">
-            <div class="results-header">
-                <span>当前检索共 <strong id="resultCount">0</strong> 件</span>
-            </div>
-            <div class="results-list" id="records"></div>
-            <div class="pagination" id="pagination"></div>
-        </div>
+        <div class="workspace">
+            <section class="results-panel" aria-label="检索结果">
+                <div class="results-header">
+                    <span>当前检索共 <strong id="resultCount">0</strong> 件</span>
+                    <span class="results-time" id="resultsTime">尚未检索</span>
+                </div>
+                <div class="results-list" id="records"></div>
+                <div class="pagination" id="pagination"></div>
+            </section>
 
-        <section class="request-panel" id="requestPanel" hidden>
-            <button class="request-header" id="requestToggle" type="button" onclick="toggleRequestPanel()" aria-controls="requestBody" aria-expanded="false">
-                <span>请求 / 错误信息</span>
-                <span id="requestIndicator" aria-hidden="true">▸</span>
-            </button>
-            <div class="request-body" id="requestBody" hidden>
-                <pre id="requestInfo">暂无请求</pre>
-            </div>
-        </section>
+            <aside class="inspector" aria-label="上下文检查器">
+                <div class="inspector-tabs" role="tablist" aria-label="检查器内容">
+                    <button class="inspector-tab active" id="targetTab" type="button" role="tab" aria-selected="true" aria-controls="targetPanel" onclick="switchInspector('targetPanel')">目标校验</button>
+                    <button class="inspector-tab" id="patentTab" type="button" role="tab" aria-selected="false" aria-controls="patentPanel" onclick="switchInspector('patentPanel')">专利详情</button>
+                    <button class="inspector-tab" id="logTab" type="button" role="tab" aria-selected="false" aria-controls="logPanel" onclick="switchInspector('logPanel')">请求日志</button>
+                </div>
+                <section class="inspector-panel active" id="targetPanel" role="tabpanel" aria-labelledby="targetTab">
+                    <div class="inspector-section">
+                        <h2>验证目标专利</h2>
+                        <p>按当前检索式、数据范围和排序，验证一件目标专利是否命中及其全局并列名次。</p>
+                        <form class="target-form" id="targetForm">
+                            <label class="search-label" for="targetIdentifier">公开号 / 公告号 / patent_id</label>
+                            <input id="targetIdentifier" name="target_identifier" autocomplete="off" placeholder="例如 CN119188170B">
+                            <div class="target-actions">
+                                <button class="primary" id="targetButton" type="submit">开始校验</button>
+                                <button type="button" onclick="clearTargetValidation()">清除</button>
+                            </div>
+                        </form>
+                        <div class="target-result" id="targetResult" role="status" aria-live="polite">
+                            输入目标号码后开始校验。不会逐页扫描普通结果。
+                        </div>
+                    </div>
+                </section>
+                <section class="inspector-panel" id="patentPanel" role="tabpanel" aria-labelledby="patentTab" hidden>
+                    <aside id="detailOverlay" class="detail-overlay" aria-labelledby="detailTitle" tabindex="-1">
+                        <div class="detail-header">
+                            <h3 id="detailTitle">专利详情</h3>
+                            <button type="button" onclick="closeDetail()">关闭</button>
+                        </div>
+                        <div class="detail-body">
+                            <div id="detailStatus"><div class="empty-state">从左侧结果选择一件专利查看详情。</div></div>
+                            <div id="detailContent" style="display: none;">
+                                <div class="detail-actions">
+                                    <button class="small" type="button" onclick="copyPatentId()">复制专利 ID</button>
+                                    <button class="small primary" type="button" onclick="loadFullDetail()">查看完整信息（含说明书）</button>
+                                    <button class="small" type="button" onclick="loadCitations()">引证信息</button>
+                                    <button class="small" type="button" onclick="loadLegalHistory()">法律历史</button>
+                                    <button class="small" type="button" onclick="switchTab('detailRaw')">原始 JSON</button>
+                                </div>
+                                <div id="detailSummary"></div>
+                                <div class="tabs" role="tablist" aria-label="详情内容">
+                                    <button class="tab active" id="detailMainTab" type="button" role="tab" data-tab="detailMain" aria-controls="detailMain" aria-selected="true" onclick="switchTab('detailMain')">主要信息</button>
+                                    <button class="tab" id="detailClaimsTab" type="button" role="tab" data-tab="detailClaims" aria-controls="detailClaims" aria-selected="false" tabindex="-1" onclick="switchTab('detailClaims')">权利要求</button>
+                                    <button class="tab" id="detailExtraTab" type="button" role="tab" data-tab="detailExtra" aria-controls="detailExtra" aria-selected="false" tabindex="-1" onclick="switchTab('detailExtra')">引证 / 法律历史</button>
+                                    <button class="tab" id="detailRawTab" type="button" role="tab" data-tab="detailRaw" aria-controls="detailRaw" aria-selected="false" tabindex="-1" onclick="switchTab('detailRaw')">原始响应</button>
+                                </div>
+                                <div id="detailMain" class="tab-content active" role="tabpanel" aria-labelledby="detailMainTab"></div>
+                                <div id="detailClaims" class="tab-content" role="tabpanel" aria-labelledby="detailClaimsTab" hidden></div>
+                                <div id="detailExtra" class="tab-content" role="tabpanel" aria-labelledby="detailExtraTab" hidden></div>
+                                <div id="detailRaw" class="tab-content" role="tabpanel" aria-labelledby="detailRawTab" hidden></div>
+                            </div>
+                        </div>
+                    </aside>
+                </section>
+                <section class="inspector-panel" id="logPanel" role="tabpanel" aria-labelledby="logTab" hidden>
+                    <section class="request-panel" id="requestPanel">
+                        <button class="request-header" id="requestToggle" type="button" onclick="toggleRequestPanel()" aria-controls="requestBody" aria-expanded="true">
+                            <span>最近一次请求</span>
+                            <span id="requestIndicator" aria-hidden="true">▾</span>
+                        </button>
+                        <div class="request-body" id="requestBody">
+                            <pre id="requestInfo">暂无请求</pre>
+                        </div>
+                    </section>
+                </section>
+            </aside>
+        </div>
         </main>
     </div>
-
-    <button id="backdrop" class="backdrop" type="button" aria-label="关闭详情" onclick="closeDetail()"></button>
-    <aside id="detailOverlay" class="detail-overlay" role="dialog" aria-modal="true" aria-labelledby="detailTitle" tabindex="-1">
-        <div class="detail-header">
-            <h3 id="detailTitle">专利详情</h3>
-            <button type="button" onclick="closeDetail()">关闭</button>
-        </div>
-        <div class="detail-body">
-            <div id="detailStatus"></div>
-            <div id="detailContent" style="display: none;">
-                <div class="detail-actions">
-                    <button class="small" type="button" onclick="copyPatentId()">复制专利 ID</button>
-                    <button class="small primary" type="button" onclick="loadFullDetail()">查看完整信息（含说明书）</button>
-                    <button class="small" type="button" onclick="loadCitations()">引证信息</button>
-                    <button class="small" type="button" onclick="loadLegalHistory()">法律历史</button>
-                    <button class="small" type="button" onclick="switchTab('detailRaw')">原始 JSON</button>
-                </div>
-                <div id="detailSummary"></div>
-                <div class="tabs" role="tablist" aria-label="详情内容">
-                    <button class="tab active" type="button" role="tab" data-tab="detailMain" aria-controls="detailMain" aria-selected="true" onclick="switchTab('detailMain')">主要信息</button>
-                    <button class="tab" type="button" role="tab" data-tab="detailClaims" aria-controls="detailClaims" aria-selected="false" onclick="switchTab('detailClaims')">权利要求</button>
-                    <button class="tab" type="button" role="tab" data-tab="detailExtra" aria-controls="detailExtra" aria-selected="false" onclick="switchTab('detailExtra')">引证 / 法律历史</button>
-                    <button class="tab" type="button" role="tab" data-tab="detailRaw" aria-controls="detailRaw" aria-selected="false" onclick="switchTab('detailRaw')">原始响应</button>
-                </div>
-                <div id="detailMain" class="tab-content active"></div>
-                <div id="detailClaims" class="tab-content" role="tabpanel" hidden></div>
-                <div id="detailExtra" class="tab-content" role="tabpanel" hidden></div>
-                <div id="detailRaw" class="tab-content" role="tabpanel" hidden></div>
-            </div>
-        </div>
-    </aside>
 
     <script>
         const API_BASE = '/console-api';
@@ -729,6 +841,10 @@
         let currentExtraData = null;
         let requestCollapsed = true;
         let detailTrigger = null;
+        let targetValidation = null;
+        let searchRequestId = 0;
+        let targetRequestId = 0;
+        let targetRequestPending = false;
 
         const QUERY_FIELDS = [
             { value: 'keyword', label: '普通关键词', kind: 'keyword', placeholder: '阀门' },
@@ -822,16 +938,77 @@
             if (qEl && qEl.addEventListener) {
                 qEl.addEventListener('input', () => {
                     qTouchedManually = true;
+                    invalidateSearchRequest();
+                    invalidateTargetValidation();
                     setQueryStatus('检索式已更新，按 Enter 或点击检索提交。');
+                });
+                qEl.addEventListener('keydown', event => {
+                    if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+                        event.preventDefault();
+                        doSearch();
+                    }
                 });
             }
             document.getElementById('searchForm').addEventListener('submit', event => {
                 event.preventDefault();
                 doSearch();
             });
+            document.getElementById('targetForm').addEventListener('submit', event => {
+                event.preventDefault();
+                testTargetRank();
+            });
+            document.getElementById('targetIdentifier').addEventListener('input', invalidateTargetValidation);
+            ['ds', 'sort'].forEach(id => {
+                document.getElementById(id).addEventListener('change', () => {
+                    invalidateSearchRequest();
+                    invalidateTargetValidation();
+                });
+            });
+            document.querySelectorAll('.inspector-tab').forEach(tab => {
+                tab.addEventListener('keydown', handleInspectorKeydown);
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('keydown', handleDetailTabKeydown);
+            });
             loadState();
-            setRequestPanelCollapsed(true);
+            setRequestPanelCollapsed(false);
             clearResults();
+        }
+
+        function handleInspectorKeydown(event) {
+            if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+            const tabs = Array.from(document.querySelectorAll('.inspector-tab'));
+            const current = tabs.indexOf(event.currentTarget);
+            const offset = event.key === 'ArrowRight' ? 1 : -1;
+            const next = tabs[(current + offset + tabs.length) % tabs.length];
+            event.preventDefault();
+            switchInspector(next.getAttribute('aria-controls'));
+            next.focus();
+        }
+
+        function handleDetailTabKeydown(event) {
+            if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+            const tabs = Array.from(document.querySelectorAll('.tab'));
+            const current = tabs.indexOf(event.currentTarget);
+            const offset = event.key === 'ArrowRight' ? 1 : -1;
+            const next = tabs[(current + offset + tabs.length) % tabs.length];
+            event.preventDefault();
+            switchTab(next.dataset.tab);
+            next.focus();
+        }
+
+        function switchInspector(panelId) {
+            document.querySelectorAll('.inspector-tab').forEach(tab => {
+                const active = tab.getAttribute('aria-controls') === panelId;
+                tab.classList.toggle('active', active);
+                tab.setAttribute('aria-selected', String(active));
+                tab.tabIndex = active ? 0 : -1;
+            });
+            document.querySelectorAll('.inspector-panel').forEach(panel => {
+                const active = panel.id === panelId;
+                panel.classList.toggle('active', active);
+                panel.hidden = !active;
+            });
         }
 
         function renderBuilder() {
@@ -1049,6 +1226,7 @@
             resetBuilder();
             document.getElementById('q').value = '';
             qTouchedManually = true;
+            invalidateTargetValidation();
             setQueryStatus('已清空检索条件。');
             clearResults();
         }
@@ -1236,6 +1414,7 @@
             document.getElementById('builderPreview').textContent = result.q;
             document.getElementById('q').value = result.q;
             qTouchedManually = false;
+            invalidateTargetValidation();
             setQueryStatus('已将构建结果写入检索式。确认后点击检索。', 'success');
             document.getElementById('q').focus();
         }
@@ -1257,6 +1436,7 @@
             el.focus();
             el.setSelectionRange(start + insert.length, start + insert.length);
             qTouchedManually = true;
+            invalidateTargetValidation();
             setQueryStatus('检索式已更新，按 Enter 或点击检索提交。');
         }
 
@@ -1312,8 +1492,7 @@
         function setRequestInfo(text) {
             const panel = document.getElementById('requestPanel');
             document.getElementById('requestInfo').textContent = text;
-            panel.hidden = !text;
-            setRequestPanelCollapsed(true);
+            panel.hidden = false;
         }
 
         function toggleRequestPanel() {
@@ -1322,6 +1501,7 @@
 
         function clearResults() {
             document.getElementById('resultCount').textContent = '0';
+            document.getElementById('resultsTime').textContent = '尚未检索';
             document.getElementById('records').innerHTML = '';
             document.getElementById('pagination').innerHTML = '';
             lastResponse = null;
@@ -1329,6 +1509,7 @@
         }
 
         async function doSearch(page) {
+            const requestId = ++searchRequestId;
             const form = getForm();
             const q = form.q;
             if (!q) {
@@ -1364,6 +1545,7 @@
                 });
                 const data = await response.json();
                 const elapsed = (performance.now() - started).toFixed(0);
+                if (requestId !== searchRequestId) return;
 
                 if (!response.ok) {
                     const message = data.detail || data.message || JSON.stringify(data);
@@ -1378,17 +1560,23 @@
                 setRequestInfo(`POST ${API_BASE}/search\n${JSON.stringify(payload, null, 2)}\n\nHTTP ${response.status} (${elapsed}ms)\n${JSON.stringify(data, null, 2).slice(0, 4000)}`);
                 setQueryStatus(data.total ? `已找到 ${data.total} 条结果。` : '没有找到结果。请调整关键词、范围或展开高级构建器。', data.total ? 'success' : '');
             } catch (err) {
+                if (requestId !== searchRequestId) return;
                 setRequestInfo(`POST ${API_BASE}/search\n${JSON.stringify(payload, null, 2)}\n\nError: ${err.message}`);
                 setQueryStatus(`网络错误：${err.message}。请检查连接后重试。`, 'error');
             } finally {
-                const button = document.getElementById('searchButton');
-                button.disabled = false;
-                button.textContent = '检索';
+                if (requestId === searchRequestId) {
+                    const button = document.getElementById('searchButton');
+                    button.disabled = false;
+                    button.textContent = '检索';
+                }
             }
         }
 
         function renderResults(data) {
             document.getElementById('resultCount').textContent = data.total || 0;
+            document.getElementById('resultsTime').textContent = data.took_ms === null || data.took_ms === undefined
+                ? '耗时未知'
+                : `耗时 ${data.took_ms} ms`;
             const recordsEl = document.getElementById('records');
             if (!data.records || data.records.length === 0) {
                 recordsEl.innerHTML = '<div class="empty-state">没有匹配结果。尝试缩短关键词、调整数据范围，或展开高级构建器重新组合条件。</div>';
@@ -1451,6 +1639,141 @@
             });
         }
 
+        function targetFingerprint() {
+            const form = getForm();
+            return JSON.stringify({
+                q: form.q,
+                ds: form.ds,
+                sort: form.sort,
+                target_identifier: document.getElementById('targetIdentifier').value.trim()
+            });
+        }
+
+        function invalidateSearchRequest() {
+            const button = document.getElementById('searchButton');
+            if (!button.disabled) return;
+            searchRequestId += 1;
+            button.disabled = false;
+            button.textContent = '检索';
+        }
+
+        function invalidateTargetValidation() {
+            targetRequestId += 1;
+            if (targetRequestPending) {
+                targetRequestPending = false;
+                const button = document.getElementById('targetButton');
+                button.disabled = false;
+                button.textContent = '开始校验';
+                const result = document.getElementById('targetResult');
+                result.className = 'target-result stale';
+                result.innerHTML = '<strong>校验已取消</strong>条件发生变化，请按当前条件重新校验。';
+                return;
+            }
+            if (!targetValidation || targetValidation.fingerprint === targetFingerprint()) return;
+            targetValidation = null;
+            const result = document.getElementById('targetResult');
+            result.className = 'target-result stale';
+            result.innerHTML = '<strong>结论已过期</strong>检索式、数据范围、排序或目标号码已变化，请重新校验。';
+        }
+
+        function clearTargetValidation() {
+            targetRequestId += 1;
+            targetRequestPending = false;
+            document.getElementById('targetIdentifier').value = '';
+            targetValidation = null;
+            const result = document.getElementById('targetResult');
+            result.className = 'target-result';
+            result.textContent = '输入目标号码后开始校验。不会逐页扫描普通结果。';
+            document.getElementById('targetIdentifier').focus();
+        }
+
+        async function testTargetRank() {
+            const form = getForm();
+            const targetIdentifier = document.getElementById('targetIdentifier').value.trim();
+            const result = document.getElementById('targetResult');
+            if (!targetIdentifier) {
+                result.className = 'target-result error';
+                result.innerHTML = '<strong>请输入目标号码</strong>支持公开号、公告号或内部 patent_id。';
+                document.getElementById('targetIdentifier').focus();
+                return;
+            }
+            if (!form.q) {
+                result.className = 'target-result error';
+                result.innerHTML = '<strong>缺少检索式</strong>请先填写当前需要验证的检索式。';
+                document.getElementById('q').focus();
+                return;
+            }
+
+            const payload = { q: form.q, ds: form.ds, sort: form.sort, target_identifier: targetIdentifier };
+            const fingerprint = targetFingerprint();
+            const requestId = ++targetRequestId;
+            const button = document.getElementById('targetButton');
+            targetRequestPending = true;
+            button.disabled = true;
+            button.textContent = '校验中';
+            result.className = 'target-result';
+            result.innerHTML = '<strong>正在校验</strong>正在计算目标专利在完整结果集中的并列名次。';
+            try {
+                const started = performance.now();
+                const response = await fetch(`${API_BASE}/test/target-rank`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+                const elapsed = (performance.now() - started).toFixed(0);
+                if (requestId !== targetRequestId) return;
+                targetRequestPending = false;
+                setRequestInfo(`POST ${API_BASE}/test/target-rank\n${JSON.stringify(payload, null, 2)}\n\nHTTP ${response.status} (${elapsed}ms)\n${JSON.stringify(data, null, 2)}`);
+                if (!response.ok) {
+                    const message = data.message || data.detail || JSON.stringify(data);
+                    result.className = 'target-result error';
+                    result.innerHTML = `<strong>校验失败</strong>${escapeHtml(typeof message === 'object' ? JSON.stringify(message) : message)}。普通检索结果仍可继续使用。`;
+                    return;
+                }
+                if (fingerprint !== targetFingerprint()) {
+                    targetValidation = null;
+                    result.className = 'target-result stale';
+                    result.innerHTML = '<strong>结论已过期</strong>校验期间查询条件发生变化，请重新校验。';
+                    return;
+                }
+                targetValidation = { fingerprint, data };
+                renderTargetResult(data);
+            } catch (err) {
+                if (requestId !== targetRequestId) return;
+                targetRequestPending = false;
+                setRequestInfo(`POST ${API_BASE}/test/target-rank\n${JSON.stringify(payload, null, 2)}\n\nError: ${err.message}`);
+                result.className = 'target-result error';
+                result.innerHTML = `<strong>网络请求失败</strong>${escapeHtml(err.message)}。普通检索结果仍可继续使用。`;
+            } finally {
+                if (requestId === targetRequestId) {
+                    targetRequestPending = false;
+                    button.disabled = false;
+                    button.textContent = '开始校验';
+                }
+            }
+        }
+
+        function renderTargetResult(data) {
+            const result = document.getElementById('targetResult');
+            const target = data.target || {};
+            const targetText = [target.documentNumber, target.title].filter(Boolean).map(escapeHtml).join(' · ');
+            if (data.status === 'matched') {
+                const tieText = data.tied_count > 0 ? `，与另外 ${data.tied_count} 件并列` : '';
+                result.className = 'target-result success';
+                result.innerHTML = `<strong>已命中 · 第 ${data.rank} 名</strong>${targetText || '目标专利'}${tieText}`;
+            } else if (data.status === 'not_in_results') {
+                result.className = 'target-result warning';
+                result.innerHTML = `<strong>未被当前查询召回</strong>${targetText || '目标专利存在于索引中'}，但不满足当前检索式或数据范围。`;
+            } else if (data.status === 'target_not_found') {
+                result.className = 'target-result warning';
+                result.innerHTML = '<strong>索引中不存在该目标</strong>请检查公开号、公告号或 patent_id 是否准确。';
+            } else if (data.status === 'ambiguous_target') {
+                result.className = 'target-result warning';
+                result.innerHTML = `<strong>目标号码对应多条记录</strong>共找到 ${data.tied_count || 2} 条记录，无法给出唯一排名。`;
+            }
+        }
+
         async function openDetail(patentId) {
             if (!patentId) return;
             detailTrigger = document.activeElement;
@@ -1458,8 +1781,8 @@
             currentDetailData = null;
             currentExtraData = null;
 
+            switchInspector('patentPanel');
             document.getElementById('detailOverlay').classList.add('open');
-            document.getElementById('backdrop').classList.add('open');
             document.getElementById('detailContent').style.display = 'none';
             document.getElementById('detailStatus').innerHTML = '<div class="loading">加载详情中...</div>';
             switchTab('detailMain');
@@ -1493,7 +1816,9 @@
 
         function closeDetail() {
             document.getElementById('detailOverlay').classList.remove('open');
-            document.getElementById('backdrop').classList.remove('open');
+            document.getElementById('detailContent').style.display = 'none';
+            document.getElementById('detailStatus').innerHTML = '<div class="empty-state">从左侧结果选择一件专利查看详情。</div>';
+            switchInspector('targetPanel');
             if (detailTrigger && typeof detailTrigger.focus === 'function') detailTrigger.focus();
         }
 
@@ -1502,6 +1827,7 @@
                 const active = el.dataset.tab === tabId;
                 el.classList.toggle('active', active);
                 el.setAttribute('aria-selected', String(active));
+                el.tabIndex = active ? 0 : -1;
             });
             document.querySelectorAll('.tab-content').forEach(el => {
                 const active = el.id === tabId;

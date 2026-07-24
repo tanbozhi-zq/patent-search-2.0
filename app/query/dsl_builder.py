@@ -37,6 +37,71 @@ def build_search_dsl(request: SearchRequest) -> dict:
     }
 
 
+def build_target_rank_dsl(request, identifier_field: str, target: dict) -> dict:
+    base = build_search_dsl(
+        SearchRequest(q=request.q, ds=request.ds, sort=request.sort, page=1, page_size=1)
+    )
+    base_query = base["query"]
+    target_source = target.get("_source", {})
+    target_identity = target_source.get("patent_id")
+    identity_field = "patent_id" if target_identity else identifier_field
+    identity_value = target_identity or target_source.get("PublicationNumber")
+    identity_clause = {"term": {identity_field: identity_value}}
+    sort_value = None
+
+    relevance_sort = request.sort in {"relation", "rank", "relevance", "score"}
+    if relevance_sort:
+        sort_value = target.get("_score")
+        better_query = None
+        tied_query = None
+    else:
+        field, descending = _date_sort_details(request.sort)
+        sort_value = target_source.get(field)
+        if sort_value:
+            better_operator = "gt" if descending else "lt"
+            tie_query = {"term": {field: sort_value}}
+            better_query = {
+                "bool": {
+                    "must": [base_query, {"range": {field: {better_operator: sort_value}}}],
+                }
+            }
+            tied_query = {
+                "bool": {
+                    "must": [base_query, tie_query],
+                    "must_not": [identity_clause],
+                }
+            }
+        else:
+            better_query = {
+                "bool": {
+                    "must": [base_query],
+                    "filter": [{"exists": {"field": field}}],
+                }
+            }
+            tied_query = {
+                "bool": {
+                    "must": [base_query],
+                    "must_not": [identity_clause, {"exists": {"field": field}}],
+                }
+            }
+
+    return {
+        "base_query": base_query,
+        "identity_clause": identity_clause,
+        "match_query": {"query": {"bool": {"must": [base_query, identity_clause]}}},
+        "better_query": {"query": better_query},
+        "tied_query": {"query": tied_query},
+        "sort_value": sort_value,
+        "relevance_sort": relevance_sort,
+    }
+
+
+def _date_sort_details(sort: str) -> tuple[str, bool]:
+    if sort in {"applicationDate", "!applicationDate"}:
+        return "ApplicationDate", sort.startswith("!")
+    return "PublicationDate", sort.startswith("!")
+
+
 def _build_node_clause(node: QueryNode) -> dict:
     if isinstance(node, WordNode):
         if _is_bare_ipc(node.value):

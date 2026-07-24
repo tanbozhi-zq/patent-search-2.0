@@ -17,3 +17,15 @@ class SearchRequest(BaseModel):
     @property
     def offset(self) -> int:
         return (self.page - 1) * self.page_size
+
+
+class TargetRankRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    q: str = Field(min_length=1, max_length=1000)
+    ds: str = Field(default="cn", pattern="^([Aa][Ll][Ll]|[A-Za-z]{2})$")
+    sort: str = Field(
+        default="relation",
+        pattern="^(relation|rank|relevance|score|!?applicationDate|!?documentDate)$",
+    )
+    target_identifier: str = Field(min_length=1, max_length=200)

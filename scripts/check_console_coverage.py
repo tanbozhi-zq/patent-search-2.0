@@ -52,6 +52,12 @@ REQUIRED_INTERACTION_CONTROLS = {
     "advancedToggle",
     "requestBody",
     "requestToggle",
+    "targetForm",
+    "targetIdentifier",
+    "targetResult",
+    "targetPanel",
+    "patentPanel",
+    "logPanel",
 }
 
 BUILDER_CONTRACT_CASES = [
@@ -178,6 +184,7 @@ def _extract_console_builder_output(html: str) -> dict:
         const fs = require('node:fs');
 
         const source = fs.readFileSync(process.argv[1], 'utf8');
+        const fetchCalls = [];
         const context = {
           console,
           setTimeout,
@@ -186,7 +193,21 @@ def _extract_console_builder_output(html: str) -> dict:
           navigator: { clipboard: { writeText: () => Promise.resolve() } },
           localStorage: { getItem: () => null, setItem: () => undefined },
           alert: () => undefined,
-          fetch: async () => ({ ok: true, status: 200, json: async () => ({}) }),
+          fetch: async (url, options) => {
+            fetchCalls.push({ url, options });
+            return {
+              ok: true,
+              status: 200,
+              json: async () => ({
+                status: 'matched',
+                in_results: true,
+                rank: 4,
+                tied_count: 2,
+                sort_value: 1.5,
+                target: { patent_id: 'patent-1', documentNumber: 'CN100B', title: '目标专利' },
+              }),
+            };
+          },
           event: { currentTarget: null },
         };
 
@@ -199,6 +220,9 @@ def _extract_console_builder_output(html: str) -> dict:
             innerHTML: '',
             textContent: '',
             style: {},
+            className: '',
+            hidden: false,
+            disabled: false,
             attributes,
             selectionStart: 0,
             selectionEnd: 0,
@@ -297,17 +321,58 @@ def _extract_console_builder_output(html: str) -> dict:
         const requestCollapsedAfterInfo = requestBody.hidden;
         const requestToggleAfterInfo = requestToggle.attributes['aria-expanded'];
 
-        console.log(JSON.stringify({
-          fields: builder.fields.map((field) => field.value),
-          outputs,
-          ui: {
-            advancedExpanded,
-            advancedAriaExpanded,
-            requestPanelHiddenAfterInfo: requestPanel.hidden,
-            requestCollapsedAfterInfo,
-            requestToggleAfterInfo,
-          },
-        }));
+        async function probeTargetValidation() {
+          const q = context.document.getElementById('q');
+          const ds = context.document.getElementById('ds');
+          const sort = context.document.getElementById('sort');
+          const page = context.document.getElementById('page');
+          const pageSize = context.document.getElementById('pageSize');
+          const highlight = context.document.getElementById('highlight');
+          const target = context.document.getElementById('targetIdentifier');
+          q.value = '阀门';
+          ds.value = 'cn';
+          sort.value = 'relation';
+          page.value = '1';
+          pageSize.value = '10';
+          highlight.value = '0';
+          target.value = '';
+          await context.testTargetRank();
+          const callsWithoutTarget = fetchCalls.length;
+
+          target.value = 'CN100B';
+          await context.testTargetRank();
+          const rankCall = fetchCalls[fetchCalls.length - 1];
+          const rankPayload = JSON.parse(rankCall.options.body);
+          const result = context.document.getElementById('targetResult');
+          const matchedResult = result.innerHTML;
+
+          page.value = '2';
+          context.invalidateTargetValidation();
+          const retainedAfterPage = result.innerHTML === matchedResult;
+
+          q.value = '阀门 AND ipc:H02M';
+          context.invalidateTargetValidation();
+          const staleAfterQuery = result.innerHTML.includes('结论已过期');
+          return { callsWithoutTarget, rankUrl: rankCall.url, rankPayload, retainedAfterPage, staleAfterQuery };
+        }
+
+        probeTargetValidation().then((targetValidation) => {
+          console.log(JSON.stringify({
+            fields: builder.fields.map((field) => field.value),
+            outputs,
+            ui: {
+              advancedExpanded,
+              advancedAriaExpanded,
+              requestPanelHiddenAfterInfo: requestPanel.hidden,
+              requestCollapsedAfterInfo,
+              requestToggleAfterInfo,
+            },
+            targetValidation,
+          }));
+        }).catch((error) => {
+          console.error(error);
+          process.exitCode = 1;
+        });
         """
     )
     completed = subprocess.run(
@@ -345,6 +410,8 @@ def main() -> int:
         raise AssertionError("console must expose an immediate live query status")
     if 'role="tablist"' not in html or 'role="tab"' not in html:
         raise AssertionError("console detail tabs must use semantic tab controls")
+    if "/test/target-rank" not in html:
+        raise AssertionError("console must call the target rank endpoint")
     if "完整短语（严格）" not in html or "normalizePhraseQuotes" not in html:
         raise AssertionError("console must make strict phrase matching discoverable and normalize Chinese quotes")
 
@@ -372,10 +439,27 @@ def main() -> int:
         raise AssertionError("advanced controls must expose their expanded state")
     if ui["requestPanelHiddenAfterInfo"]:
         raise AssertionError("request panel should appear after request info is written")
-    if not ui["requestCollapsedAfterInfo"]:
-        raise AssertionError("request info body should remain collapsed by default after request info is written")
-    if ui["requestToggleAfterInfo"] != "false":
-        raise AssertionError(f"request info toggle should expose collapsed state, got {ui['requestToggleAfterInfo']!r}")
+    if ui["requestCollapsedAfterInfo"]:
+        raise AssertionError("request log should remain visible inside its dedicated inspector tab")
+    if ui["requestToggleAfterInfo"] != "true":
+        raise AssertionError(f"request info toggle should expose expanded state, got {ui['requestToggleAfterInfo']!r}")
+
+    target = builder_output["targetValidation"]
+    if target["callsWithoutTarget"] != 0:
+        raise AssertionError("target validation must not call the endpoint without an identifier")
+    if not target["rankUrl"].endswith("/console-api/test/target-rank"):
+        raise AssertionError(f"target validation called wrong endpoint: {target['rankUrl']!r}")
+    if target["rankPayload"] != {
+        "q": "阀门",
+        "ds": "cn",
+        "sort": "relation",
+        "target_identifier": "CN100B",
+    }:
+        raise AssertionError(f"target validation submitted wrong payload: {target['rankPayload']!r}")
+    if not target["retainedAfterPage"]:
+        raise AssertionError("ordinary pagination must retain the current target rank conclusion")
+    if not target["staleAfterQuery"]:
+        raise AssertionError("query changes must invalidate the current target rank conclusion")
 
     print("console coverage checks passed")
     return 0

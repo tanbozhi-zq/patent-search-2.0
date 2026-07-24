@@ -33,6 +33,49 @@ class OpenSearchRepository:
     def search(self, body: dict) -> dict:
         return self.client.search(index=self.index_name, body=body)
 
+    def count(self, body: dict) -> int:
+        raw = self.client.count(index=self.index_name, body=body)
+        return int(raw.get("count", 0))
+
+    def count_with_min_score(self, query: dict, min_score: float) -> int:
+        raw = self.search({
+            "size": 0,
+            "track_total_hits": True,
+            "min_score": min_score,
+            "query": query,
+        })
+        return self._total_hits(raw.get("hits", {}))
+
+    def find_in_query(self, query: dict, identity: dict) -> Optional[dict]:
+        raw = self.search({
+            "size": 1,
+            "track_total_hits": True,
+            "query": {"bool": {"must": [query], "filter": [identity]}},
+        })
+        return self._first_hit(raw)
+
+    def find_target(self, identifier: str) -> tuple[str, Optional[dict], int]:
+        patent_id = identifier.strip()
+        raw = self.search({
+            "size": 10,
+            "track_total_hits": True,
+            "query": self._identifier_query("patent_id", patent_id),
+        })
+        hits_data = raw.get("hits", {})
+        hits = hits_data.get("hits", [])
+        if hits:
+            return "patent_id", hits[0], self._total_hits(hits_data)
+
+        publication_number = patent_id.upper()
+        raw = self.search({
+            "size": 10,
+            "track_total_hits": True,
+            "query": self._identifier_query("PublicationNumber", publication_number),
+        })
+        hits_data = raw.get("hits", {})
+        hits = hits_data.get("hits", [])
+        return "PublicationNumber", (hits[0] if hits else None), self._total_hits(hits_data)
+
     def get_patent_by_identifier(self, identifier: str) -> Optional[dict]:
         for field in ("patent_id", "PublicationNumber", "ApplicationNumber"):
             raw = self.search(
@@ -54,3 +97,10 @@ class OpenSearchRepository:
         if not hits:
             return None
         return hits[0]
+
+    @staticmethod
+    def _total_hits(hits: dict) -> int:
+        total = hits.get("total", 0)
+        if isinstance(total, dict):
+            return int(total.get("value", 0))
+        return int(total or 0)
