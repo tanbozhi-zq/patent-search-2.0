@@ -11,6 +11,18 @@
 
 `GET <BASE_URL>/health` 不鉴权。`/console` 和 `/console-api/*` 是内部控制台实现，不是对外交付接口。
 
+### 当前部署地址
+
+| 服务 | 地址 |
+|---|---|
+| HTTP API | `http://124.174.76.216:8000` |
+| OpenAPI / Swagger | `http://124.174.76.216:8000/docs` |
+| ReDoc | `http://124.174.76.216:8000/redoc` |
+| 内部控制台 | `http://124.174.76.216:8000/console/` |
+| Streamable HTTP MCP | `http://124.174.76.216:9000/mcp` |
+
+HTTP、MCP 的两个访问令牌由服务方单独交付；本文仅说明其使用位置，不记录令牌值。
+
 ## 2. HTTP API
 
 所有请求和响应使用 UTF-8 JSON。除健康检查外，业务接口都要求 `X-API-Key`。`<BASE_URL>` 和 API Token 由服务方通过安全渠道提供。
@@ -55,6 +67,8 @@ curl -sS -X POST "$BASE_URL/api/patent/search" \
 
 `mainClaim`/`main_claim` 是主权利要求；`independentClaims`/`independent_claims` 为独立权利要求。源数据缺失时，字符串字段返回空字符串、列表字段返回空数组；不要用空值推断不存在的业务事实。
 
+每一条 `records` 的完整键集为：`id`、`patent_id`、`applicationNumber`、`application_number`、`documentNumber`、`document_number`、`title`、`ti`、`abstract`、`ab`、`summary`、`applicant`、`pa`、`currentAssignee`、`inventor`、`mainIpc`、`main_ipc`、`mainClaim`、`main_claim`、`independentClaims`、`independent_claims`、`ipcMainList`、`applicationDate`、`application_date`、`ad`、`documentDate`、`document_date`、`legalStatus`、`legal_status`、`currentStatus`、`type`、`score`。
+
 ### 2.3 查询语法
 
 检索式只接受英文双引号 `"`；HTTP 调用中 `“”` 不是短语符号。短语会按字段分词结果进行连续匹配，通常比普通全文检索窄。
@@ -91,7 +105,15 @@ curl -sS -X POST "$BASE_URL/api/patent/search" \
 | `GET /api/patent/citations/{patent_id}` | 无 | `patent_id`、`cited_by`、`patent_references`、`non_patent_references`，以及原始兼容字段 `referencesCited`、`referencesCitedRaw`、`referencesCitedText`、`relatedDocuments`。归一化的引用专利项包含 `id`、`title`、`applicant`、`application_date`、`application_number`、`type`、`legal_status`、`main_ipc`。 |
 | `GET /api/patent/legal-history/{patent_id}` | 无 | `patent_id`、`transaction_count`、`transactions`。`transactions` 保留上游法律状态历史条目结构。 |
 
-详情中，除上述检索记录字段外，还可能包含 `firstApplicant`、`currentAssignee`、`assignee`、`inventor`、`firstInventor`、`applicantAddress`、`agency`、`agent`、`ipcMainList`、`loc`、优先权/PCT 字段、`imagePath`、`pdfList`、`family`、`drawings`、`legalStatusHistory`、`mainClaim` 与 `claims`；其 snake_case 兼容别名与对应 camelCase 值相同。
+详情接口固定返回以下字段（缺值按空字符串或空数组返回）；仅 `description` 在 `include_description=true` 时出现：
+
+| 字段组 | 键 |
+|---|---|
+| 标识与文本 | `id`、`patent_id`、`title`、`ti`、`abstract`、`ab`、`summary`、`type`、`mainClaim`、`main_claim`、`claims`。 |
+| 号码与日期 | `applicationNumber`/`application_number`、`documentNumber`/`document_number`、`applicationDate`/`application_date`、`documentDate`/`document_date`、`priorityNumber`/`priority_number`、`fullPriorityNumber`/`full_priority_number`、`pctDate`/`pct_date`、`pctApplicationData`/`pct_application_data`、`pctPublicationData`/`pct_publication_data`。 |
+| 主体 | `applicant`、`firstApplicant`/`first_applicant`、`currentAssignee`/`current_assignee`、`assignee`、`inventor`、`firstInventor`/`first_inventor`、`applicantAddress`/`applicant_address`、`agency`、`agent`。 |
+| 分类与状态 | `ipc`、`mainIpc`/`main_ipc`、`ipcMainList`/`ipc_main_list`、`legalStatus`/`legal_status`、`currentStatus`/`current_status`、`legalStatusHistory`/`legal_status_history`。 |
+| 附属资源 | `loc`、`imagePath`/`image_path`、`pdfList`/`pdf_list`、`family`、`drawings`；以及可选 `description`。 |
 
 ```bash
 curl -sS "$BASE_URL/api/patent/detail/$PATENT_ID?include_description=true" \
@@ -115,6 +137,14 @@ curl -sS "$BASE_URL/api/patent/detail/$PATENT_ID?include_description=true" \
 | `40401` | 404 | 专利不存在。 |
 | `50001` | 502 | OpenSearch 查询失败。 |
 | `50002` | 500 | 服务内部异常。 |
+
+### 2.6 内部网页控制台
+
+访问 `<BASE_URL>/console/`。页面可直接完成检索、分页、详情、引证和法律状态查看；高级构建器可组合 `AND`、`OR`、`NOT`、分组、字段、范围与排序参数。
+
+文本字段的构建器提供“普通全文”“完整短语（严格）”“OR 短语”三种模式。严格短语会生成如 `ab:"口腔数字印模仪器"` 的检索式；页面会把输入的中文引号 `“”` 规范为英文双引号。直接通过 HTTP 调用时仍必须自行使用英文双引号。
+
+控制台调用的是未鉴权的 `/console-api/*` 路由，返回结构与对应 HTTP API 一致；它仅供当前内部页面使用，第三方系统应调用带 `X-API-Key` 的 `/api/patent/*`。
 
 ## 3. MCP
 
@@ -144,7 +174,7 @@ MCP 是 HTTP API 的工具层，不直接访问 OpenSearch。它使用另一份 
 
 | 工具 | 参数 | 返回 |
 |---|---|---|
-| `patent_search` | `q`；可选 `ds`、`page`、`page_size`、`sort`、`highlight`（boolean） | 与 HTTP 搜索相同的分页元数据，但列表字段为 `patents` 而非 `records`。每项是精简 snake_case 记录。实际每页上限由 MCP 配置控制，默认 50。 |
+| `patent_search` | `q`；可选 `ds`、`page`、`page_size`、`sort`、`highlight`（boolean） | `total`、`page`、`page_size`、`total_pages`、`next_page`、`took_ms`、`patents`。每项含 `id`、`title`、`applicant`、`application_date`、`application_number`、`document_number`、`document_date`、`type`、`legal_status`、`main_ipc`、`main_claim`、`independent_claims`、`rank`、`inventor`、`summary`。实际每页上限由 MCP 配置控制，默认 50。 |
 | `patent_get_detail` | `patent_id`；可选 `include_description` | 与 HTTP 详情相同。 |
 | `patent_get_citations` | `patent_id` | 与 HTTP 引证相同。 |
 | `patent_get_legal_history` | `patent_id` | 与 HTTP 法律状态历史相同。 |
