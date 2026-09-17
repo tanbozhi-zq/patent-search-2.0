@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "patent-search": {
+      "command": "/absolute/path/to/patent-search-2.0/.venv/bin/python",
+      "args": [
+        "/absolute/path/to/patent-search-2.0/mcp_server/server.py"
+      ],
+      "env": {
+        "PATENT_SEARCH_BASE_URL": "http://127.0.0.1:8000",
+        "PATENT_SEARCH_TIMEOUT_SECONDS": "245",
+        "PATENT_SEARCH_PAGE_SIZE_LIMIT": "50"
+      }
+    }
+  }
+}

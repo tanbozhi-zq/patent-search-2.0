@@ -1,0 +1,23 @@
+{
+  "schema_version": "issue75-semantic-performance-query-set.v1",
+  "queries": [
+    {
+      "id": "fluid-control",
+      "q": "title:流体控制",
+      "semantic_text": "低泄漏流体控制阀",
+      "vector_anchor": [1.0, 0.0, 0.0]
+    },
+    {
+      "id": "power-conversion",
+      "q": "title:功率转换",
+      "semantic_text": "高效率功率转换装置",
+      "vector_anchor": [0.0, 1.0, 0.0]
+    },
+    {
+      "id": "sensor-control",
+      "q": "title:传感控制",
+      "semantic_text": "精密传感与闭环控制",
+      "vector_anchor": [0.0, 0.0, 1.0]
+    }
+  ]
+}

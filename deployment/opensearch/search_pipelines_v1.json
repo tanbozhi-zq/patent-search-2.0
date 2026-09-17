@@ -1,0 +1,121 @@
+{
+  "version": 1,
+  "pipelines": {
+    "patent-vector-rrf-v1-2": {
+      "description": "Issue 75 equal-weight RRF for 2 vector branches",
+      "phase_results_processors": [
+        {
+          "score-ranker-processor": {
+            "combination": {
+              "technique": "rrf",
+              "rank_constant": 60,
+              "parameters": {"weights": [0.5, 0.5]}
+            }
+          }
+        }
+      ]
+    },
+    "patent-vector-rrf-v1-3": {
+      "description": "Issue 75 equal-weight RRF for 3 vector branches",
+      "phase_results_processors": [
+        {
+          "score-ranker-processor": {
+            "combination": {
+              "technique": "rrf",
+              "rank_constant": 60,
+              "parameters": {
+                "weights": [0.3333333333333333, 0.3333333333333333, 0.3333333333333333]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "patent-vector-rrf-v1-4": {
+      "description": "Issue 75 equal-weight RRF for 4 vector branches",
+      "phase_results_processors": [
+        {
+          "score-ranker-processor": {
+            "combination": {
+              "technique": "rrf",
+              "rank_constant": 60,
+              "parameters": {"weights": [0.25, 0.25, 0.25, 0.25]}
+            }
+          }
+        }
+      ]
+    },
+    "patent-vector-rrf-v1-5": {
+      "description": "Issue 75 equal-weight RRF for 5 vector branches",
+      "phase_results_processors": [
+        {
+          "score-ranker-processor": {
+            "combination": {
+              "technique": "rrf",
+              "rank_constant": 60,
+              "parameters": {"weights": [0.2, 0.2, 0.2, 0.2, 0.2]}
+            }
+          }
+        }
+      ]
+    },
+    "patent-hybrid-rrf-v1-1": {
+      "description": "Issue 75 RRF: 50% boolean, 50% one vector branch",
+      "phase_results_processors": [
+        {
+          "score-ranker-processor": {
+            "combination": {
+              "technique": "rrf",
+              "rank_constant": 60,
+              "parameters": {"weights": [0.5, 0.5]}
+            }
+          }
+        }
+      ]
+    },
+    "patent-hybrid-rrf-v1-2": {
+      "description": "Issue 75 RRF: 50% boolean, 25% per vector branch",
+      "phase_results_processors": [
+        {
+          "score-ranker-processor": {
+            "combination": {
+              "technique": "rrf",
+              "rank_constant": 60,
+              "parameters": {"weights": [0.5, 0.25, 0.25]}
+            }
+          }
+        }
+      ]
+    },
+    "patent-hybrid-rrf-v1-3": {
+      "description": "Issue 75 RRF: 50% boolean, remaining weight split over 3 vectors",
+      "phase_results_processors": [
+        {
+          "score-ranker-processor": {
+            "combination": {
+              "technique": "rrf",
+              "rank_constant": 60,
+              "parameters": {
+                "weights": [0.5, 0.16666666666666666, 0.16666666666666666, 0.16666666666666666]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "patent-hybrid-rrf-v1-4": {
+      "description": "Issue 75 RRF: 50% boolean, 12.5% per vector branch",
+      "phase_results_processors": [
+        {
+          "score-ranker-processor": {
+            "combination": {
+              "technique": "rrf",
+              "rank_constant": 60,
+              "parameters": {"weights": [0.5, 0.125, 0.125, 0.125, 0.125]}
+            }
+          }
+        }
+      ]
+    }
+  }
+}

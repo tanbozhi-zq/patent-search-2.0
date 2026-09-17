@@ -1,0 +1,187 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "description": "Issue #54 baseline dashboard for the patent search backend. Candidate thresholds require canary calibration.",
+  "editable": false,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "fieldConfig": {"defaults": {"unit": "reqps"}, "overrides": []},
+      "gridPos": {"h": 6, "w": 8, "x": 0, "y": 0},
+      "id": 1,
+      "options": {"legend": {"displayMode": "table", "placement": "bottom"}},
+      "targets": [
+        {"expr": "sum(rate(patent_search_http_requests_total{route!~\"/(live|startup|ready|health)\"}[5m]))", "legendFormat": "business all", "refId": "A"},
+        {"expr": "sum(rate(patent_search_http_requests_total{route!~\"/(live|startup|ready|health)\",status=~\"2..\"}[5m]))", "legendFormat": "business 2xx", "refId": "B"}
+      ],
+      "title": "Request rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []},
+      "gridPos": {"h": 6, "w": 8, "x": 8, "y": 0},
+      "id": 2,
+      "options": {"legend": {"displayMode": "table", "placement": "bottom"}},
+      "targets": [
+        {"expr": "histogram_quantile(0.95, sum by (le) (rate(patent_search_http_request_duration_seconds_bucket{route!~\"/(live|startup|ready|health)\"}[5m])))", "legendFormat": "P95", "refId": "A"},
+        {"expr": "histogram_quantile(0.99, sum by (le) (rate(patent_search_http_request_duration_seconds_bucket{route!~\"/(live|startup|ready|health)\"}[5m])))", "legendFormat": "P99", "refId": "B"}
+      ],
+      "title": "End-to-end latency",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "fieldConfig": {"defaults": {"min": 0, "max": 1, "unit": "percentunit"}, "overrides": []},
+      "gridPos": {"h": 6, "w": 8, "x": 16, "y": 0},
+      "id": 3,
+      "options": {"legend": {"displayMode": "table", "placement": "bottom"}},
+      "targets": [
+        {"expr": "sum(rate(patent_search_http_requests_total{route!~\"/(live|startup|ready|health)\",status=~\"5..\"}[5m])) / clamp_min(sum(rate(patent_search_http_requests_total{route!~\"/(live|startup|ready|health)\"}[5m])), 0.001)", "legendFormat": "5xx", "refId": "A"},
+        {"expr": "sum(rate(patent_search_http_requests_total{route!~\"/(live|startup|ready|health)\",status=\"503\"}[5m])) / clamp_min(sum(rate(patent_search_http_requests_total{route!~\"/(live|startup|ready|health)\"}[5m])), 0.001)", "legendFormat": "503", "refId": "B"},
+        {"expr": "sum(rate(patent_search_http_requests_total{route!~\"/(live|startup|ready|health)\",status=\"504\"}[5m])) / clamp_min(sum(rate(patent_search_http_requests_total{route!~\"/(live|startup|ready|health)\"}[5m])), 0.001)", "legendFormat": "504", "refId": "C"}
+      ],
+      "title": "Server error ratios",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "fieldConfig": {"defaults": {"unit": "reqps"}, "overrides": []},
+      "gridPos": {"h": 7, "w": 6, "x": 0, "y": 6},
+      "id": 4,
+      "options": {"legend": {"displayMode": "table", "placement": "bottom"}},
+      "targets": [
+        {"expr": "sum by (code) (rate(patent_search_http_requests_total{status=~\"4..\"}[5m]))", "legendFormat": "code {{code}}", "refId": "A"}
+      ],
+      "title": "Caller errors (4xx)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "fieldConfig": {"defaults": {"unit": "reqps"}, "overrides": []},
+      "gridPos": {"h": 7, "w": 6, "x": 6, "y": 6},
+      "id": 5,
+      "options": {"legend": {"displayMode": "table", "placement": "bottom"}},
+      "targets": [
+        {"expr": "sum(rate(patent_search_http_requests_total{code=\"50301\"}[5m]))", "legendFormat": "50301 overload", "refId": "A"},
+        {"expr": "sum by (bulkhead) (rate(patent_search_bulkhead_rejections_total[5m]))", "legendFormat": "{{bulkhead}} reject", "refId": "B"}
+      ],
+      "title": "Application overload",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "fieldConfig": {"defaults": {"unit": "ops"}, "overrides": []},
+      "gridPos": {"h": 7, "w": 6, "x": 12, "y": 6},
+      "id": 6,
+      "options": {"legend": {"displayMode": "table", "placement": "bottom"}},
+      "targets": [
+        {"expr": "sum by (outcome) (rate(patent_search_opensearch_calls_total{outcome=~\"connection_error|unavailable|timeout|invalid_response|error\"}[5m]))", "legendFormat": "{{outcome}}", "refId": "A"},
+        {"expr": "sum by (operation) (rate(patent_search_opensearch_retries_total[5m]))", "legendFormat": "retry {{operation}}", "refId": "B"}
+      ],
+      "title": "OpenSearch dependency failures",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "fieldConfig": {"defaults": {"unit": "reqps"}, "overrides": []},
+      "gridPos": {"h": 7, "w": 6, "x": 18, "y": 6},
+      "id": 7,
+      "options": {"legend": {"displayMode": "table", "placement": "bottom"}},
+      "targets": [
+        {"expr": "sum(rate(patent_search_http_requests_total{code=\"50002\"}[5m]))", "legendFormat": "50002 unknown", "refId": "A"},
+        {"expr": "sum(rate(patent_search_opensearch_calls_total{outcome=\"unexpected_error\"}[5m]))", "legendFormat": "dependency unexpected", "refId": "B"}
+      ],
+      "title": "Unknown program errors",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+      "gridPos": {"h": 7, "w": 8, "x": 0, "y": 13},
+      "id": 8,
+      "options": {"legend": {"displayMode": "table", "placement": "bottom"}},
+      "targets": [
+        {"expr": "sum by (bulkhead) (patent_search_bulkhead_in_flight)", "legendFormat": "{{bulkhead}} in-flight", "refId": "A"},
+        {"expr": "sum by (bulkhead) (patent_search_bulkhead_capacity)", "legendFormat": "{{bulkhead}} capacity", "refId": "B"}
+      ],
+      "title": "Bulkhead totals across instances",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "fieldConfig": {"defaults": {"min": 0, "max": 1, "unit": "percentunit"}, "overrides": []},
+      "gridPos": {"h": 7, "w": 8, "x": 8, "y": 13},
+      "id": 9,
+      "options": {"legend": {"displayMode": "table", "placement": "bottom"}},
+      "targets": [
+        {"expr": "max by (job, bulkhead) (patent_search_bulkhead_in_flight / patent_search_bulkhead_capacity)", "legendFormat": "max {{bulkhead}}", "refId": "A"}
+      ],
+      "title": "Worst per-instance bulkhead utilization",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "fieldConfig": {"defaults": {"min": 0, "max": 1, "unit": "short"}, "overrides": []},
+      "gridPos": {"h": 7, "w": 8, "x": 16, "y": 13},
+      "id": 10,
+      "options": {"legend": {"displayMode": "table", "placement": "bottom"}},
+      "targets": [
+        {"expr": "min by (job, probe) (patent_search_probe_status)", "legendFormat": "{{probe}}", "refId": "A"}
+      ],
+      "title": "Probe availability (worst instance)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []},
+      "gridPos": {"h": 7, "w": 12, "x": 0, "y": 20},
+      "id": 11,
+      "options": {"legend": {"displayMode": "table", "placement": "bottom"}},
+      "targets": [
+        {"expr": "histogram_quantile(0.95, sum by (operation, le) (rate(patent_search_opensearch_call_duration_seconds_bucket[5m])))", "legendFormat": "P95 {{operation}}", "refId": "A"},
+        {"expr": "histogram_quantile(0.99, sum by (operation, le) (rate(patent_search_opensearch_call_duration_seconds_bucket[5m])))", "legendFormat": "P99 {{operation}}", "refId": "B"}
+      ],
+      "title": "OpenSearch call latency",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "fieldConfig": {"defaults": {"unit": "dateTimeAsIso"}, "overrides": []},
+      "gridPos": {"h": 7, "w": 12, "x": 12, "y": 20},
+      "id": 12,
+      "options": {"legend": {"displayMode": "table", "placement": "bottom"}},
+      "targets": [
+        {"expr": "patent_search_service_start_time_seconds * 1000", "legendFormat": "{{instance}}", "refId": "A"}
+      ],
+      "title": "Per-instance service start time / restart signal",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "15s",
+  "schemaVersion": 39,
+  "tags": ["patent-search", "issue-54", "candidate-thresholds"],
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "label": "Prometheus",
+        "name": "DS_PROMETHEUS",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "type": "datasource"
+      }
+    ]
+  },
+  "time": {"from": "now-6h", "to": "now"},
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Patent Search Service - Baseline Operations",
+  "uid": "patent-search-issue54",
+  "version": 1
+}

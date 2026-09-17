@@ -1,0 +1,22 @@
+[Unit]
+Description=Patent Search Service
+After=network.target
+
+[Service]
+User=work
+Group=work
+WorkingDirectory=/opt/patent-search-service
+EnvironmentFile=/opt/patent-search-service/.env
+StateDirectory=patent-search-service
+StateDirectoryMode=0700
+UMask=0077
+ExecStart=/opt/patent-search-service/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 --no-access-log
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+LogNamespace=patent-search
+SyslogIdentifier=patent-search-service
+
+[Install]
+WantedBy=multi-user.target

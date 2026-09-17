@@ -1,0 +1,37 @@
+{
+  "version": "1",
+  "status": "candidate_guardrails_require_operator_review",
+  "levels": [4, 6, 8, 10],
+  "application": {
+    "max_failure_rate": 0.0,
+    "max_bulkhead_rejections": 0,
+    "rejection_p99_slo_seconds": 0.1
+  },
+  "opensearch": {
+    "max_failed_metric_samples": 0,
+    "max_missing_required_metric_count": 0,
+    "max_nodes_failed": 0,
+    "max_node_cpu_percent": 80,
+    "max_node_heap_percent": 65,
+    "max_consecutive_search_queue_samples": 2,
+    "max_search_rejected_delta": 0,
+    "max_breaker_tripped_delta": 0,
+    "max_backpressure_cancellation_delta": 0,
+    "require_final_search_idle": true
+  },
+  "knee": {
+    "minimum_throughput_gain_ratio": 0.15,
+    "maximum_tail_latency_growth_ratio": 0.3
+  },
+  "mixed": {
+    "max_light_p95_growth_ratio": 1.0
+  },
+  "notes": [
+    "Run only one level at a time and require human approval before the next level.",
+    "Use overload_rejections.py on the final candidate for heavy/global 50301 P99; zero ladder rejections do not satisfy that SLO.",
+    "CPU 80% and heap 65% stop before the OpenSearch search-backpressure defaults of 90% and 70% node duress.",
+    "Three consecutive non-zero queue samples at the default 2-second interval mean a sustained queue of about 6 seconds.",
+    "The 100-millisecond rejection SLO is end-to-end; the 10-millisecond semaphore wait is only a candidate internal budget.",
+    "A light-request P95 more than twice its standalone baseline requires workload isolation or an explicitly approved SLO."
+  ]
+}

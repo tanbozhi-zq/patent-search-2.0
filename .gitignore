@@ -1,0 +1,31 @@
+.DS_Store
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# Python artifacts
+.venv/
+__pycache__/
+.pytest_cache/
+
+# Local records and generated development artifacts
+frontend/
+local/
+.local-dev/
+
+# Local read-only SaaS source copy for contract audit
+patent_harness_base_副本/
+
+
+# Generated outputs
+artifacts/
+outputs/
+reports/
+*.log
+
+# Benchmark measurements and local design notes
+/benchmarks/capacity/results/
+/benchmarks/semantic_search/results/
+/.impeccable/

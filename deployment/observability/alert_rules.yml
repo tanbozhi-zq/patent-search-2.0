@@ -1,0 +1,165 @@
+groups:
+  - name: patent-search-service
+    interval: 30s
+    rules:
+      - alert: PatentSearchHigh5xxRatio
+        expr: |
+          sum(rate(patent_search_http_requests_total{route!~"/(live|startup|ready|health)",status=~"5.."}[5m]))
+          /
+          clamp_min(sum(rate(patent_search_http_requests_total{route!~"/(live|startup|ready|health)"}[5m])), 0.001)
+          > 0.05
+        for: 10m
+        labels:
+          severity: warning
+          threshold_status: candidate
+        annotations:
+          summary: Patent search 5xx ratio is above the initial 5% candidate threshold
+          possible_causes: Unknown application errors, overload, or dependency failures
+          investigation: Split requests by code and compare dependency and bulkhead panels
+          mitigation: Stop the canary or roll back the current service revision if errors began after release
+          runbook: docs/ops/observability.md#alert-response
+
+      - alert: PatentSearchHigh503Ratio
+        expr: |
+          sum(rate(patent_search_http_requests_total{route!~"/(live|startup|ready|health)",status="503"}[5m]))
+          /
+          clamp_min(sum(rate(patent_search_http_requests_total{route!~"/(live|startup|ready|health)"}[5m])), 0.001)
+          > 0.02
+        for: 5m
+        labels:
+          severity: warning
+          threshold_status: candidate
+        annotations:
+          summary: Patent search 503 ratio is above the initial 2% candidate threshold
+          possible_causes: Application bulkhead rejection or OpenSearch unavailability
+          investigation: Split 50301 overload from 50302 dependency unavailable and inspect in-flight capacity
+          mitigation: Stop traffic growth; roll back only when the rise correlates with the current revision
+          runbook: docs/ops/observability.md#alert-response
+
+      - alert: PatentSearchHigh504Ratio
+        expr: |
+          sum(rate(patent_search_http_requests_total{route!~"/(live|startup|ready|health)",status="504"}[5m]))
+          /
+          clamp_min(sum(rate(patent_search_http_requests_total{route!~"/(live|startup|ready|health)"}[5m])), 0.001)
+          > 0.01
+        for: 5m
+        labels:
+          severity: critical
+          threshold_status: candidate
+        annotations:
+          summary: Patent search 504 ratio is above the initial 1% candidate threshold
+          possible_causes: OpenSearch timeout or exhausted end-to-end request deadline
+          investigation: Compare 50401 requests with OpenSearch timeout outcomes and latency buckets
+          mitigation: Stop the canary or traffic increase and use the verified release rollback entry
+          runbook: docs/ops/observability.md#alert-response
+
+      - alert: PatentSearchP95LatencyHigh
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum by (le) (rate(patent_search_http_request_duration_seconds_bucket{route!~"/(live|startup|ready|health)"}[5m]))
+          ) > 5
+        for: 10m
+        labels:
+          severity: warning
+          threshold_status: candidate
+        annotations:
+          summary: Patent search P95 latency is above the initial 5 second candidate threshold
+          possible_causes: Slow queries, application saturation, or dependency latency
+          investigation: Split latency by route and compare bulkhead utilization and OpenSearch duration
+          mitigation: Stop traffic growth and roll back the current revision if the regression is release-linked
+          runbook: docs/ops/observability.md#alert-response
+
+      - alert: PatentSearchP99LatencyHigh
+        expr: |
+          histogram_quantile(
+            0.99,
+            sum by (le) (rate(patent_search_http_request_duration_seconds_bucket{route!~"/(live|startup|ready|health)"}[5m]))
+          ) > 30
+        for: 10m
+        labels:
+          severity: critical
+          threshold_status: candidate
+        annotations:
+          summary: Patent search P99 latency is above the initial 30 second candidate threshold
+          possible_causes: Long-tail queries, saturation, dependency stalls, or deadline pressure
+          investigation: Inspect route-level P99, in-flight gauges, rejections, and OpenSearch timeouts
+          mitigation: Stop the canary or traffic increase and roll back the verified service revision when appropriate
+          runbook: docs/ops/observability.md#alert-response
+
+      - alert: PatentSearchBulkheadRejecting
+        expr: sum(increase(patent_search_bulkhead_rejections_total[5m])) > 5
+        labels:
+          severity: warning
+          threshold_status: candidate
+        annotations:
+          summary: Patent search bulkheads rejected more than 5 requests in the rolling 5 minute window
+          possible_causes: Heavy-search saturation or global application overload
+          investigation: Compare global and heavy_search capacity, in-flight, and rejection series
+          mitigation: Stop traffic growth; do not raise capacity without Issue 49 calibration evidence
+          runbook: docs/ops/observability.md#alert-response
+
+      - alert: PatentSearchDependencyTimeouts
+        expr: |
+          sum(increase(patent_search_opensearch_calls_total{outcome="timeout"}[5m])) > 2
+        labels:
+          severity: critical
+          threshold_status: candidate
+        annotations:
+          summary: Patent search observed more than 2 OpenSearch timeouts in the rolling 5 minute window
+          possible_causes: Dependency latency, network timeout, or exhausted request deadline
+          investigation: Compare operation outcomes, retry rate, duration histogram, and 50401 responses
+          mitigation: Stop the canary or traffic increase and follow the verified service rollback entry
+          runbook: docs/ops/observability.md#alert-response
+
+      - alert: PatentSearchInstanceNotReady
+        expr: patent_search_probe_status{probe="ready"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          threshold_status: candidate
+        annotations:
+          summary: Patent search instance has remained not-ready for 2 minutes
+          possible_causes: Startup incomplete, isolated readiness timeout, or OpenSearch unavailable
+          investigation: Check startup and ready probes plus readiness operation outcomes for this instance
+          mitigation: Keep the instance out of traffic; restart or roll back only after identifying the failure boundary
+          runbook: docs/ops/observability.md#alert-response
+
+      - alert: PatentSearchProcessRestarted
+        expr: changes(patent_search_service_start_time_seconds[15m]) > 0
+        for: 1m
+        labels:
+          severity: warning
+          threshold_status: candidate
+        annotations:
+          summary: Patent search process start time changed within 15 minutes
+          possible_causes: Deployment, operator restart, crash, or service-manager restart loop
+          investigation: Correlate the instance start time with deployment records and post-start logs
+          mitigation: Stop rollout progression and use the verified rollback revision when restarts are unexpected
+          runbook: docs/ops/observability.md#alert-response
+
+  - name: patent-search-prometheus
+    interval: 30s
+    rules:
+      - alert: PatentSearchPrometheusStorageBudgetHigh
+        expr: |
+          (
+            prometheus_tsdb_storage_blocks_bytes{job="prometheus"}
+            /
+            prometheus_tsdb_retention_limit_bytes{job="prometheus"}
+            > 0.80
+          )
+          and on (job, instance)
+          (
+            prometheus_tsdb_retention_limit_bytes{job="prometheus"} > 0
+          )
+        for: 10m
+        labels:
+          severity: warning
+          threshold_status: deployment_budget
+        annotations:
+          summary: Patent search Prometheus TSDB blocks exceed 80% of the configured size budget
+          possible_causes: Unexpected series growth, a scrape-label regression, or delayed block retention
+          investigation: Compare storage block bytes, retention limit bytes, active series, and filesystem free space
+          mitigation: Stop adding targets; preserve evidence and reduce retention only through the verified deployment rollback procedure
+          runbook: docs/ops/internal_prometheus.md#storage-budget-response

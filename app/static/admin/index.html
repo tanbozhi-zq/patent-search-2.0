@@ -1,0 +1,282 @@
+<!--
+THESIS: Raw service parameters and guarded immutable records let one administrator diagnose, apply the explicitly reloadable subset, and recover the prior process-local snapshot.
+OWN-WORLD: Slate, white, and blue form a dense control desk built from ruled fact bands, metric rails, compact tables, and one explicit draft boundary.
+STORY: Establish release/data identity, compare request and runtime parameters, prepare a validated immutable draft, inspect raw tables, then trace a bounded event.
+FIRST VIEWPORT: A compact command bar leads directly into release facts, eight request measurements, and effective runtime parameters.
+FORM: Operate-mode extension of the incumbent administrator surface; only the separately enabled runtime-reload subset exposes a fixed apply or rollback action.
+-->
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <title>检索服务运行参数</title>
+    <link rel="icon" href="/admin/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body>
+    <div class="admin-shell">
+        <header class="topbar">
+            <div>
+                <div class="product-line">
+                    <span class="product-mark" aria-hidden="true"></span>
+                    <span>专利检索服务</span>
+                    <code>service=patent-search</code>
+                </div>
+                <h1>运行参数</h1>
+            </div>
+            <div class="topbar-actions">
+                <span id="adminModeBadge" class="admin-badge">管理 · ADMIN</span>
+                <label class="compact-field" for="metricWindow">
+                    <span>指标窗口</span>
+                    <select id="metricWindow">
+                        <option value="300">最近 5 分钟</option>
+                        <option value="900" selected>最近 15 分钟</option>
+                        <option value="3600">最近 1 小时</option>
+                    </select>
+                </label>
+                <button id="refreshButton" type="button">刷新数据</button>
+            </div>
+        </header>
+
+        <main>
+            <section class="panel fact-panel" aria-labelledby="releaseTitle">
+                <div class="panel-heading compact-heading">
+                    <div>
+                        <p class="section-kicker">release / data identity</p>
+                        <h2 id="releaseTitle">发布与数据身份</h2>
+                    </div>
+                    <code class="source-note" id="refreshState" role="status" aria-live="polite">loading=true</code>
+                </div>
+                <dl class="fact-grid">
+                    <div><dt>版本</dt><dd id="releaseVersion">待加载</dd></div>
+                    <div><dt>Commit</dt><dd id="releaseCommit">待加载</dd></div>
+                    <div><dt>Tag</dt><dd id="releaseTag">待加载</dd></div>
+                    <div><dt>实例</dt><dd id="releaseInstance">待加载</dd></div>
+                    <div><dt>进程启动</dt><dd id="releaseStarted">待加载</dd></div>
+                    <div><dt>指标时间</dt><dd id="metricsGeneratedAt">待加载</dd></div>
+                    <div><dt>指标源 / partial</dt><dd id="metricsIdentity">待加载</dd></div>
+                    <div><dt>日志范围</dt><dd id="logScopeIdentity">待加载</dd></div>
+                </dl>
+            </section>
+
+            <section class="panel metric-panel" aria-labelledby="signalTitle">
+                <div class="panel-heading metric-heading">
+                    <div>
+                        <p class="section-kicker">request measurements</p>
+                        <h2 id="signalTitle">核心请求参数</h2>
+                    </div>
+                    <code class="source-note" id="metricWindowLabel" data-window-label>window=900s</code>
+                </div>
+                <div class="metric-grid">
+                    <div class="metric" data-signal="request_rate"><span>请求速率</span><strong>…</strong><small>req/s</small></div>
+                    <div class="metric" data-signal="success_rate"><span>2xx 成功率</span><strong>…</strong><small>ratio</small></div>
+                    <div class="metric" data-signal="latency_p50_seconds"><span>P50</span><strong>…</strong><small>ms</small></div>
+                    <div class="metric" data-signal="latency_p95_seconds"><span>P95</span><strong>…</strong><small>ms</small></div>
+                    <div class="metric" data-signal="latency_p99_seconds"><span>P99</span><strong>…</strong><small>ms</small></div>
+                    <div class="metric" data-signal="http_4xx_rate"><span>4xx 速率</span><strong>…</strong><small>req/s</small></div>
+                    <div class="metric" data-signal="http_5xx_rate"><span>5xx 速率</span><strong>…</strong><small>req/s</small></div>
+                    <div class="metric" data-signal="global_in_flight"><span>全局在途</span><strong>…</strong><small>requests</small></div>
+                </div>
+            </section>
+
+            <section class="panel" aria-labelledby="coreConfigTitle">
+                <div class="panel-heading compact-heading">
+                    <div>
+                        <p class="section-kicker">effective config</p>
+                        <h2 id="coreConfigTitle">关键生效参数</h2>
+                    </div>
+                    <code class="source-note">source=/admin-api/v1/config</code>
+                </div>
+                <div id="coreConfigRows" class="core-config-grid">
+                    <p class="empty-state">loading=true</p>
+                </div>
+            </section>
+
+            <section id="draftWorkspace" class="panel draft-panel" aria-labelledby="draftTitle" hidden>
+                <div class="panel-heading compact-heading">
+                    <div>
+                        <p class="section-kicker">validated change record</p>
+                        <h2 id="draftTitle">配置草案与预检</h2>
+                    </div>
+                    <code class="source-note" id="draftBaseline">loading=true</code>
+                </div>
+                <div class="draft-boundary" role="note">
+                    <strong id="draftBoundaryTitle">这里只预检并保存草案，不会修改当前运行参数。</strong>
+                    <span id="draftBoundaryDetail">运行时应用开关默认关闭；restart_required 参数始终需要按发布流程生效。</span>
+                </div>
+                <div class="draft-workspace-grid">
+                    <form id="configDraftForm" class="draft-form">
+                        <div class="draft-section-heading">
+                            <div>
+                                <h3>候选参数</h3>
+                                <p>勾选需要变更的参数；范围和组合约束最终由服务端验证。</p>
+                            </div>
+                            <code id="draftSelectionCount">selected=0</code>
+                        </div>
+                        <div id="draftParameterRows" class="draft-parameter-list" aria-live="polite">
+                            <p class="empty-state">loading=true</p>
+                        </div>
+                        <label class="draft-reason" for="draftReason">
+                            <span>变更原因</span>
+                            <textarea id="draftReason" rows="3" maxlength="500" required placeholder="说明要解决的问题、预期影响和观察重点"></textarea>
+                            <small>1–500 字；原因保存在不可变审计记录中，不进入普通日志。</small>
+                        </label>
+                        <div class="draft-actions">
+                            <button id="createDraftButton" class="primary" type="submit">预检并保存草案</button>
+                            <code id="draftSubmitState" role="status" aria-live="polite">idle=true</code>
+                        </div>
+                    </form>
+
+                    <section class="draft-history" aria-labelledby="draftHistoryTitle">
+                        <div class="draft-section-heading">
+                            <div>
+                                <h3 id="draftHistoryTitle">最近草案</h3>
+                                <p>状态按当前基线和 24 小时 TTL 实时判断；过期记录不会被原地改写。</p>
+                            </div>
+                            <button id="refreshDraftsButton" class="secondary-action" type="button">刷新草案</button>
+                        </div>
+                        <div id="draftResult" class="draft-result" role="status" aria-live="polite">
+                            <strong>尚未提交新草案</strong>
+                            <span>选择参数并填写原因后，结果会显示在这里。</span>
+                        </div>
+                        <div id="runtimeControl" class="runtime-control" hidden>
+                            <div>
+                                <strong>当前运行时快照</strong>
+                                <code id="runtimeVersion">version=loading</code>
+                                <small id="runtimeRollbackTarget">rollback=unavailable</small>
+                            </div>
+                            <button id="runtimeRollbackButton" class="runtime-action" type="button" disabled>回滚到上一版本</button>
+                        </div>
+                        <section id="runtimeAudit" class="runtime-audit" aria-labelledby="runtimeAuditTitle" hidden>
+                            <div class="draft-section-heading">
+                                <div>
+                                    <h3 id="runtimeAuditTitle">最近运行操作</h3>
+                                    <p>仅显示当前实例的脱敏审计结果；原因、版本与操作 ID 可用于回溯 SQLite 记录。</p>
+                                </div>
+                            </div>
+                            <div class="table-wrap runtime-audit-table-wrap">
+                                <table>
+                                    <thead><tr><th>result / time</th><th>actor / operation</th><th>reason</th><th>old / new version</th></tr></thead>
+                                    <tbody id="runtimeOperationRows"><tr><td colspan="4" class="empty-cell">loading=true</td></tr></tbody>
+                                </table>
+                            </div>
+                        </section>
+                        <div class="table-wrap draft-history-table-wrap">
+                            <table>
+                                <thead><tr><th>status</th><th>created / expires / id</th><th>diff</th><th>reason</th><th>export</th><th>action</th></tr></thead>
+                                <tbody id="draftHistoryRows"><tr><td colspan="6" class="empty-cell">loading=true</td></tr></tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+            </section>
+
+            <div class="dashboard-grid">
+                <section class="panel panel-wide" aria-labelledby="instancesTitle">
+                    <div class="panel-heading">
+                        <div><p class="section-kicker">per instance</p><h2 id="instancesTitle">实例与探针</h2></div>
+                        <code class="source-note">probe value: 1 / 0 / unavailable</code>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>instance</th><th>version</th><th>commit</th><th>started_at</th><th class="number">live</th><th class="number">startup</th><th class="number">ready</th></tr></thead>
+                            <tbody id="instanceRows"><tr><td colspan="7" class="empty-cell">loading=true</td></tr></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="panel" aria-labelledby="bulkheadTitle">
+                    <div class="panel-heading">
+                        <div><p class="section-kicker">admission boundary</p><h2 id="bulkheadTitle">并发容量</h2></div>
+                        <code class="source-note" data-window-label>window=900s</code>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>bulkhead</th><th class="number">in_flight_total</th><th class="number">capacity_total</th><th class="number">max_instance_utilization</th><th class="number">rejections_window</th></tr></thead>
+                            <tbody id="bulkheadRows"><tr><td colspan="5" class="empty-cell">loading=true</td></tr></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="panel" aria-labelledby="dependencyTitle">
+                    <div class="panel-heading">
+                        <div><p class="section-kicker">dependency boundary</p><h2 id="dependencyTitle">OpenSearch 调用</h2></div>
+                        <code class="source-note" data-window-label>window=900s</code>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>operation</th><th class="number">calls/s</th><th class="number">failures/s</th><th class="number">failure ratio</th><th class="number">P95</th><th class="number">retry/s</th></tr></thead>
+                            <tbody id="dependencyRows"><tr><td colspan="6" class="empty-cell">loading=true</td></tr></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="panel" aria-labelledby="routesTitle">
+                    <div class="panel-heading">
+                        <div><p class="section-kicker">request dimension</p><h2 id="routesTitle">接口请求率</h2></div>
+                        <code class="source-note">group by route</code>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>route</th><th class="number">rate</th><th class="number">ratio</th></tr></thead>
+                            <tbody id="routeRows"><tr><td colspan="3" class="empty-cell">loading=true</td></tr></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="panel" aria-labelledby="outcomesTitle">
+                    <div class="panel-heading">
+                        <div><p class="section-kicker">response dimension</p><h2 id="outcomesTitle">HTTP 状态与业务码</h2></div>
+                        <code class="source-note">group by status, code</code>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>HTTP</th><th>业务码</th><th class="number">rate</th><th class="number">ratio</th></tr></thead>
+                            <tbody id="outcomeRows"><tr><td colspan="4" class="empty-cell">loading=true</td></tr></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <details class="panel panel-wide config-details">
+                    <summary><span>全部生效参数</span><code id="configCount">count=0</code></summary>
+                    <div class="table-wrap config-table-wrap">
+                        <table>
+                            <thead><tr><th>key</th><th>label</th><th>category</th><th>value</th></tr></thead>
+                            <tbody id="configRows"><tr><td colspan="4" class="empty-cell">loading=true</td></tr></tbody>
+                        </table>
+                    </div>
+                </details>
+
+                <section class="panel panel-wide logs-panel" aria-labelledby="logsTitle">
+                    <div class="panel-heading">
+                        <div><p class="section-kicker">bounded query</p><h2 id="logsTitle">结构化日志</h2></div>
+                        <code class="source-note" id="logScope">scope=unavailable · limit=50</code>
+                    </div>
+                    <form id="logForm" class="log-filters">
+                        <label><span>时间</span><select id="logWindow"><option value="900" selected>最近 15 分钟</option><option value="3600">最近 1 小时</option><option value="21600">最近 6 小时</option><option value="86400">最近 24 小时</option></select></label>
+                        <label><span>Request ID</span><input id="logRequestId" maxlength="64" autocomplete="off" placeholder="精确匹配"></label>
+                        <label><span>接口</span><input id="logRoute" list="logRouteOptions" maxlength="160" autocomplete="off" placeholder="输入或选择精确路径"><datalist id="logRouteOptions"></datalist></label>
+                        <label><span>业务错误码</span><input id="logCode" type="number" min="0" max="99999" placeholder="例如 50301"></label>
+                        <label class="system-toggle"><input id="includeSystem" type="checkbox"><span>包含系统活动</span></label>
+                        <button class="primary" type="submit">查询</button>
+                    </form>
+                    <div id="logSummary" class="query-summary" role="status" aria-live="polite">loading=true</div>
+                    <div class="table-wrap log-table-wrap">
+                        <table>
+                            <thead><tr><th>timestamp</th><th>event</th><th>request_id</th><th>接口 / operation</th><th>status / code</th><th class="number">elapsed_ms</th></tr></thead>
+                            <tbody id="logRows"><tr><td colspan="6" class="empty-cell">loading=true</td></tr></tbody>
+                        </table>
+                    </div>
+                    <div class="log-footer">
+                        <span>带 Request ID 的行可点击回填筛选</span>
+                        <button id="nextLogsButton" class="secondary-action" type="button" hidden>下一页</button>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+    <script src="/admin/admin.js" defer></script>
+</body>
+</html>

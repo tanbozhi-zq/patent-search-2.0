@@ -1,0 +1,2 @@
+# Optional Linux-only dependency for ADMIN_LOG_SOURCE=journal.
+systemd-python==235; sys_platform == "linux"

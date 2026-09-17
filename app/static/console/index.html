@@ -1,0 +1,2261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>专利检索内部控制台</title>
+    <style>
+        * { box-sizing: border-box; }
+        [hidden] { display: none !important; }
+        :root {
+            --primary: #409eff;
+            --primary-hover: #66b1ff;
+            --danger: #f56c6c;
+            --success: #67c23a;
+            --warning: #e6a23c;
+            --text: #303133;
+            --text-secondary: #606266;
+            --border: #dcdfe6;
+            --bg: #f5f7fa;
+            --card-bg: #fff;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        .app {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        :focus-visible {
+            outline: 3px solid rgba(64, 158, 255, 0.4);
+            outline-offset: 2px;
+        }
+        .console-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 16px 24px;
+            background: #172033;
+            color: #fff;
+        }
+        .console-topbar h1 { margin: 0; font-size: 18px; }
+        .console-topbar p { margin: 3px 0 0; color: #cbd5e1; font-size: 12px; }
+        /* 检索区 */
+        .search-panel {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            padding: 20px 24px;
+        }
+        .search-form { max-width: 1200px; margin: 0 auto; }
+        .search-label { display: block; margin-bottom: 7px; font-size: 13px; font-weight: 600; }
+        .search-entry { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: end; }
+        .search-entry textarea { min-height: 68px; resize: vertical; }
+        .search-actions { display: flex; gap: 8px; align-items: center; }
+        .search-actions .primary { min-width: 92px; min-height: 42px; }
+        .query-status { min-height: 22px; margin: 10px 0 0; font-size: 13px; color: var(--text-secondary); }
+        .query-status.error { color: #b42318; }
+        .query-status.success { color: #067647; }
+        .query-status.loading { color: #175cd3; }
+        .advanced-toggle { margin-top: 14px; padding: 0; border: 0; background: transparent; color: #175cd3; font-weight: 600; }
+        .advanced-panel { margin-top: 12px; padding-top: 16px; border-top: 1px solid var(--border); }
+        .advanced-panel[hidden] { display: none; }
+        button {
+            padding: 8px 18px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: #fff;
+            color: var(--text);
+            font-size: 13px;
+            cursor: pointer;
+        }
+        button:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        button.primary {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #fff;
+        }
+        button.primary:hover {
+            background: var(--primary-hover);
+            border-color: var(--primary-hover);
+        }
+        button.small {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        button.icon {
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            line-height: 1;
+        }
+        button.icon.add {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        button.icon.add:hover {
+            background: var(--primary);
+            color: #fff;
+        }
+        button.icon.remove {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+        button.icon.remove:hover {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        .request-params {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(110px, 1fr));
+            gap: 10px;
+            padding: 10px;
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+        }
+        .request-param label {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 7px 10px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: inherit;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        textarea {
+            resize: vertical;
+        }
+        .hint {
+            font-size: 12px;
+            color: #909399;
+            margin-top: 4px;
+        }
+        .semantic-controls {
+            display: grid;
+            grid-template-columns: minmax(260px, 2fr) minmax(180px, 1fr) minmax(100px, 0.5fr);
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .semantic-controls textarea { min-height: 68px; }
+
+        .query-workbench {
+            display: grid;
+            grid-template-columns: minmax(320px, 1.4fr) minmax(420px, 1fr);
+            gap: 12px;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+        .query-editor {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 12px;
+            background: #f8fafc;
+        }
+        .query-editor label,
+        .builder-label {
+            display: block;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        .query-editor textarea {
+            background: #fff;
+            min-height: 92px;
+            margin-bottom: 8px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+            line-height: 1.5;
+        }
+        .query-toolbar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .query-toolbar button {
+            padding: 5px 12px;
+            font-size: 12px;
+        }
+        .builder-panel {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: #fff;
+            padding: 12px;
+        }
+        .builder-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        .builder-header h2 {
+            margin: 0;
+            font-size: 14px;
+            color: var(--text);
+        }
+        .builder-toolbar,
+        .builder-group-actions,
+        .builder-node-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .builder-toolbar {
+            margin-bottom: 10px;
+        }
+        .builder-tree {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .builder-group {
+            border: 1px solid #cfd8e3;
+            border-left: 1px solid var(--primary);
+            border-radius: 6px;
+            padding: 10px;
+            background: #fbfdff;
+        }
+        .builder-group.depth-1 { border-left-color: var(--success); }
+        .builder-group.depth-2 { border-left-color: var(--warning); }
+        .builder-group.depth-3 { border-left-color: #8b5cf6; }
+        .builder-group-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 8px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        .builder-children {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .builder-node {
+            display: grid;
+            grid-template-columns: 112px minmax(150px, 190px) 168px minmax(180px, 1fr) 76px;
+            gap: 8px;
+            align-items: end;
+            padding: 10px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            background: #fff;
+        }
+        .builder-node.group-node {
+            grid-template-columns: 112px minmax(220px, 1fr) 76px;
+            background: #f6fbff;
+        }
+        .builder-node label {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        .builder-value-pair {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 8px;
+        }
+        .builder-value textarea {
+            min-height: 64px;
+        }
+        .builder-preview {
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px dashed #bfd0e4;
+            border-radius: 6px;
+            background: #f8fafc;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+            font-size: 12px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .builder-error {
+            margin-bottom: 10px;
+        }
+
+        /* 结果区 */
+        .results-panel {
+            display: block;
+            background: var(--bg);
+        }
+        .results-header {
+            padding: 10px 24px;
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .results-header strong {
+            color: var(--primary);
+            font-size: 14px;
+        }
+        .results-list {
+            padding: 16px 24px;
+        }
+        .record {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 14px;
+            margin-bottom: 12px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .record:hover, .record.active {
+            border-color: var(--primary);
+            box-shadow: 0 3px 10px rgba(15, 23, 42, 0.12);
+        }
+        .record-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        .record-meta {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+        .record-meta span {
+            margin-right: 16px;
+        }
+        .record-abstract {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #555;
+            line-height: 1.5;
+            max-height: 60px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .record-actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 8px;
+        }
+        .pagination {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+            background: var(--card-bg);
+            border-top: 1px solid var(--border);
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        /* 请求/错误区 */
+        .request-panel {
+            background: var(--card-bg);
+            border-top: 1px solid var(--border);
+        }
+        .request-header {
+            padding: 8px 24px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+        .request-header:hover {
+            background: #f5f7fa;
+        }
+        .request-body {
+            padding: 0 24px 16px;
+            max-height: 180px;
+            overflow: auto;
+        }
+        .request-body.collapsed {
+            display: none;
+        }
+        .request-body pre {
+            margin: 0;
+            background: #f8f8f8;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            border: 1px solid var(--border);
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        /* 详情抽屉 */
+        .detail-overlay {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: min(720px, 100vw);
+            background: var(--card-bg);
+            border-left: 1px solid var(--border);
+            box-shadow: -4px 0 16px rgba(0,0,0,0.1);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.2s;
+        }
+        .detail-overlay.open {
+            transform: translateX(0);
+        }
+        .detail-header {
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .detail-header h3 {
+            margin: 0;
+            font-size: 16px;
+        }
+        .detail-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 20px;
+        }
+        .detail-actions {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+        .detail-summary {
+            background: #f0f9ff;
+            border-left: 1px solid var(--primary);
+            padding: 10px 12px;
+            margin-bottom: 14px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        .detail-section {
+            margin-bottom: 18px;
+        }
+        .detail-section h4 {
+            margin: 0 0 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 4px;
+        }
+        .detail-row {
+            display: flex;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+        .detail-label {
+            width: 100px;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+        }
+        .detail-value {
+            flex: 1;
+            word-break: break-all;
+        }
+        .detail-text {
+            font-size: 13px;
+            line-height: 1.7;
+            white-space: pre-wrap;
+        }
+        .tabs {
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 12px;
+        }
+        .tab {
+            padding: 8px 12px;
+            background: transparent;
+            border: 0;
+            border-bottom: 2px solid transparent;
+            font-size: 13px;
+        }
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        pre {
+            background: #f8f8f8;
+            padding: 12px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+            border: 1px solid var(--border);
+        }
+        .error {
+            background: #fef0f0;
+            color: var(--danger);
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            white-space: pre-wrap;
+        }
+        .loading {
+            color: var(--primary);
+            padding: 12px;
+            font-size: 13px;
+        }
+
+        .workspace {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(340px, 420px);
+            gap: 18px;
+            width: min(1440px, 100%);
+            margin: 0 auto;
+            padding: 18px 24px 28px;
+            align-items: start;
+        }
+        .results-panel, .inspector {
+            min-width: 0;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+        .results-header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 12px 12px 0 0;
+        }
+        .results-list { padding: 14px; }
+        .results-time { color: var(--text-secondary); font-size: 12px; }
+        .record { border-radius: 10px; box-shadow: none; }
+        .record:hover, .record.active { box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08); }
+        .inspector {
+            position: sticky;
+            top: 16px;
+            max-height: calc(100vh - 32px);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .inspector-tabs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            border-bottom: 1px solid var(--border);
+            flex: 0 0 auto;
+        }
+        .inspector-tab {
+            border: 0;
+            border-bottom: 2px solid transparent;
+            border-radius: 0;
+            padding: 13px 8px 11px;
+            background: #fff;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+        .inspector-tab.active {
+            color: #175cd3;
+            border-bottom-color: #175cd3;
+        }
+        .inspector-panel { display: none; min-height: 280px; overflow: auto; }
+        .inspector-panel.active { display: block; }
+        .inspector-section { padding: 18px; }
+        .inspector-section h2 { margin: 0 0 6px; font-size: 15px; }
+        .inspector-section > p { margin: 0 0 16px; color: var(--text-secondary); font-size: 12px; line-height: 1.6; }
+        .target-form { display: grid; gap: 10px; }
+        .target-actions { display: flex; gap: 8px; }
+        .target-actions .primary { flex: 1; }
+        .target-result {
+            margin-top: 16px;
+            padding: 14px;
+            border: 1px solid #d0d5dd;
+            border-radius: 10px;
+            background: #f8fafc;
+            font-size: 13px;
+            line-height: 1.65;
+        }
+        .target-result.success { border-color: #a6d7bd; background: #f0faf5; color: #05603a; }
+        .target-result.warning { border-color: #f3cf8a; background: #fffaeb; color: #854a0e; }
+        .target-result.error { border-color: #f1b4b4; background: #fff5f5; color: #9f1b1b; }
+        .target-result.stale { border-color: #b9c8dc; background: #f5f8fc; color: #475467; }
+        .target-result strong { display: block; margin-bottom: 3px; font-size: 15px; color: inherit; }
+        .detail-overlay {
+            position: static;
+            width: auto;
+            min-height: 280px;
+            border: 0;
+            box-shadow: none;
+            transform: none;
+            transition: none;
+            display: none;
+        }
+        .inspector-panel.active .detail-overlay { display: flex; }
+        .detail-overlay.open { transform: none; }
+        .detail-header { padding: 14px 18px; }
+        .detail-body { overflow: visible; padding: 16px 18px; }
+        .request-panel { border: 0; }
+        .request-body { max-height: none; padding: 16px 18px; overflow: visible; }
+        .request-body pre { max-height: none; }
+
+        @media (max-width: 900px) {
+            .query-workbench { grid-template-columns: 1fr; }
+            .request-params { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
+            .semantic-controls { grid-template-columns: 1fr; }
+            .builder-node,
+            .builder-node.group-node {
+                grid-template-columns: 1fr;
+            }
+            .builder-value-pair { grid-template-columns: 1fr; }
+            .detail-overlay { width: 100vw; }
+            .console-topbar, .search-panel { padding: 14px 16px; }
+            .search-entry { grid-template-columns: 1fr; }
+            .search-actions { justify-content: space-between; }
+            .results-list { padding: 12px; }
+            .workspace { grid-template-columns: 1fr; padding: 12px; }
+            .inspector { position: static; max-height: none; overflow: visible; }
+            .inspector-panel { overflow: visible; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <header class="console-topbar">
+            <div>
+                <h1>专利检索</h1>
+                <p>输入关键词或检索式，按 Ctrl / Command + Enter 或使用检索按钮开始。</p>
+            </div>
+        </header>
+        <main>
+            <section class="search-panel" aria-label="检索工作台">
+                <form class="search-form" id="searchForm">
+                    <div class="search-entry">
+                        <div id="booleanQueryControls">
+                            <label class="search-label" for="q">检索式</label>
+                            <textarea id="q" rows="2" aria-describedby="ipcTransitionHint queryStatus" placeholder="例如：阀门、ipc:F16K31 或 title:(&quot;均衡&quot; OR &quot;平衡&quot;)"></textarea>
+                            <div class="hint" id="ipcTransitionHint">IPC 精确语义：ipc:F16K31 查询整个组族；ipc:F16K31/00 与 ipc:F16K31/02 仅匹配真实完整分类。mainIpc:F16K31 查询主 IPC 组族，带斜杠的 mainIpc 查询精确主分类。</div>
+                        </div>
+                        <div class="search-actions">
+                            <button id="copyQueryButton" type="button">复制检索式</button>
+                            <button id="clearConditionsButton" type="button">清空</button>
+                            <button class="primary" id="searchButton" type="submit">检索</button>
+                        </div>
+                    </div>
+                    <div class="semantic-controls" id="semanticQueryControls" hidden>
+                        <div class="request-param">
+                            <label class="search-label" for="semanticText">语义文本</label>
+                            <textarea id="semanticText" rows="2" placeholder="例如：用于流体控制的低泄漏阀门"></textarea>
+                        </div>
+                        <div class="request-param">
+                            <label class="search-label" for="vectorFields">向量字段（可多选）</label>
+                            <select id="vectorFields" multiple size="3">
+                                <!-- VECTOR_FIELD_OPTIONS -->
+                            </select>
+                        </div>
+                        <div class="request-param">
+                            <label class="search-label" for="topK">候选窗口 top_k</label>
+                            <input id="topK" type="number" value="100" min="1" max="1000">
+                        </div>
+                    </div>
+                    <div class="query-status" id="queryStatus" role="status" aria-live="polite">输入检索条件后开始检索。</div>
+                    <div class="request-params">
+                        <div class="request-param">
+                            <label for="mode">检索模式</label>
+                            <select id="mode">
+                                <option value="boolean" selected>布尔</option>
+                                <option value="vector">向量</option>
+                                <option value="hybrid">混合</option>
+                            </select>
+                        </div>
+                        <div class="request-param">
+                            <label for="ds">数据范围</label>
+                            <select id="ds">
+                                <option value="cn" selected>中国</option>
+                                <option value="all">全球</option>
+                                <option value="us">美国</option>
+                                <option value="jp">日本</option>
+                                <option value="de">德国</option>
+                                <option value="ep">欧洲专利局</option>
+                                <option value="wo">WIPO</option>
+                                <option value="kr">韩国</option>
+                                <option value="gb">英国</option>
+                                <option value="fr">法国</option>
+                                <option value="ca">加拿大</option>
+                                <option value="au">澳大利亚</option>
+                            </select>
+                        </div>
+                        <div class="request-param">
+                            <label for="sort">排序</label>
+                            <select id="sort">
+                                <option value="relation" selected>相关性</option>
+                                <option value="rank">相关性（rank）</option>
+                                <option value="relevance">相关性（relevance）</option>
+                                <option value="score">相关性（score）</option>
+                                <option value="applicationDate">申请日升序</option>
+                                <option value="!applicationDate">申请日降序</option>
+                                <option value="documentDate">公开日升序</option>
+                                <option value="!documentDate">公开日降序</option>
+                            </select>
+                        </div>
+                        <div class="request-param">
+                            <label for="page">页码</label>
+                            <input id="page" type="number" value="1" min="1">
+                        </div>
+                        <div class="request-param">
+                            <label for="pageSize">每页数量</label>
+                            <input id="pageSize" type="number" value="10" min="1" max="100">
+                        </div>
+                        <div class="request-param">
+                            <label for="highlight">高亮</label>
+                            <select id="highlight">
+                                <option value="0" selected>关闭</option>
+                                <option value="1">开启</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="advanced-toggle" id="advancedToggle" type="button" aria-controls="advancedPanel" aria-expanded="false">显示高级构建与参数</button>
+                    <div class="advanced-panel" id="advancedPanel" hidden>
+                        <div class="query-toolbar" aria-label="插入布尔操作符">
+                            <button type="button" data-insert-op="AND">AND</button>
+                            <button type="button" data-insert-op="OR">OR</button>
+                            <button type="button" data-insert-op="NOT">NOT</button>
+                            <button type="button" data-insert-op="(">(</button>
+                            <button type="button" data-insert-op=")">)</button>
+                        </div>
+                        <div class="builder-panel">
+                    <div class="builder-header">
+                        <h2>布尔构建器</h2>
+                        <div class="builder-toolbar">
+                            <button class="small" type="button" data-builder-template="textIpcExclude">技术 + IPC + 排除</button>
+                            <button class="small" type="button" data-builder-template="claimsDate">完整权要 + 日期</button>
+                            <button class="small" type="button" data-builder-template="numbers">号码 OR</button>
+                            <button class="small" type="button" data-builder-template="legalStatus">法律状态 OR</button>
+                        </div>
+                    </div>
+                    <div id="builderError" class="builder-error"></div>
+                    <div id="builderTree" class="builder-tree"></div>
+                    <div class="builder-group-actions">
+                        <button class="small" id="addRootConditionButton" type="button">添加条件</button>
+                        <button class="small" id="addRootGroupButton" type="button">添加分组</button>
+                        <button class="small" id="applyBuilderButton" type="button">写入检索式</button>
+                        <button class="small" id="resetBuilderButton" type="button">重置构建器</button>
+                    </div>
+                    <div id="builderPreview" class="builder-preview"></div>
+                        </div>
+
+                        <datalist id="legalStatusOptions">
+                    <option value="有效专利"></option>
+                    <option value="在审"></option>
+                    <option value="失效"></option>
+                    <option value="实质审查"></option>
+                    <option value="授权"></option>
+                        </datalist>
+                        <datalist id="typeOptions">
+                    <option value="发明专利"></option>
+                    <option value="实用新型"></option>
+                    <option value="外观设计"></option>
+                        </datalist>
+                    </div>
+                </form>
+            </section>
+
+        <div class="workspace">
+            <section class="results-panel" aria-label="检索结果">
+                <div class="results-header">
+                    <span>当前检索共 <strong id="resultCount">0</strong> 件</span>
+                    <span class="results-time" id="resultsTime">尚未检索</span>
+                </div>
+                <div class="results-list" id="records"></div>
+                <div class="pagination" id="pagination"></div>
+            </section>
+
+            <aside class="inspector" aria-label="上下文检查器">
+                <div class="inspector-tabs" role="tablist" aria-label="检查器内容">
+                    <button class="inspector-tab active" id="targetTab" type="button" role="tab" aria-selected="true" aria-controls="targetPanel">目标校验</button>
+                    <button class="inspector-tab" id="patentTab" type="button" role="tab" aria-selected="false" aria-controls="patentPanel">专利详情</button>
+                    <button class="inspector-tab" id="logTab" type="button" role="tab" aria-selected="false" aria-controls="logPanel">请求日志</button>
+                </div>
+                <section class="inspector-panel active" id="targetPanel" role="tabpanel" aria-labelledby="targetTab">
+                    <div class="inspector-section">
+                        <h2>验证目标专利</h2>
+                        <p>按当前检索式、数据范围和排序，验证一件目标专利是否命中及其全局并列名次。</p>
+                        <form class="target-form" id="targetForm">
+                            <label class="search-label" for="targetIdentifier">公开号 / 公告号 / patent_id</label>
+                            <input id="targetIdentifier" name="target_identifier" autocomplete="off" placeholder="例如 CN119188170B">
+                            <div class="target-actions">
+                                <button class="primary" id="targetButton" type="submit">开始校验</button>
+                                <button id="clearTargetButton" type="button">清除</button>
+                            </div>
+                        </form>
+                        <div class="target-result" id="targetResult" role="status" aria-live="polite">
+                            输入目标号码后开始校验。不会逐页扫描普通结果。
+                        </div>
+                    </div>
+                </section>
+                <section class="inspector-panel" id="patentPanel" role="tabpanel" aria-labelledby="patentTab" hidden>
+                    <aside id="detailOverlay" class="detail-overlay" aria-labelledby="detailTitle" tabindex="-1">
+                        <div class="detail-header">
+                            <h3 id="detailTitle">专利详情</h3>
+                            <button id="closeDetailButton" type="button">关闭</button>
+                        </div>
+                        <div class="detail-body">
+                            <div id="detailStatus"><div class="empty-state">从左侧结果选择一件专利查看详情。</div></div>
+                            <div id="detailContent" style="display: none;">
+                                <div class="detail-actions">
+                                    <button class="small" id="copyPatentIdButton" type="button">复制专利 ID</button>
+                                    <button class="small primary" id="loadFullDetailButton" type="button">查看完整信息（含说明书）</button>
+                                    <button class="small" id="loadCitationsButton" type="button">引证信息</button>
+                                    <button class="small" id="loadLegalHistoryButton" type="button">法律历史</button>
+                                    <button class="small" id="showRawDetailButton" type="button">原始 JSON</button>
+                                </div>
+                                <div id="detailSummary"></div>
+                                <div class="tabs" role="tablist" aria-label="详情内容">
+                                    <button class="tab active" id="detailMainTab" type="button" role="tab" data-tab="detailMain" aria-controls="detailMain" aria-selected="true">主要信息</button>
+                                    <button class="tab" id="detailClaimsTab" type="button" role="tab" data-tab="detailClaims" aria-controls="detailClaims" aria-selected="false" tabindex="-1">权利要求</button>
+                                    <button class="tab" id="detailExtraTab" type="button" role="tab" data-tab="detailExtra" aria-controls="detailExtra" aria-selected="false" tabindex="-1">引证 / 法律历史</button>
+                                    <button class="tab" id="detailRawTab" type="button" role="tab" data-tab="detailRaw" aria-controls="detailRaw" aria-selected="false" tabindex="-1">原始响应</button>
+                                </div>
+                                <div id="detailMain" class="tab-content active" role="tabpanel" aria-labelledby="detailMainTab"></div>
+                                <div id="detailClaims" class="tab-content" role="tabpanel" aria-labelledby="detailClaimsTab" hidden></div>
+                                <div id="detailExtra" class="tab-content" role="tabpanel" aria-labelledby="detailExtraTab" hidden></div>
+                                <div id="detailRaw" class="tab-content" role="tabpanel" aria-labelledby="detailRawTab" hidden></div>
+                            </div>
+                        </div>
+                    </aside>
+                </section>
+                <section class="inspector-panel" id="logPanel" role="tabpanel" aria-labelledby="logTab" hidden>
+                    <section class="request-panel" id="requestPanel">
+                        <button class="request-header" id="requestToggle" type="button" aria-controls="requestBody" aria-expanded="true">
+                            <span>最近一次请求</span>
+                            <span id="requestIndicator" aria-hidden="true">▾</span>
+                        </button>
+                        <div class="request-body" id="requestBody">
+                            <pre id="requestInfo">暂无请求</pre>
+                        </div>
+                    </section>
+                </section>
+            </aside>
+        </div>
+        </main>
+    </div>
+
+    <script>
+        // Console 前端是一个无状态的同源界面：浏览器负责管理 Basic 凭据，脚本只
+        // 通过 /console-api 调用业务接口。后端仍是查询语法、预算和鉴权的最终裁判。
+        // 所有后端文本都通过 textContent/DOM 节点展示，只有构建器模板使用 HTML
+        // 字符串，并在 escapeHtmlAttribute 后写入属性。
+        const API_BASE = '/console-api';
+        // 旧版本可能在 Web Storage 留下查询内容；初始化时主动清掉，避免旧状态
+        // 在新版本中被误读或把敏感检索式长期保存到浏览器。
+        const LEGACY_SEARCH_STATE_KEY = 'patentConsole:lastSearch';
+        let builderRoot = null;
+        let builderNextId = 1;
+        let qTouchedManually = false;
+        let lastResponse = null;
+        let currentDetailId = null;
+        let currentDetailData = null;
+        let currentExtraData = null;
+        let requestCollapsed = true;
+        let detailTrigger = null;
+        let targetValidation = null;
+        let searchRequestId = 0;
+        let targetRequestId = 0;
+        let targetRequestPending = false;
+
+        // 这份列表同时驱动构建器字段选择、输入控件和查询字符串生成；字段语义
+        // 必须与后端 query_field_mapping 保持一致，前端不能自行扩展 DSL。
+        const QUERY_FIELDS = [
+            { value: 'keyword', label: '普通关键词', kind: 'keyword', placeholder: '阀门' },
+            { value: 'title', label: '标题 title', kind: 'text', placeholder: '均衡' },
+            { value: 'ab', label: '摘要 ab', kind: 'text', placeholder: '平衡' },
+            { value: 'tscd', label: '全文 tscd', kind: 'text', placeholder: '电液比例阀' },
+            { value: 'mainClaim', label: '首权 mainClaim', kind: 'text', placeholder: '电路' },
+            { value: 'claims', label: '完整权要 claims', kind: 'text', placeholder: '均衡' },
+            { value: 'independentClaims', label: '独权 independentClaims', kind: 'text', placeholder: '电路' },
+            { value: 'dependentClaims', label: '从权 dependentClaims', kind: 'text', placeholder: '控制器' },
+            { value: 'description', label: '说明书 description', kind: 'text', placeholder: '外观' },
+            { value: 'applicant', label: '申请人 applicant', kind: 'text', placeholder: '华为技术有限公司' },
+            { value: 'currentAssignee', label: '当前权利人 currentAssignee', kind: 'text', placeholder: '华为技术有限公司' },
+            { value: 'agency', label: '代理机构 agency', kind: 'text', placeholder: '知识产权代理' },
+            { value: 'agent', label: '代理人 agent', kind: 'text', placeholder: '张三' },
+            { value: 'type', label: '专利类型 type', kind: 'enum', placeholder: '发明专利', list: 'typeOptions' },
+            { value: 'ipc', label: 'IPC ipc', kind: 'classification', placeholder: 'F16K31' },
+            { value: 'mainIpc', label: '主 IPC mainIpc', kind: 'classification', placeholder: 'F16K31' },
+            { value: 'legalStatus', label: '法律状态 legalStatus', kind: 'enum', placeholder: '有效专利', list: 'legalStatusOptions' },
+            { value: 'applicationNumber', label: '申请号 applicationNumber', kind: 'identifier', placeholder: 'CN202411108082.1' },
+            { value: 'documentNumber', label: '公开号 documentNumber', kind: 'identifier', placeholder: 'CN119188170B' },
+            { value: 'publicationNumber', label: '公开号 publicationNumber', kind: 'identifier', placeholder: 'CN119188170B' },
+            { value: 'patentId', label: '专利 ID patentId', kind: 'identifier', placeholder: 'cn-xxx' },
+            { value: 'ad', label: '申请日 ad', kind: 'dateRange' },
+            { value: 'documentYear', label: '公开年 documentYear', kind: 'yearRange' }
+        ];
+
+        function nextBuilderId() {
+            // 构建器节点 ID 只用于 DOM 事件定位，不会发送给后端。
+            builderNextId += 1;
+            return `node-${builderNextId}`;
+        }
+
+        function createBuilderGroup(id, children, connector) {
+            // builder tree 用嵌套对象表达括号分组，connector 表示该节点与同级前项的关系。
+            return {
+                type: 'group',
+                id: id || nextBuilderId(),
+                connector: connector || 'AND',
+                children: children || []
+            };
+        }
+
+        function createBuilderCondition(fieldValue, connector) {
+            // 不同字段类别有不同默认模式/初值；真正提交前仍会由 buildBuilderCondition
+            // 做空值和格式检查，默认值只是帮助用户快速开始。
+            const field = getQueryField(fieldValue || 'keyword');
+            const base = {
+                type: 'condition',
+                id: nextBuilderId(),
+                connector: connector || 'AND',
+                field: field.value,
+                mode: field.kind === 'text' || field.kind === 'keyword' ? 'single' : 'fixed',
+                value: '',
+                values: [],
+                start: '',
+                end: ''
+            };
+            if (field.kind === 'keyword') return { ...base, value: '阀门' };
+            if (field.kind === 'text') return { ...base, value: field.placeholder || '均衡', values: ['均衡', '平衡'] };
+            if (field.kind === 'classification') return { ...base, value: field.placeholder || 'H02M' };
+            if (field.kind === 'identifier') return { ...base, value: field.placeholder || '' };
+            if (field.kind === 'enum') return { ...base, value: field.placeholder || '' };
+            if (field.kind === 'dateRange') return { ...base, mode: 'range', start: '2020-01-01', end: '2020-12-31' };
+            if (field.kind === 'yearRange') return { ...base, mode: 'range', start: '2020', end: '2024' };
+            return base;
+        }
+
+        function createDefaultBuilderTree() {
+            // 默认只放一个普通关键词条件，避免打开页面就提交一个隐式复杂查询。
+            return createBuilderGroup('root', [createBuilderCondition('keyword', 'AND')]);
+        }
+
+        function getQueryField(value) {
+            // 未知字段回退到普通关键词，防止历史 DOM 状态让渲染器崩溃。
+            return QUERY_FIELDS.find(field => field.value === value) || QUERY_FIELDS[0];
+        }
+
+        function toggleAdvancedPanel() {
+            // 高级构建器只是编辑器视图切换，不改变当前 q，直到用户明确点击写入。
+            const panel = document.getElementById('advancedPanel');
+            const toggle = document.getElementById('advancedToggle');
+            const expanded = panel.hidden;
+            panel.hidden = !expanded;
+            toggle.setAttribute('aria-expanded', String(expanded));
+            toggle.textContent = expanded ? '隐藏高级构建与参数' : '显示高级构建与参数';
+        }
+
+        function setQueryStatus(message, state) {
+            // 状态提示使用 textContent，且不把后端原始 JSON 当 HTML 插入。
+            const status = document.getElementById('queryStatus');
+            status.textContent = message;
+            status.className = `query-status${state ? ` ${state}` : ''}`;
+        }
+
+        function domElement(tagName, className, text) {
+            // 统一 DOM 工厂是前端的输出安全边界；查询结果、详情和错误都经过这里。
+            const element = document.createElement(tagName);
+            if (className) element.className = className;
+            if (text !== undefined && text !== null) element.textContent = String(text);
+            return element;
+        }
+
+        function replaceWithText(target, className, text) {
+            const content = domElement('div', className, text);
+            target.replaceChildren(content);
+            return content;
+        }
+
+        function replaceWithStrongMessage(target, title, message) {
+            const strong = domElement('strong', '', title);
+            const detail = document.createTextNode(message || '');
+            target.replaceChildren(strong, detail);
+        }
+
+        function jsonText(value) {
+            return JSON.stringify(value, null, 2);
+        }
+
+        function init() {
+            // 初始化顺序：先建立 builder tree 和预览，再绑定表单/键盘/抽屉事件，
+            // 最后清理旧状态并置空结果区，保证首次渲染不会读到残留数据。
+            builderRoot = createDefaultBuilderTree();
+            renderBuilder();
+            updateBuilderPreview();
+            updateModeControls();
+            document.getElementById('copyQueryButton').addEventListener('click', copyQuery);
+            document.getElementById('clearConditionsButton').addEventListener('click', clearAllConditions);
+            document.getElementById('advancedToggle').addEventListener('click', toggleAdvancedPanel);
+            document.querySelectorAll('[data-insert-op]').forEach(button => {
+                button.addEventListener('click', () => insertOp(button.dataset.insertOp));
+            });
+            document.querySelectorAll('[data-builder-template]').forEach(button => {
+                button.addEventListener('click', () => applyBuilderTemplate(button.dataset.builderTemplate));
+            });
+            document.getElementById('addRootConditionButton').addEventListener('click', () => addBuilderCondition('root'));
+            document.getElementById('addRootGroupButton').addEventListener('click', () => addBuilderGroup('root'));
+            document.getElementById('applyBuilderButton').addEventListener('click', applyBuilderQuery);
+            document.getElementById('resetBuilderButton').addEventListener('click', resetBuilder);
+            document.getElementById('clearTargetButton').addEventListener('click', clearTargetValidation);
+            document.getElementById('closeDetailButton').addEventListener('click', closeDetail);
+            document.getElementById('copyPatentIdButton').addEventListener('click', copyPatentId);
+            document.getElementById('loadFullDetailButton').addEventListener('click', loadFullDetail);
+            document.getElementById('loadCitationsButton').addEventListener('click', loadCitations);
+            document.getElementById('loadLegalHistoryButton').addEventListener('click', loadLegalHistory);
+            document.getElementById('showRawDetailButton').addEventListener('click', () => switchTab('detailRaw'));
+            document.getElementById('requestToggle').addEventListener('click', toggleRequestPanel);
+            const builderTree = document.getElementById('builderTree');
+            builderTree.addEventListener('click', handleBuilderClick);
+            builderTree.addEventListener('change', handleBuilderValueEvent);
+            builderTree.addEventListener('input', handleBuilderValueEvent);
+            const qEl = document.getElementById('q');
+            if (qEl && qEl.addEventListener) {
+                qEl.addEventListener('input', () => {
+                    qTouchedManually = true;
+                    invalidateSearchRequest();
+                    invalidateTargetValidation();
+                    setQueryStatus('检索式已更新，按 Enter 或点击检索提交。');
+                });
+                qEl.addEventListener('keydown', event => {
+                    if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+                        event.preventDefault();
+                        doSearch();
+                    }
+                });
+            }
+            document.getElementById('searchForm').addEventListener('submit', event => {
+                event.preventDefault();
+                doSearch();
+            });
+            document.getElementById('targetForm').addEventListener('submit', event => {
+                event.preventDefault();
+                testTargetRank();
+            });
+            document.getElementById('targetIdentifier').addEventListener('input', invalidateTargetValidation);
+            document.getElementById('mode').addEventListener('change', () => {
+                updateModeControls();
+                invalidateSearchRequest();
+                invalidateTargetValidation();
+            });
+            ['ds', 'sort', 'vectorFields', 'topK'].forEach(id => {
+                document.getElementById(id).addEventListener('change', () => {
+                    invalidateSearchRequest();
+                    invalidateTargetValidation();
+                });
+            });
+            document.getElementById('semanticText').addEventListener('input', () => {
+                invalidateSearchRequest();
+                invalidateTargetValidation();
+            });
+            document.querySelectorAll('.inspector-tab').forEach(tab => {
+                tab.addEventListener('click', () => switchInspector(tab.getAttribute('aria-controls')));
+                tab.addEventListener('keydown', handleInspectorKeydown);
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+                tab.addEventListener('keydown', handleDetailTabKeydown);
+            });
+            clearLegacySensitiveState();
+            setRequestPanelCollapsed(false);
+            clearResults();
+        }
+
+        function handleInspectorKeydown(event) {
+            // 左右箭头只在同一组 inspector tab 内循环，保持键盘用户的焦点位置。
+            if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+            const tabs = Array.from(document.querySelectorAll('.inspector-tab'));
+            const current = tabs.indexOf(event.currentTarget);
+            const offset = event.key === 'ArrowRight' ? 1 : -1;
+            const next = tabs[(current + offset + tabs.length) % tabs.length];
+            event.preventDefault();
+            switchInspector(next.getAttribute('aria-controls'));
+            next.focus();
+        }
+
+        function handleDetailTabKeydown(event) {
+            // 详情抽屉的 tab 同样支持循环键盘导航，不依赖鼠标点击。
+            if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+            const tabs = Array.from(document.querySelectorAll('.tab'));
+            const current = tabs.indexOf(event.currentTarget);
+            const offset = event.key === 'ArrowRight' ? 1 : -1;
+            const next = tabs[(current + offset + tabs.length) % tabs.length];
+            event.preventDefault();
+            switchTab(next.dataset.tab);
+            next.focus();
+        }
+
+        function switchInspector(panelId) {
+            // 左侧 inspector 在“目标排名”和“专利详情”之间切换，状态只影响显示。
+            document.querySelectorAll('.inspector-tab').forEach(tab => {
+                const active = tab.getAttribute('aria-controls') === panelId;
+                tab.classList.toggle('active', active);
+                tab.setAttribute('aria-selected', String(active));
+                tab.tabIndex = active ? 0 : -1;
+            });
+            document.querySelectorAll('.inspector-panel').forEach(panel => {
+                const active = panel.id === panelId;
+                panel.classList.toggle('active', active);
+                panel.hidden = !active;
+            });
+        }
+
+        function renderBuilder() {
+            // builder tree 的 HTML 由服务端字段白名单驱动；属性值必须经过转义。
+            const container = document.getElementById('builderTree');
+            if (!container) return;
+            container.innerHTML = renderBuilderGroup(builderRoot, 0, true);
+        }
+
+        function renderBuilderGroup(group, depth, isRoot) {
+            // 分组递归渲染成带括号的视觉层级；depth 只影响颜色/样式，不改变查询语义。
+            const children = group.children.length === 0
+                ? '<div class="hint">本分组暂无条件</div>'
+                : group.children.map((node, index) => renderBuilderNode(node, group.id, index, depth + 1)).join('');
+            return `
+                <div class="builder-group depth-${Math.min(depth, 3)}">
+                    <div class="builder-group-title">
+                        <span>${isRoot ? '根分组' : '子分组'}</span>
+                        <div class="builder-group-actions">
+                            <button class="small" type="button" data-builder-action="add-condition" data-parent-id="${escapeHtmlAttribute(group.id)}">条件</button>
+                            <button class="small" type="button" data-builder-action="add-group" data-parent-id="${escapeHtmlAttribute(group.id)}">分组</button>
+                        </div>
+                    </div>
+                    <div class="builder-children">${children}</div>
+                </div>
+            `;
+        }
+
+        function renderBuilderNode(node, parentId, index, depth) {
+            // group 节点和 condition 节点共享 connector/remove 操作，值控件按字段 kind 分流。
+            if (node.type === 'group') {
+                return `
+                    <div class="builder-node group-node">
+                        <div>
+                            <label>连接</label>
+                            ${renderConnectorSelect(parentId, index, node.connector)}
+                        </div>
+                        <div>
+                            <label>分组</label>
+                            <div class="hint">生成时自动加括号</div>
+                        </div>
+                        <div class="builder-node-actions">
+                            <button class="small" type="button" data-builder-action="remove" data-parent-id="${escapeHtmlAttribute(parentId)}" data-index="${index}">删除</button>
+                        </div>
+                    </div>
+                    ${renderBuilderGroup(node, depth, false)}
+                `;
+            }
+            const field = getQueryField(node.field);
+            return `
+                <div class="builder-node">
+                    <div>
+                        <label>连接</label>
+                        ${renderConnectorSelect(parentId, index, node.connector)}
+                    </div>
+                    <div>
+                        <label>字段</label>
+                        <select data-builder-change="field" data-parent-id="${escapeHtmlAttribute(parentId)}" data-index="${index}">
+                            ${QUERY_FIELDS.map(item => optionHtml(item.value, item.label, node.field)).join('')}
+                        </select>
+                    </div>
+                    <div>
+                        <label>模式</label>
+                        ${renderModeControl(parentId, index, node, field)}
+                    </div>
+                    <div class="builder-value">
+                        <label>值</label>
+                        ${renderValueControl(parentId, index, node, field)}
+                    </div>
+                    <div class="builder-node-actions">
+                        <button class="small" type="button" data-builder-action="remove" data-parent-id="${escapeHtmlAttribute(parentId)}" data-index="${index}">删除</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderConnectorSelect(parentId, index, value) {
+            return `
+                <select data-builder-update-key="connector" data-parent-id="${escapeHtmlAttribute(parentId)}" data-index="${index}" ${index === 0 ? 'disabled' : ''}>
+                    ${optionHtml('AND', 'AND', value)}
+                    ${optionHtml('OR', 'OR', value)}
+                    ${optionHtml('AND NOT', 'AND NOT', value)}
+                </select>
+            `;
+        }
+
+        function renderModeControl(parentId, index, node, field) {
+            if (field.kind === 'text') {
+                return `
+                    <select data-builder-change="mode" data-parent-id="${escapeHtmlAttribute(parentId)}" data-index="${index}">
+                        ${optionHtml('single', '普通全文', node.mode)}
+                        ${optionHtml('phrase', '短语检索', node.mode)}
+                        ${optionHtml('or', 'OR 短语', node.mode)}
+                    </select>
+                `;
+            }
+            if (field.kind === 'keyword') {
+                return `
+                    <select data-builder-change="mode" data-parent-id="${escapeHtmlAttribute(parentId)}" data-index="${index}">
+                        ${optionHtml('single', '单值', node.mode)}
+                        ${optionHtml('or', 'OR 词组', node.mode)}
+                    </select>
+                `;
+            }
+            return '<input type="text" value="固定" disabled>';
+        }
+
+        function renderValueControl(parentId, index, node, field) {
+            if (field.kind === 'dateRange') {
+                return `
+                    <div class="builder-value-pair">
+                        <input type="date" value="${escapeHtmlAttribute(node.start || '')}" data-builder-update-key="start" data-parent-id="${escapeHtmlAttribute(parentId)}" data-index="${index}">
+                        <input type="date" value="${escapeHtmlAttribute(node.end || '')}" data-builder-update-key="end" data-parent-id="${escapeHtmlAttribute(parentId)}" data-index="${index}">
+                    </div>
+                `;
+            }
+            if (field.kind === 'yearRange') {
+                return `
+                    <div class="builder-value-pair">
+                        <input type="number" min="1900" max="2100" value="${escapeHtmlAttribute(node.start || '')}" data-builder-update-key="start" data-parent-id="${escapeHtmlAttribute(parentId)}" data-index="${index}">
+                        <input type="number" min="1900" max="2100" value="${escapeHtmlAttribute(node.end || '')}" data-builder-update-key="end" data-parent-id="${escapeHtmlAttribute(parentId)}" data-index="${index}">
+                    </div>
+                `;
+            }
+            if ((field.kind === 'text' || field.kind === 'keyword') && node.mode === 'or') {
+                return `<textarea placeholder="每行一个词" data-builder-values data-parent-id="${escapeHtmlAttribute(parentId)}" data-index="${index}">${escapeHtmlAttribute((node.values || []).join('\n'))}</textarea>`;
+            }
+            const listAttr = field.list ? ` list="${field.list}"` : '';
+            const phraseHint = field.kind === 'text' && node.mode === 'phrase'
+                ? `<div class="hint">${field.value === 'tscd'
+                    ? '按分词顺序匹配；包含汉字时使用 slop 1 的词位容差。'
+                    : '按分词结果连续匹配。'}预览会生成带英文引号的短语查询。</div>`
+                : '';
+            return `
+                <input type="text"${listAttr} value="${escapeHtmlAttribute(node.value || '')}" placeholder="${escapeHtmlAttribute(field.placeholder || '')}" data-builder-update-key="value" data-parent-id="${escapeHtmlAttribute(parentId)}" data-index="${index}">
+                ${phraseHint}
+            `;
+        }
+
+        function optionHtml(value, label, selected) {
+            return `<option value="${escapeHtmlAttribute(value)}" ${value === selected ? 'selected' : ''}>${escapeHtmlAttribute(label)}</option>`;
+        }
+
+        function handleBuilderClick(event) {
+            const control = event.target.closest('[data-builder-action]');
+            if (!control) return;
+            const parentId = control.dataset.parentId;
+            if (control.dataset.builderAction === 'add-condition') {
+                addBuilderCondition(parentId);
+            } else if (control.dataset.builderAction === 'add-group') {
+                addBuilderGroup(parentId);
+            } else if (control.dataset.builderAction === 'remove') {
+                removeBuilderNode(parentId, Number(control.dataset.index));
+            }
+        }
+
+        function handleBuilderValueEvent(event) {
+            const control = event.target;
+            const parentId = control.dataset.parentId;
+            const index = Number(control.dataset.index);
+            if (!parentId || !Number.isInteger(index)) return;
+            if (control.dataset.builderChange === 'field' && event.type === 'change') {
+                changeBuilderField(parentId, index, control.value);
+            } else if (control.dataset.builderChange === 'mode' && event.type === 'change') {
+                changeBuilderMode(parentId, index, control.value);
+            } else if (control.hasAttribute('data-builder-values')) {
+                updateBuilderValues(parentId, index, control.value);
+            } else if (control.dataset.builderUpdateKey) {
+                updateBuilderNode(parentId, index, control.dataset.builderUpdateKey, control.value);
+            }
+        }
+
+        function findBuilderNode(id, node) {
+            const current = node || builderRoot;
+            if (!current) return null;
+            if (current.id === id) return current;
+            if (current.type !== 'group') return null;
+            for (const child of current.children) {
+                const found = findBuilderNode(id, child);
+                if (found) return found;
+            }
+            return null;
+        }
+
+        function addBuilderCondition(parentId, fieldValue) {
+            const group = findBuilderNode(parentId || 'root');
+            if (!group || group.type !== 'group') return;
+            group.children.push(createBuilderCondition(fieldValue || 'title', group.children.length === 0 ? 'AND' : 'AND'));
+            renderBuilder();
+            updateBuilderPreview();
+        }
+
+        function addBuilderGroup(parentId) {
+            const group = findBuilderNode(parentId || 'root');
+            if (!group || group.type !== 'group') return;
+            const child = createBuilderGroup(nextBuilderId(), [createBuilderCondition('title', 'AND')], group.children.length === 0 ? 'AND' : 'AND');
+            group.children.push(child);
+            renderBuilder();
+            updateBuilderPreview();
+        }
+
+        function removeBuilderNode(parentId, index) {
+            const parent = findBuilderNode(parentId);
+            if (!parent || !parent.children[index]) return;
+            parent.children.splice(index, 1);
+            if (parent.children[0]) parent.children[0].connector = 'AND';
+            renderBuilder();
+            updateBuilderPreview();
+        }
+
+        function updateBuilderNode(parentId, index, key, value) {
+            const parent = findBuilderNode(parentId);
+            if (!parent || !parent.children[index]) return;
+            parent.children[index][key] = value;
+            updateBuilderPreview();
+        }
+
+        function updateBuilderValues(parentId, index, raw) {
+            const parent = findBuilderNode(parentId);
+            if (!parent || !parent.children[index]) return;
+            parent.children[index].values = raw.split('\n').map(item => item.trim()).filter(Boolean);
+            updateBuilderPreview();
+        }
+
+        function changeBuilderField(parentId, index, fieldValue) {
+            const parent = findBuilderNode(parentId);
+            if (!parent || !parent.children[index]) return;
+            parent.children[index] = createBuilderCondition(fieldValue, parent.children[index].connector);
+            renderBuilder();
+            updateBuilderPreview();
+        }
+
+        function changeBuilderMode(parentId, index, mode) {
+            const parent = findBuilderNode(parentId);
+            if (!parent || !parent.children[index]) return;
+            parent.children[index].mode = mode;
+            renderBuilder();
+            updateBuilderPreview();
+        }
+
+        function resetBuilder() {
+            builderRoot = createDefaultBuilderTree();
+            qTouchedManually = false;
+            renderBuilder();
+            updateBuilderPreview();
+        }
+
+        function clearAllConditions() {
+            resetBuilder();
+            document.getElementById('q').value = '';
+            document.getElementById('semanticText').value = '';
+            document.getElementById('topK').value = '100';
+            Array.from(document.getElementById('vectorFields').options).forEach((option, index) => {
+                option.selected = index === 0;
+            });
+            document.getElementById('page').value = '1';
+            qTouchedManually = true;
+            invalidateTargetValidation();
+            setQueryStatus('已清空检索条件。');
+            clearResults();
+        }
+
+        function applyBuilderTemplate(name) {
+            builderNextId = 1;
+            if (name === 'textIpcExclude') {
+                builderRoot = createBuilderGroup('root', [
+                    createBuilderGroup(nextBuilderId(), [
+                        createBuilderGroup(nextBuilderId(), [
+                            condition('title', 'AND', 'single', '均衡'),
+                            condition('ab', 'OR', 'single', '平衡')
+                        ], 'AND'),
+                        createBuilderGroup(nextBuilderId(), [
+                            condition('ipc', 'AND', 'fixed', 'H02M'),
+                            condition('ipc', 'OR', 'fixed', 'F16K31')
+                        ], 'AND')
+                    ], 'AND'),
+                    condition('description', 'AND NOT', 'single', '外观')
+                ]);
+            } else if (name === 'claimsDate') {
+                const date = condition('ad', 'AND', 'range', '');
+                date.start = '2020-01-01';
+                date.end = '2020-12-31';
+                builderRoot = createBuilderGroup('root', [
+                    { ...condition('claims', 'AND', 'or', ''), values: ['均衡', '平衡'] },
+                    date
+                ]);
+            } else if (name === 'numbers') {
+                builderRoot = createBuilderGroup('root', [
+                    createBuilderGroup(nextBuilderId(), [
+                        condition('applicationNumber', 'AND', 'fixed', 'CN202411108082.1'),
+                        condition('documentNumber', 'OR', 'fixed', 'CN119188170B')
+                    ], 'AND')
+                ]);
+            } else if (name === 'legalStatus') {
+                builderRoot = createBuilderGroup('root', [
+                    createBuilderGroup(nextBuilderId(), [
+                        condition('legalStatus', 'AND', 'fixed', '有效专利'),
+                        condition('legalStatus', 'OR', 'fixed', '实质审查')
+                    ], 'AND')
+                ]);
+            }
+            qTouchedManually = false;
+            renderBuilder();
+            applyBuilderQuery();
+        }
+
+        function condition(field, connector, mode, value) {
+            const item = createBuilderCondition(field, connector);
+            item.mode = mode || item.mode;
+            item.value = value || item.value;
+            return item;
+        }
+
+        function buildQueryFromTree(tree) {
+            // 对外暴露的构建器入口：只返回 {q} 或 {error}，不会直接调用后端。
+            return buildBuilderGroupQuery(tree, true);
+        }
+
+        function buildBuilderGroupQuery(group, isRoot) {
+            // 同级节点按 connector 拼接；子分组始终加括号，显式保留用户在树中看到的优先级。
+            if (!group || group.type !== 'group') return { error: '分组非法' };
+            if (!group.children || group.children.length === 0) return { error: '分组不能为空' };
+
+            const parts = [];
+            for (let index = 0; index < group.children.length; index += 1) {
+                const child = group.children[index];
+                const built = child.type === 'group'
+                    ? buildBuilderGroupQuery(child, false)
+                    : buildBuilderCondition(child);
+                if (built.error) return { error: built.error };
+                if (parts.length === 0) {
+                    parts.push(built.q);
+                } else {
+                    parts.push(`${normalizeConnector(child.connector)} ${built.q}`);
+                }
+            }
+            const q = parts.join(' ');
+            return { q: isRoot ? q : `(${q})` };
+        }
+
+        function buildBuilderCondition(node) {
+            // 这里把 UI 条件转换成服务端接受的 q 语法。字段类别决定是否加字段名、
+            // 引号、OR 分组或日期范围；IPC 大小写规范化由后端再次执行。
+            const field = getQueryField(node.field);
+            if (field.kind === 'keyword') {
+                if (node.mode === 'or') {
+                    const values = normalizedValues(node.values);
+                    if (values.length === 0) return { error: '普通关键词 OR 词组不能为空' };
+                    return { q: `(${values.map(quoteTerm).join(' OR ')})` };
+                }
+                const value = normalizedValue(node.value);
+                if (!value) return { error: '普通关键词不能为空' };
+                return { q: value };
+            }
+            if (field.kind === 'text') {
+                if (node.mode === 'or') {
+                    const values = normalizedValues(node.values);
+                    if (values.length === 0) return { error: `${field.label} OR 词组不能为空` };
+                    return { q: `${field.value}:(${values.map(quoteTerm).join(' OR ')})` };
+                }
+                const value = normalizedValue(node.value);
+                if (!value) return { error: `${field.label}不能为空` };
+                if (node.mode === 'phrase') {
+                    return { q: `${field.value}:${quoteTerm(value)}` };
+                }
+                return { q: `${field.value}:(${formatTerm(value)})` };
+            }
+            if (field.kind === 'classification') {
+                const value = normalizedValue(node.value).toUpperCase();
+                if (!value) return { error: `${field.label}不能为空` };
+                return { q: `${field.value}:${value}` };
+            }
+            if (field.kind === 'identifier') {
+                const value = normalizedValue(node.value);
+                if (!value) return { error: `${field.label}不能为空` };
+                return { q: `${field.value}:${value}` };
+            }
+            if (field.kind === 'enum') {
+                const value = normalizedValue(node.value);
+                if (!value) return { error: `${field.label}不能为空` };
+                return { q: `${field.value}:(${formatTerm(value)})` };
+            }
+            if (field.kind === 'dateRange') {
+                if (!node.start || !node.end) return { error: `${field.label}起止日期都必须填写` };
+                return { q: `${field.value}:[${node.start} TO ${node.end}]` };
+            }
+            if (field.kind === 'yearRange') {
+                if (!/^\d{4}$/.test(node.start || '') || !/^\d{4}$/.test(node.end || '')) {
+                    return { error: `${field.label}必须是4位年份` };
+                }
+                return { q: `${field.value}:[${node.start} TO ${node.end}]` };
+            }
+            return { error: '不支持的字段类型' };
+        }
+
+        function normalizeConnector(value) {
+            // UI 只允许 AND/OR/AND NOT，未知值回退 AND，不让任意字符串进入 q。
+            return value === 'OR' || value === 'AND NOT' ? value : 'AND';
+        }
+
+        function normalizedValue(value) {
+            // 控制台额外接受中文引号，但发送前统一成后端要求的英文双引号。
+            return normalizePhraseQuotes(value).trim();
+        }
+
+        function normalizedValues(values) {
+            return (values || []).map(normalizedValue).filter(Boolean);
+        }
+
+        function formatTerm(value) {
+            // 含空白的普通字段值自动变成短语，单词保持裸值；更严格的语法仍由后端 parser 判定。
+            const escaped = escapeQuery(value);
+            if (/\s/.test(escaped) && !/^".*"$/.test(escaped)) return `"${escaped}"`;
+            return escaped;
+        }
+
+        function quoteTerm(value) {
+            return `"${escapeQuery(value)}"`;
+        }
+
+        function escapeQuery(value) {
+            // 当前 DSL 不支持转义双引号，去掉用户输入的引号后由本函数统一重新加引号。
+            return normalizePhraseQuotes(value).replace(/"/g, '');
+        }
+
+        function normalizePhraseQuotes(value) {
+            return String(value || '').replace(/[“”]/g, '"');
+        }
+
+        function updateBuilderPreview() {
+            // 预览只更新 UI，不覆盖主 q 输入框；用户必须主动点击“写入检索式”。
+            const result = buildQueryFromTree(builderRoot);
+            const preview = document.getElementById('builderPreview');
+            const error = document.getElementById('builderError');
+            if (result.error) {
+                preview.textContent = '';
+                replaceWithText(error, 'error', result.error);
+                return;
+            }
+            error.replaceChildren();
+            preview.textContent = result.q;
+            setQueryStatus('构建器预览已更新。点击“写入检索式”后覆盖当前输入。');
+        }
+
+        function applyBuilderQuery() {
+            // 写入 q 后使目标排名结论失效，因为查询条件已经发生变化。
+            const result = buildQueryFromTree(builderRoot);
+            if (result.error) {
+                replaceWithText(document.getElementById('builderError'), 'error', result.error);
+                return;
+            }
+            document.getElementById('builderError').replaceChildren();
+            document.getElementById('builderPreview').textContent = result.q;
+            document.getElementById('q').value = result.q;
+            qTouchedManually = false;
+            invalidateTargetValidation();
+            setQueryStatus('已将构建结果写入检索式。确认后点击检索。', 'success');
+            document.getElementById('q').focus();
+        }
+
+        window.consoleQueryBuilder = {
+            fields: QUERY_FIELDS,
+            buildQueryFromTree
+        };
+
+        function insertOp(op) {
+            const el = document.getElementById('q');
+            const start = el.selectionStart;
+            const end = el.selectionEnd;
+            const value = el.value;
+            const before = value.substring(0, start);
+            const after = value.substring(end);
+            const insert = op.length === 1 ? op : ` ${op} `;
+            el.value = before + insert + after;
+            el.focus();
+            el.setSelectionRange(start + insert.length, start + insert.length);
+            qTouchedManually = true;
+            invalidateTargetValidation();
+            setQueryStatus('检索式已更新，按 Enter 或点击检索提交。');
+        }
+
+        function updateModeControls() {
+            const mode = document.getElementById('mode').value || 'boolean';
+            const vectorOnly = mode === 'vector';
+            const semantic = mode !== 'boolean';
+            document.getElementById('booleanQueryControls').hidden = vectorOnly;
+            document.getElementById('semanticQueryControls').hidden = !semantic;
+            const advancedToggle = document.getElementById('advancedToggle');
+            advancedToggle.hidden = vectorOnly;
+            if (vectorOnly) {
+                const panel = document.getElementById('advancedPanel');
+                panel.hidden = true;
+                advancedToggle.setAttribute('aria-expanded', 'false');
+                advancedToggle.textContent = '显示高级构建与参数';
+            }
+        }
+
+        function getForm() {
+            // 从表单读取最终请求；page/page_size/highlight 仍会在后端 schema 和预算层复核。
+            const qEl = document.getElementById('q');
+            const q = normalizePhraseQuotes(qEl.value).trim();
+            if (q !== qEl.value) qEl.value = q;
+            const semanticTextEl = document.getElementById('semanticText');
+            const semanticText = semanticTextEl.value.trim();
+            if (semanticText !== semanticTextEl.value) semanticTextEl.value = semanticText;
+            return {
+                mode: document.getElementById('mode').value || 'boolean',
+                q,
+                semantic_text: semanticText,
+                vector_fields: Array.from(document.getElementById('vectorFields').selectedOptions || [])
+                    .map(option => option.value),
+                top_k: Number(document.getElementById('topK').value),
+                ds: document.getElementById('ds').value,
+                sort: document.getElementById('sort').value,
+                page: parseInt(document.getElementById('page').value, 10) || 1,
+                page_size: parseInt(document.getElementById('pageSize').value, 10) || 10,
+                highlight: parseInt(document.getElementById('highlight').value, 10) || 0
+            };
+        }
+
+        function buildSearchPayload(form) {
+            const payload = {
+                mode: form.mode,
+                ds: form.ds,
+                sort: form.sort,
+                page: form.page,
+                page_size: form.page_size,
+                highlight: form.highlight
+            };
+            if (form.mode !== 'vector') payload.q = form.q;
+            if (form.mode !== 'boolean') {
+                payload.semantic_text = form.semantic_text;
+                payload.vector_fields = form.vector_fields;
+                payload.top_k = form.top_k;
+            }
+            return payload;
+        }
+
+        function clearLegacySensitiveState() {
+            // localStorage/sessionStorage 清理失败不应阻断控制台，浏览器可能禁用 Storage。
+            try {
+                localStorage.removeItem(LEGACY_SEARCH_STATE_KEY);
+            } catch (e) {}
+            try {
+                sessionStorage.removeItem(LEGACY_SEARCH_STATE_KEY);
+            } catch (e) {}
+        }
+
+        function setRequestPanelCollapsed(collapsed) {
+            requestCollapsed = collapsed;
+            const body = document.getElementById('requestBody');
+            const toggle = document.getElementById('requestToggle');
+            if (body) body.hidden = collapsed;
+            if (toggle) {
+                toggle.setAttribute('aria-expanded', String(!collapsed));
+            }
+            const indicator = document.getElementById('requestIndicator');
+            if (indicator) indicator.textContent = collapsed ? '▸' : '▾';
+        }
+
+        function setRequestInfo(text) {
+            // “最近一次请求”是调试辅助，不是持久化日志；只放当前页面内存并以纯文本显示。
+            const panel = document.getElementById('requestPanel');
+            document.getElementById('requestInfo').textContent = text;
+            panel.hidden = false;
+        }
+
+        function toggleRequestPanel() {
+            setRequestPanelCollapsed(!requestCollapsed);
+        }
+
+        function clearResults() {
+            // 新查询开始前清理列表/分页/上次响应，但不清空用户仍在编辑的 q。
+            document.getElementById('resultCount').textContent = '0';
+            document.getElementById('resultsTime').textContent = '尚未检索';
+            document.getElementById('pagination').replaceChildren();
+            lastResponse = null;
+            replaceWithText(
+                document.getElementById('records'),
+                'empty-state',
+                '从一个关键词开始，或展开高级构建器生成检索式。'
+            );
+        }
+
+        async function doSearch(page) {
+            // 每次搜索递增 requestId；条件变化或新请求到来后，旧响应不能覆盖当前页面。
+            // 页面不携带 API Token，浏览器同源凭据由 HTTP 层自动发送。
+            const requestId = ++searchRequestId;
+            const form = getForm();
+            if (form.mode !== 'vector' && !form.q) {
+                setQueryStatus('请输入关键词或有效检索式后再检索。', 'error');
+                document.getElementById('q').focus();
+                return;
+            }
+            if (form.mode !== 'boolean' && !form.semantic_text) {
+                setQueryStatus('请输入语义文本后再检索。', 'error');
+                document.getElementById('semanticText').focus();
+                return;
+            }
+            if (form.mode !== 'boolean' && form.vector_fields.length === 0) {
+                setQueryStatus('请至少选择一个向量字段。', 'error');
+                document.getElementById('vectorFields').focus();
+                return;
+            }
+            if (
+                form.mode !== 'boolean'
+                && (!Number.isInteger(form.top_k) || form.top_k < 1 || form.top_k > 1000)
+            ) {
+                setQueryStatus('top_k 必须是 1 到 1000 之间的整数。', 'error');
+                document.getElementById('topK').focus();
+                return;
+            }
+
+            if (page) {
+                form.page = page;
+                document.getElementById('page').value = page;
+            }
+
+            const payload = buildSearchPayload(form);
+
+            try {
+                const button = document.getElementById('searchButton');
+                button.disabled = true;
+                button.textContent = '检索中';
+                setQueryStatus('正在检索，请稍候。', 'loading');
+                const started = performance.now();
+                const response = await fetch(`${API_BASE}/search`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+                const elapsed = (performance.now() - started).toFixed(0);
+                if (requestId !== searchRequestId) return;
+
+                if (!response.ok) {
+                    const message = data.detail || data.message || JSON.stringify(data);
+                    setRequestInfo(`POST ${API_BASE}/search\n${JSON.stringify(payload, null, 2)}\n\nHTTP ${response.status} (${elapsed}ms)\n${typeof message === 'object' ? JSON.stringify(message, null, 2) : message}`);
+                    setQueryStatus(`检索失败：${typeof message === 'object' ? JSON.stringify(message) : message}。请修改检索式后重试。`, 'error');
+                    return;
+                }
+
+                lastResponse = data;
+                renderResults(data);
+                setRequestInfo(`POST ${API_BASE}/search\n${JSON.stringify(payload, null, 2)}\n\nHTTP ${response.status} (${elapsed}ms)\n${JSON.stringify(data, null, 2).slice(0, 4000)}`);
+                setQueryStatus(data.total ? `已找到 ${data.total} 条结果。` : '没有找到结果。请调整当前检索条件。', data.total ? 'success' : '');
+            } catch (err) {
+                if (requestId !== searchRequestId) return;
+                setRequestInfo(`POST ${API_BASE}/search\n${JSON.stringify(payload, null, 2)}\n\nError: ${err.message}`);
+                setQueryStatus(`网络错误：${err.message}。请检查连接后重试。`, 'error');
+            } finally {
+                if (requestId === searchRequestId) {
+                    const button = document.getElementById('searchButton');
+                    button.disabled = false;
+                    button.textContent = '检索';
+                }
+            }
+        }
+
+        function renderResults(data) {
+            // 搜索列表只读固定 records 字段，并通过 DOM 节点渲染；详情/引证按需加载。
+            document.getElementById('resultCount').textContent = data.total || 0;
+            document.getElementById('resultsTime').textContent = data.took_ms === null || data.took_ms === undefined
+                ? '耗时未知'
+                : `耗时 ${data.took_ms} ms`;
+            const recordsEl = document.getElementById('records');
+            if (!data.records || data.records.length === 0) {
+                replaceWithText(
+                    recordsEl,
+                    'empty-state',
+                    '没有匹配结果。尝试缩短关键词、调整数据范围，或展开高级构建器重新组合条件。'
+                );
+                document.getElementById('pagination').replaceChildren();
+                return;
+            }
+
+            const records = data.records.map((record, index) => {
+                const article = domElement('article', 'record');
+                article.append(
+                    domElement(
+                        'div',
+                        'record-title',
+                        `${(data.page - 1) * data.page_size + index + 1}. ${record.title || '(无标题)'}`
+                    ),
+                    recordMetadata([
+                        ['专利ID', record.id],
+                        ['申请号', record.application_number],
+                        ['公开号', record.publication_number],
+                        ['得分', record.score],
+                    ]),
+                    recordMetadata([
+                        ['申请人', record.applicant],
+                        ['主IPC', record.main_ipc],
+                        ['申请日', record.application_date],
+                        ['法律状态', record.legal_status],
+                    ]),
+                    domElement('div', 'record-abstract', record.abstract || '')
+                );
+                const actions = domElement('div', 'record-actions');
+                const copyButton = domElement('button', 'small', '复制 ID');
+                copyButton.type = 'button';
+                copyButton.addEventListener('click', () => copyText(record.id || ''));
+                const detailButton = domElement('button', 'small primary', '查看详情');
+                detailButton.type = 'button';
+                detailButton.addEventListener('click', () => openDetail(record.id || ''));
+                actions.append(copyButton, detailButton);
+                article.append(actions);
+                return article;
+            });
+            recordsEl.replaceChildren(...records);
+
+            renderPagination(data);
+        }
+
+        function recordMetadata(entries) {
+            const metadata = domElement('div', 'record-meta');
+            entries.forEach(([label, value]) => {
+                const displayValue = value === null || value === undefined ? '' : value;
+                metadata.append(domElement('span', '', `${label}: ${displayValue}`));
+            });
+            return metadata;
+        }
+
+        function renderPagination(data) {
+            // 分页按钮只提交后端返回的 page/total_pages 范围内的页码。
+            const totalPages = data.total_pages || 0;
+            const accessiblePages = Number.isInteger(data.accessible_pages)
+                ? data.accessible_pages
+                : totalPages;
+            const page = data.page || 1;
+            const el = document.getElementById('pagination');
+            if (totalPages <= 1 && accessiblePages <= 1) {
+                el.replaceChildren();
+                return;
+            }
+            const controls = [];
+            if (page > 1) {
+                const previous = domElement('button', '', '上一页');
+                previous.type = 'button';
+                previous.addEventListener('click', () => doSearch(page - 1));
+                controls.push(previous);
+            }
+            const pageLabel = accessiblePages < totalPages
+                ? `第 ${page} / ${accessiblePages} 可浏览页（按总命中共 ${totalPages} 页）`
+                : `第 ${page} / ${totalPages} 页`;
+            controls.push(domElement('span', '', pageLabel));
+            if (Number.isInteger(data.next_page)) {
+                const next = domElement('button', '', '下一页');
+                next.type = 'button';
+                next.addEventListener('click', () => doSearch(data.next_page));
+                controls.push(next);
+            }
+            el.replaceChildren(...controls);
+        }
+
+        function copyQuery() {
+            copyText(document.getElementById('q').value);
+        }
+
+        function copyPatentId() {
+            if (currentDetailId) copyText(currentDetailId);
+        }
+
+        function copyText(text) {
+            if (!text) return;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('已复制到剪贴板');
+            });
+        }
+
+        function targetFingerprint() {
+            // 排名结论绑定 q、ds、sort 和目标标识符；任一变化都使旧结论过期。
+            const form = getForm();
+            return JSON.stringify({
+                mode: form.mode,
+                q: form.q,
+                ds: form.ds,
+                sort: form.sort,
+                target_identifier: document.getElementById('targetIdentifier').value.trim()
+            });
+        }
+
+        function invalidateSearchRequest() {
+            // 输入条件改变时取消“UI 级等待”并让旧搜索响应失效，不能真正强杀 fetch。
+            const button = document.getElementById('searchButton');
+            if (!button.disabled) return;
+            searchRequestId += 1;
+            button.disabled = false;
+            button.textContent = '检索';
+        }
+
+        function invalidateTargetValidation() {
+            // 目标排名是针对完整查询快照的结论，查询式/范围/排序/目标变化后必须重算。
+            targetRequestId += 1;
+            if (targetRequestPending) {
+                targetRequestPending = false;
+                const button = document.getElementById('targetButton');
+                button.disabled = false;
+                button.textContent = '开始校验';
+                const result = document.getElementById('targetResult');
+                result.className = 'target-result stale';
+                replaceWithStrongMessage(result, '校验已取消', '条件发生变化，请按当前条件重新校验。');
+                return;
+            }
+            if (!targetValidation || targetValidation.fingerprint === targetFingerprint()) return;
+            targetValidation = null;
+            const result = document.getElementById('targetResult');
+            result.className = 'target-result stale';
+            replaceWithStrongMessage(result, '结论已过期', '检索式、数据范围、排序或目标号码已变化，请重新校验。');
+        }
+
+        function clearTargetValidation() {
+            targetRequestId += 1;
+            targetRequestPending = false;
+            document.getElementById('targetIdentifier').value = '';
+            targetValidation = null;
+            const result = document.getElementById('targetResult');
+            result.className = 'target-result';
+            result.textContent = '输入目标号码后开始校验。不会逐页扫描普通结果。';
+            document.getElementById('targetIdentifier').focus();
+        }
+
+        async function testTargetRank() {
+            // 目标排名调用专用接口，不逐页扫描当前列表；请求期间仍允许用户修改条件，
+            // fingerprint/revision 会把返回结果标记为过期。
+            const form = getForm();
+            const targetIdentifier = document.getElementById('targetIdentifier').value.trim();
+            const result = document.getElementById('targetResult');
+            if (form.mode !== 'boolean') {
+                result.className = 'target-result warning';
+                replaceWithStrongMessage(result, '仅支持布尔模式', '目标排名不能忽略当前语义条件，请切换到布尔模式后再校验。');
+                return;
+            }
+            if (!targetIdentifier) {
+                result.className = 'target-result error';
+                replaceWithStrongMessage(result, '请输入目标号码', '支持公开号、公告号或内部 patent_id。');
+                document.getElementById('targetIdentifier').focus();
+                return;
+            }
+            if (!form.q) {
+                result.className = 'target-result error';
+                replaceWithStrongMessage(result, '缺少检索式', '请先填写当前需要验证的检索式。');
+                document.getElementById('q').focus();
+                return;
+            }
+
+            const payload = { q: form.q, ds: form.ds, sort: form.sort, target_identifier: targetIdentifier };
+            const fingerprint = targetFingerprint();
+            const requestId = ++targetRequestId;
+            const button = document.getElementById('targetButton');
+            targetRequestPending = true;
+            button.disabled = true;
+            button.textContent = '校验中';
+            result.className = 'target-result';
+            replaceWithStrongMessage(result, '正在校验', '正在计算目标专利在完整结果集中的并列名次。');
+            try {
+                const started = performance.now();
+                const response = await fetch(`${API_BASE}/test/target-rank`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+                const elapsed = (performance.now() - started).toFixed(0);
+                if (requestId !== targetRequestId) return;
+                targetRequestPending = false;
+                setRequestInfo(`POST ${API_BASE}/test/target-rank\n${JSON.stringify(payload, null, 2)}\n\nHTTP ${response.status} (${elapsed}ms)\n${JSON.stringify(data, null, 2)}`);
+                if (!response.ok) {
+                    const message = data.message || data.detail || JSON.stringify(data);
+                    result.className = 'target-result error';
+                    const safeMessage = typeof message === 'object' ? JSON.stringify(message) : String(message);
+                    replaceWithStrongMessage(result, '校验失败', `${safeMessage}。普通检索结果仍可继续使用。`);
+                    return;
+                }
+                if (fingerprint !== targetFingerprint()) {
+                    targetValidation = null;
+                    result.className = 'target-result stale';
+                    replaceWithStrongMessage(result, '结论已过期', '校验期间查询条件发生变化，请重新校验。');
+                    return;
+                }
+                targetValidation = { fingerprint, data };
+                renderTargetResult(data);
+            } catch (err) {
+                if (requestId !== targetRequestId) return;
+                targetRequestPending = false;
+                setRequestInfo(`POST ${API_BASE}/test/target-rank\n${JSON.stringify(payload, null, 2)}\n\nError: ${err.message}`);
+                result.className = 'target-result error';
+                replaceWithStrongMessage(result, '网络请求失败', `${err.message}。普通检索结果仍可继续使用。`);
+            } finally {
+                if (requestId === targetRequestId) {
+                    targetRequestPending = false;
+                    button.disabled = false;
+                    button.textContent = '开始校验';
+                }
+            }
+        }
+
+        function renderTargetResult(data) {
+            // 后端四种 status 对应四种可解释的 UI 结论，ambiguous 不被误显示为未命中。
+            const result = document.getElementById('targetResult');
+            const target = data.target || {};
+            const targetText = [target.documentNumber, target.title].filter(Boolean).join(' · ');
+            if (data.status === 'matched') {
+                const tieText = data.tied_count > 0 ? `，与另外 ${data.tied_count} 件并列` : '';
+                result.className = 'target-result success';
+                replaceWithStrongMessage(result, `已命中 · 第 ${data.rank} 名`, `${targetText || '目标专利'}${tieText}`);
+            } else if (data.status === 'not_in_results') {
+                result.className = 'target-result warning';
+                replaceWithStrongMessage(result, '未被当前查询召回', `${targetText || '目标专利存在于索引中'}，但不满足当前检索式或数据范围。`);
+            } else if (data.status === 'target_not_found') {
+                result.className = 'target-result warning';
+                replaceWithStrongMessage(result, '索引中不存在该目标', '请检查公开号、公告号或 patent_id 是否准确。');
+            } else if (data.status === 'ambiguous_target') {
+                result.className = 'target-result warning';
+                replaceWithStrongMessage(result, '目标号码对应多条记录', `共找到 ${data.tied_count || 2} 条记录，无法给出唯一排名。`);
+            }
+        }
+
+        async function openDetail(patentId) {
+            // 详情抽屉先加载轻详情，完整说明书由用户点击后再取；记录触发按钮以便关闭后回焦。
+            if (!patentId) return;
+            detailTrigger = document.activeElement;
+            currentDetailId = patentId;
+            currentDetailData = null;
+            currentExtraData = null;
+
+            switchInspector('patentPanel');
+            document.getElementById('detailOverlay').classList.add('open');
+            document.getElementById('detailContent').style.display = 'none';
+            replaceWithText(document.getElementById('detailStatus'), 'loading', '加载详情中...');
+            switchTab('detailMain');
+            document.getElementById('detailOverlay').focus();
+
+            await fetchDetail(patentId, false);
+        }
+
+        async function loadFullDetail() {
+            if (!currentDetailId) return;
+            replaceWithText(document.getElementById('detailStatus'), 'loading', '加载完整信息（含说明书）...');
+            await fetchDetail(currentDetailId, true);
+        }
+
+        async function fetchDetail(patentId, includeDescription) {
+            // patentId 进入 URL 前必须 encodeURIComponent；响应只作为当前抽屉状态，不写入存储。
+            try {
+                const response = await fetch(`${API_BASE}/detail/${encodeURIComponent(patentId)}?include_description=${includeDescription}`);
+                const data = await response.json();
+                if (!response.ok) {
+                    replaceWithText(
+                        document.getElementById('detailStatus'),
+                        'error',
+                        `HTTP ${response.status}\n${data.message || JSON.stringify(data)}`
+                    );
+                    return;
+                }
+                currentDetailData = data;
+                renderDetail(data);
+                document.getElementById('detailStatus').replaceChildren();
+                document.getElementById('detailContent').style.display = 'block';
+            } catch (err) {
+                replaceWithText(document.getElementById('detailStatus'), 'error', `请求失败：${err.message}`);
+            }
+        }
+
+        function closeDetail() {
+            // 关闭抽屉时清除显示并恢复焦点，不主动删除后端数据（Console 是只读的）。
+            document.getElementById('detailOverlay').classList.remove('open');
+            document.getElementById('detailContent').style.display = 'none';
+            replaceWithText(document.getElementById('detailStatus'), 'empty-state', '从左侧结果选择一件专利查看详情。');
+            switchInspector('targetPanel');
+            if (detailTrigger && typeof detailTrigger.focus === 'function') detailTrigger.focus();
+        }
+
+        function switchTab(tabId) {
+            // 详情 tab 只切换当前已加载数据的展示面板，不重复请求。
+            document.querySelectorAll('.tab').forEach(el => {
+                const active = el.dataset.tab === tabId;
+                el.classList.toggle('active', active);
+                el.setAttribute('aria-selected', String(active));
+                el.tabIndex = active ? 0 : -1;
+            });
+            document.querySelectorAll('.tab-content').forEach(el => {
+                const active = el.id === tabId;
+                el.classList.toggle('active', active);
+                el.hidden = !active;
+            });
+        }
+
+        function renderDetail(data) {
+            // 详情字段按固定 snake_case 合同渲染；说明书、引证和法律历史都通过纯文本/JSON 节点显示。
+            const summary = domElement('div', 'detail-summary');
+            appendSummaryValue(summary, '标题', data.title || '');
+            appendSummaryValue(summary, '申请号', data.application_number || '');
+            appendSummaryValue(summary, '公开号', data.publication_number || '');
+            if (data.description) appendSummaryValue(summary, '含说明书', '是');
+            document.getElementById('detailSummary').replaceChildren(summary);
+
+            document.getElementById('detailMain').replaceChildren(...detailRows([
+                ['专利 ID', data.id || ''],
+                ['标题', data.title || ''],
+                ['申请号', data.application_number || ''],
+                ['公开号', data.publication_number || ''],
+                ['申请日', data.application_date || ''],
+                ['公开日', data.publication_date || ''],
+                ['申请人', data.applicant || ''],
+                ['当前权利人', data.current_assignee || ''],
+                ['发明人', data.inventor || ''],
+                ['主 IPC', data.main_ipc || ''],
+                ['IPC 列表', (data.ipc_list || []).join('; ')],
+                ['法律状态', data.legal_status || ''],
+                ['类型', data.type || '']
+            ]));
+
+            const claimSections = [
+                detailTextSection('首权 / 主权利要求', data.main_claim || '（无）'),
+                detailTextSection('独立权利要求', data.independent_claims || '（无）'),
+                detailTextSection('完整权利要求书', data.claims || '（无）'),
+            ];
+            if (data.description) claimSections.push(detailTextSection('说明书', data.description));
+            document.getElementById('detailClaims').replaceChildren(...claimSections);
+
+            if (!currentExtraData) {
+                replaceWithText(document.getElementById('detailExtra'), 'hint', '点击“引证信息”或“法律历史”加载。');
+            }
+            document.getElementById('detailRaw').replaceChildren(domElement('pre', '', jsonText(data)));
+        }
+
+        function appendSummaryValue(summary, label, value) {
+            summary.append(
+                document.createTextNode(`${label}：`),
+                domElement('strong', '', value),
+                document.createTextNode(' ')
+            );
+        }
+
+        function detailRows(rows) {
+            return rows.map(([label, value]) => {
+                const row = domElement('div', 'detail-row');
+                row.append(
+                    domElement('div', 'detail-label', label),
+                    domElement('div', 'detail-value', value || '')
+                );
+                return row;
+            });
+        }
+
+        function detailTextSection(title, text) {
+            const section = domElement('div', 'detail-section');
+            section.append(
+                domElement('h4', '', title),
+                domElement('div', 'detail-text', text)
+            );
+            return section;
+        }
+
+        function detailJsonSection(title, value) {
+            const section = domElement('div', 'detail-section');
+            section.append(domElement('h4', '', title), domElement('pre', '', jsonText(value)));
+            return section;
+        }
+
+        async function loadCitations() {
+            // 引证是详情抽屉中的按需读取，失败只影响 detailExtra，不清空已加载的基本详情。
+            if (!currentDetailId) return;
+            switchTab('detailExtra');
+            replaceWithText(document.getElementById('detailExtra'), 'loading', '加载引证信息...');
+            try {
+                const response = await fetch(`${API_BASE}/citations/${encodeURIComponent(currentDetailId)}`);
+                const data = await response.json();
+                currentExtraData = { type: 'citations', data };
+                if (!response.ok) {
+                    replaceWithText(
+                        document.getElementById('detailExtra'),
+                        'error',
+                        `HTTP ${response.status}\n${data.message || JSON.stringify(data)}`
+                    );
+                    return;
+                }
+                document.getElementById('detailExtra').replaceChildren(
+                    detailJsonSection(`被引专利 (${data.cited_by ? data.cited_by.length : 0})`, data.cited_by || []),
+                    detailJsonSection(`引用专利 (${data.patent_references ? data.patent_references.length : 0})`, data.patent_references || []),
+                    detailJsonSection('非专利引用', data.non_patent_references || [])
+                );
+            } catch (err) {
+                replaceWithText(document.getElementById('detailExtra'), 'error', `请求失败：${err.message}`);
+            }
+        }
+
+        async function loadLegalHistory() {
+            // 法律历史与引证共享同一按需加载边界，数据由后端 mapper 保留来源条目结构。
+            if (!currentDetailId) return;
+            switchTab('detailExtra');
+            replaceWithText(document.getElementById('detailExtra'), 'loading', '加载法律历史...');
+            try {
+                const response = await fetch(`${API_BASE}/legal-history/${encodeURIComponent(currentDetailId)}`);
+                const data = await response.json();
+                currentExtraData = { type: 'legalHistory', data };
+                if (!response.ok) {
+                    replaceWithText(
+                        document.getElementById('detailExtra'),
+                        'error',
+                        `HTTP ${response.status}\n${data.message || JSON.stringify(data)}`
+                    );
+                    return;
+                }
+                document.getElementById('detailExtra').replaceChildren(
+                    detailJsonSection(
+                        `法律历史 (${data.transactions ? data.transactions.length : 0})`,
+                        data.transactions || []
+                    )
+                );
+            } catch (err) {
+                replaceWithText(document.getElementById('detailExtra'), 'error', `请求失败：${err.message}`);
+            }
+        }
+
+        function escapeHtmlAttribute(value) {
+            // 仅供 builder 的属性模板使用；文本内容仍优先走 textContent。
+            return String(value === null || value === undefined ? '' : value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+{
+  "version": "1",
+  "total_queries": 3,
+  "channel_counts": {
+    "example": 3
+  },
+  "queries": [
+    {
+      "query": "title:valve",
+      "channel": "example",
+      "element_id": "1",
+      "ipc_used": "",
+      "mode": "example",
+      "level": null,
+      "max_patents": 10,
+      "ds": "all",
+      "sort": "relation"
+    },
+    {
+      "query": "abstract:battery",
+      "channel": "example",
+      "element_id": "2",
+      "ipc_used": "",
+      "mode": "example",
+      "level": null,
+      "max_patents": 10,
+      "ds": "all",
+      "sort": "relation"
+    },
+    {
+      "query": "title:电池",
+      "channel": "example",
+      "element_id": "3",
+      "ipc_used": "",
+      "mode": "example",
+      "level": null,
+      "max_patents": 10,
+      "ds": "all",
+      "sort": "relation"
+    }
+  ],
+  "instructions": [
+    "Synthetic examples only. Supply an authorized representative workload for capacity acceptance."
+  ]
+}

@@ -1,0 +1,37 @@
+[Unit]
+Description=Patent Search Internal-Test Prometheus
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=patent-search-prometheus
+Group=patent-search-prometheus
+EnvironmentFile=/etc/patent-search-prometheus/runtime.env
+ExecStart=/opt/patent-search-prometheus/current/prometheus \
+    --config.file=/etc/patent-search-prometheus/prometheus.yml \
+    --storage.tsdb.path=/var/lib/patent-search-prometheus \
+    --web.listen-address=127.0.0.1:${PROMETHEUS_WEB_PORT} \
+    --query.timeout=5s \
+    --query.max-concurrency=8 \
+    --web.max-connections=32 \
+    --log.format=json
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+MemoryHigh=384M
+MemoryMax=512M
+CPUQuota=50%
+TasksMax=128
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/patent-search-prometheus
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+UMask=0027
+
+[Install]
+WantedBy=multi-user.target
