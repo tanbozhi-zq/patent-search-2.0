@@ -15,7 +15,7 @@ Uvicorn worker 对应一个实例；横向扩容时应抓取每个实例，不�
 
 `/metrics` 不使用业务 API Key，安全边界与 `/live`、`/startup`、`/ready` 相同：只允许
 Prometheus 从私网或受信入口访问。部署前必须在防火墙、服务发现或反向代理层确认公网
-无法访问该路径；在网络入口收口验收完成前，不得把裸 `:8000` 端口暴露到非可信网络。
+无法访问该路径；在网络访问边界验证完成前，不得把裸 `:8000` 端口暴露到非可信网络。
 
 内测部署复用 `deployment/prometheus/prometheus.yml` 和 Prometheus 原生
 `file_sd_configs`。仓库固定 job 为 `patent-search`，与管理员看板的
@@ -60,7 +60,7 @@ promtool test rules deployment/observability/alert_rules_test.yml
 | `patent_search_probe_status` | Gauge | `probe` | `live/startup/ready` 最近状态，1 可用、0 不可用。 |
 | `patent_search_service_start_time_seconds` | Gauge | 无 | 本实例初始化开始的 Unix 时间。 |
 | `patent_search_build_info` | Gauge | `version,commit,tag` | 本实例构建身份；实例名使用 Prometheus scrape 的 `instance` label。 |
-| `patent_search_rate_limit_rejections_total` | Counter contract | `scope=caller` | 为 #45 预留；限流未实现前不创建调用方序列。 |
+| `patent_search_rate_limit_rejections_total` | Counter contract | `scope=caller` | 调用方限流预留指标；限流未实现前不创建调用方序列。 |
 
 固定枚举中，OpenSearch `operation` 只有 `search/count/readiness`；`outcome` 只有
 `success/timeout/connection_error/unavailable/invalid_response/error/unexpected_error`。
@@ -140,17 +140,17 @@ patent_search_build_info
 ```
 
 `version/commit/tag` 是低基数部署身份，不得加入 request ID、节点地址或任意运行时值。
-生产验收必须显式注入 commit/tag；`unknown` 只适用于本地或尚未发布的环境。
+生产环境必须显式注入 commit/tag；`unknown` 只适用于本地或尚未发布的环境。
 
 ## 面板导入
 
 在 Grafana 导入 `deployment/observability/grafana_dashboard.json`，选择该环境的
 Prometheus 数据源。面板按四个失败边界分组：调用方 4xx、应用过载 `50301`、
 OpenSearch 连接错误/不可用/超时/无效响应/内部错误、未知程序异常 `50002`；另含吞吐、P95/P99、舱壁状态、
-探针和重启信号。该 JSON 可被 #47 只读看板复用，但不提供用户权限、配置修改、日志
+探针和重启信号。该 JSON 可被只读看板复用，但不提供用户权限、配置修改、日志
 全文检索或回滚按钮。
 
-## Alert response
+## 告警处置
 
 仓库规则中的阈值都是 canary 待校准候选值，不是已经批准的生产 SLO。舱壁拒绝和
 OpenSearch 超时是五分钟滚动事件数规则，窗口一旦超限立即触发，不再叠加额外
@@ -160,7 +160,7 @@ OpenSearch 超时是五分钟滚动事件数规则，窗口一旦超限立即触
 2. 核对告警实例、当前发布提交、部署时间、探针和同窗口结构化日志，不凭单一图表归因。
 3. 先停止 canary 或流量增长；只有回归与当前版本相关时，才按
    `docs/ops/deployment_runbook.md` 的已验证提交执行服务回滚。
-4. 不通过临时提高舱壁容量止损；容量调整必须经过 Issue #49 的阶梯压测和保护线。
+4. 不通过临时提高舱壁容量止损；容量调整必须经过阶梯压测，并核对应用拒绝延迟与 OpenSearch 资源保护阈值。
 5. 恢复后确认规则回到 inactive，并记录触发、处置、恢复时间和后续校准结论。
 
 告警接收方、静默和升级链由实际值班平台配置；仓库只保存无凭据的规则与核查入口。

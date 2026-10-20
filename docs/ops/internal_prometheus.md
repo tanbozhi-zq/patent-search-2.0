@@ -1,13 +1,8 @@
 # 内测 Prometheus 数据源
 
-本文是 Issue #62 的单实例内测部署手册。它把现有 `/metrics`、告警规则和只读管理员
+本文说明单实例内测环境的 Prometheus 配置。它把现有 `/metrics`、告警规则和只读管理员
 看板连接起来，不建设 Prometheus、Grafana、Alertmanager 或日志平台的生产高可用
 集群，也不修改 OpenSearch、检索语义、舱壁容量或告警阈值。
-
-代码合并、部署完成和内测验收是三个独立状态。仅通过仓库测试不能证明目标机器已经
-安装 Prometheus，也不能证明管理看板已经取得真实数据。
-
-以下为部署与验收方法，部署前应独立核对服务状态。
 
 ## 复用边界与版本来源
 
@@ -16,8 +11,7 @@
   验证的版本或校验值。
 - 主配置复用 `deployment/prometheus/prometheus.yml`，服务告警复用
   `deployment/observability/alert_rules.yml`。
-- 管理看板继续使用现有固定 PromQL、5/15/60 分钟窗口、2 秒查询超时、最多 4 个
-  并发、5 秒缓存和 single-flight；此组件不增加浏览器可提交的 PromQL。
+- 管理看板的固定查询、窗口和访问限制见[管理员手册](admin_dashboard.md#版本信息与指标来源)。
 - Prometheus 使用 `file_sd_configs`。真实抓取目标、端口、实例名和任何凭据只写入
   目标机器受限配置，不进入仓库、PR 或 Issue。
 
@@ -32,9 +26,9 @@
 80% 时告警。该容量指标不包含 WAL 和 head 的全部磁盘占用，因此部署前、升级前和告警
 处置时仍必须检查数据目录所在文件系统的真实剩余空间。
 
-模板为 `patent-search` job 设置 256 KB body、1,000 samples、16 labels、64-byte label
-name、128-byte label value 和 10 targets 上限。部署前应测量本环境指标并确认足够余量。
-超过任一上限时整次 scrape 必须失败并由 `up=0` 暴露，不能静默截断后通过验收。
+`patent-search` job 设置 256 KB body、1,000 samples、16 labels、64-byte label
+name、128-byte label value 和 10 targets 上限。
+超过任一上限时整次 scrape 必须失败并由 `up=0` 暴露，不能静默截断指标。
 
 systemd 同时设置 `MemoryHigh=384M`、`MemoryMax=512M`、`CPUQuota=50%` 和
 `TasksMax=128`，避免 Prometheus 与同机检索服务无界争抢资源。部署前必须重新只读测量；
@@ -133,8 +127,8 @@ Prometheus 查询使用同一 loopback 入口。
     systemctl is-active patent-search-prometheus.service
 
 只从目标机本地检查 readiness、targets、rules 和 `up`。从非受信网络连接 Prometheus
-查询入口必须失败。Alertmanager 未配置属于本 Issue 允许的内测边界，但所有规则必须
-成功加载和计算。
+查询入口必须失败。内测环境可不配置 Alertmanager，但所有规则必须成功加载和计算；
+需要发送告警通知时，应另行配置 Alertmanager 接收方。
 
 ### 6. 连接管理员看板
 
@@ -147,93 +141,44 @@ Prometheus 查询使用同一 loopback 入口。
 按正常服务发布流程重启 FastAPI。只修改 Prometheus 配置或 targets 时不需要重启检索
 服务；Prometheus 会刷新 file-SD，规则/主配置变更则在 `promtool` 通过后发送 SIGHUP。
 
-## 内测验收
+## 指标与故障检查
 
-验收必须保存开始/结束时间、服务 commit、Prometheus 版本、配置摘要 SHA256、回滚点和
-每项结果，但不得保存 Token、Cookie、密码、完整查询、专利正文、节点凭据或原始
-metrics 全文。
+保留服务提交、Prometheus 版本、配置摘要、回滚点和检查结果。指标口径统一见[可观测性手册](observability.md)，不要保存完整指标正文、秘密、完整查询或专利正文。
 
-1. 先配置并确认两个隔离 targets，其 `instance` label 必须分别等于对应服务的
-   `SERVICE_INSTANCE_ID`；从此处到 final 完成前不得增删或替换 targets。在每个预期 target
-   上各制造一轮受控初始化事件：正常业务 2xx、固定 `400/40002`、隔离的 search 依赖失败、
-   global 拒绝和 heavy_search 拒绝，并等待至少两个抓取周期。这一轮只初始化五类原始
-   Counter series，属于基线历史，不能作为正式验收事件。随后按下方两阶段命令捕获
-   baseline。管理状态接口必须报告
-   `metrics_source=prometheus`；baseline smoke 必须完整覆盖
-   5/15/60 分钟，三个窗口均不再整体 unavailable，并把每条固定查询与 Prometheus
-   在对应管理快照的 `generated_at` 时刻做直查和归一化比较。series labels 必须完全
-   一致；考虑同一批查询可能跨过抓取边界，数值只允许 5% 相对误差或 `1e-9` 绝对误差。
-2. baseline 成功返回后，产生一次正常业务请求和一次固定 `400/40002`；核对 request
-   rate、success rate、P50/P95/P99、HTTP status/code 和 route 指标。
-3. 在同一 baseline 之后制造 search 依赖失败和双层舱壁拒绝，并在五类事件全部完成后
-   等待至少两个抓取周期。故障/拒绝只允许在 loopback 隔离验收实例中制造；不得修改真实
-   OpenSearch host/index/alias、停真实依赖或用无界并发冲击在线实例。
-4. 使用 baseline 前已固定的两个隔离实例，逐项核对 Counter/Histogram 的跨实例聚合、
-   Gauge 的逐实例值、总在途求和和逐实例利用率后取最大值；final 完成后再移除临时
-   targets。
-5. 用同一固定窗口直接查询 Prometheus，并与管理 API 返回值比较。延迟分位数单位为秒。
-6. 记录一个已落盘时间序列的值与时间范围，重启 Prometheus，再查询同一时间范围，确认
-   数据仍在且 targets/rules 恢复。
-7. 停止 Prometheus，确认管理指标降级，同时 HTTP/Console/MCP smoke、错误码和
-   `Retry-After` 不变；随后重新启动并确认自动恢复。
-8. 核对每个预期 target 的 `up=1`、retention 自指标精确等于 2,592,000 秒和
-   2,147,483,648 bytes、TSDB 目录大小及文件系统剩余空间；规则列表中必须包含存储预算
-   告警。
-9. 使用部署侧哨兵值扫描管理页面/API、Prometheus 查询结果和日志，确认秘密、完整查询、
-   完整正文和节点凭据均未出现。
+### 日常检查
 
-完成上述每个预期 target 的初始化轮次并等待至少两个抓取周期后，在已安全注入
-`ADMIN_VIEWER_USERNAME`/`ADMIN_VIEWER_PASSWORD` 的进程环境中捕获基线：
+应用 `/metrics` 本身不要求业务认证，其保护依赖网络入口。
 
-    <venv-python> -m scripts.smoke_admin_metrics <admin-base-url> <loopback-prometheus-url> --minimum-instances 2 --expected-release-commit <deployed-commit> --capture-acceptance-baseline
+1. 从目标机读取 readiness、targets、rules，确认预期 target 的 `up=1`，管理员状态为 `metrics_source=prometheus`。
+2. 检查保留策略、blocks/WAL/head 占用和文件系统余量；确认存储预算告警已加载。
+3. 用同一时间窗口比较管理卡片与 Prometheus 查询；P50/P95/P99 以秒为单位，舱壁利用率按逐实例比率取最大值。
+4. 在维护窗口检查 Prometheus 重启后历史数据仍可读取；停止 Prometheus 时管理指标应降级，HTTP、Console、MCP 仍可用。
+5. 独立验证网络访问控制，非受信网络不能访问原始指标或 Prometheus 查询入口。
 
-脚本先完成管理员窗口与 Prometheus 直查等静态比较，再读取最终服务状态并捕获初始快照；
-随后在全部初始快照查询完成后建立 barrier，等待另一次新抓取作为稳定 guard。只在静态检查
-全部通过、初始快照到 guard 的五类 Counter 完全不变，并且管理员
-`status.release` 不含 `unknown` 占位值、每个 Prometheus `build_info` 的
-version/commit/tag、精确实例数、服务启动时间、新鲜抓取时间和健康 target 一致时输出
-`acceptance_baseline_time`；此时每个预期实例的五类验收 Counter series 还必须都已存在。
-脚本同时通过固定 job、固定 metric family 和有界 limit 调用 Prometheus
-`/api/v1/targets/metadata`，要求三个底层 family 在每个预期实例上各有且仅有一条元数据、
-`metric` 精确等于所查询 family 且 `type=counter`，不得缺失、重复或出现额外 target；final 与
-guard 会重新读取并要求该映射稳定。
-最终输出的 `acceptance_baseline_time` 使用 guard 的时点，而非较早的初始快照时点。基线证据点
-因此建立在静态比较完成之后；初始化轮次、命令开始前尚未抓取的事件以及静态比较期间出现的
-事件都会进入基线，初始快照到 guard 之间观测到同类事件则整次失败。从基线命令开始到成功
-输出必须保持隔离实例安静；自动证据截至输出的 guard 时点，guard 固定时点到进程输出的剩余
-有界查询区间仍由该操作纪律约束，脚本不能证明这一区间没有尚未抓取的事件。命令成功返回后
-再制造正式的第二轮事件：
-通过 `/api/patent/search` 制造一次正常 2xx 和一次固定 `400/40002` 无效请求，并制造第 3 步
-的 search 依赖失败及两类隔离拒绝事件；等待至少两个抓取周期，期间不得重启/重新部署应用
-或修改 targets。从正式事件开始直到 final 命令最终输出前，也不得再制造同类事件。在基线后
-15 分钟内运行：
+### 两阶段事件检查
 
-    <venv-python> -m scripts.smoke_admin_metrics <admin-base-url> <loopback-prometheus-url> --minimum-instances 2 --expected-release-commit <deployed-commit> --acceptance-baseline-time <captured-baseline-time> --require-acceptance-events
+此检查需两个固定的隔离测试实例。故障、依赖失败和舱壁拒绝只在隔离实例制造，不修改真实 OpenSearch 地址、索引或 alias，不向在线实例施加无界并发。
 
-不传 `--window-seconds` 时脚本默认遍历 300/900/3600 秒；该参数只用于重复指定诊断
-窗口，不能作为完整验收记录。脚本还会核对 success rate 在 0--1、P50 <= P95 <= P99，
-并核对 global/heavy_search 两层舱壁的逐实例 series、总量求和、最坏利用率聚合和两层
-拒绝事件。最终检查在 baseline 和当前 Prometheus 时间分别读取原始 Counter，要求业务
-2xx、固定 `400/40002`、search 依赖失败、global 拒绝和 heavy_search 拒绝均有严格正
-增量，并在 3600 秒管理员窗口确认同合同事件实际可见；首次出现的 Counter series 不会被
-Prometheus 推断为从零增长，因此缺少初始化轮次会在基线阶段失败。较长验收中 300 秒窗口
-可自然过期。final 会先固定 raw Counter after，再轮询三个管理窗口；每个管理快照的
-`generated_at` 必须严格晚于 raw after 加现有 5 秒单批查询硬上限，因而不能复用 raw 前启动
-的 in-flight 或缓存批次。完成逐查询直查比较后，脚本还会等待一次严格晚于全部管理快照的
-时间且严格晚于直查完成后 Prometheus barrier 的新抓取，要求每个实例的 release/启动时间、
-`up`、拓扑以及五类 Counter map 与 raw after 完全一致，最后再读一次管理状态。任一新事件、
-陈旧抓取、重启、target 变化或计数器回退只要在 raw after 到 completion-guard scrape 的
-证据区间内被观测到就会失败，30--900 秒之外的 raw baseline-to-after 间隔也会失败；final
-的缓存淘汰、直查和 completion guard 用时不计入该事件间隔。guard scrape 后到命令输出前
-仍依靠上述隔离和禁止变化的操作纪律，自动输出不证明这一小段时间内持续无变化。除通过
-基线模式时额外输出一个时间戳外，它只输出各检查项的
-布尔结果，不输出凭据、URL、series label 或响应正文。省略两阶段参数只能证明查询链路及
-静态聚合口径可用；历史窗口中的正值不能代替本次事件，raw Counter 增长也不能替代管理员
-看板数据路径可见性。
+1. 为两个实例配置 targets，各 `instance` 与 `SERVICE_INSTANCE_ID` 一致。检查全程保持服务提交、启动时间和 targets 不变。
+2. 在每个实例先初始化五类 Counter series：业务 2xx、固定 `400/40002`、search 依赖失败、global 拒绝、heavy_search 拒绝。等待至少两个抓取周期，随后保持实例安静并捕获基线：
 
-应用 `/metrics` 本身不要求业务认证，其保护依赖网络入口。没有独立网络证据时，不能将 Prometheus 查询成功或 Issue 关闭解释为“未认证用户不能访问原始指标”；TLS 与端口收口必须单独验收。
+```sh
+<venv-python> -m scripts.smoke_admin_metrics <admin-base-url> <loopback-prometheus-url> --minimum-instances 2 --expected-release-commit <deployed-commit> --capture-acceptance-baseline
+```
 
-## Storage budget response
+3. 基线成功后，每个实例再产生一轮上述五类事件，等待至少两个抓取周期。使用输出的 `acceptance_baseline_time`，在基线后 15 分钟内运行最终检查：
+
+```sh
+<venv-python> -m scripts.smoke_admin_metrics <admin-base-url> <loopback-prometheus-url> --minimum-instances 2 --expected-release-commit <deployed-commit> --acceptance-baseline-time <captured-baseline-time> --require-acceptance-events
+```
+
+4. 正式事件完成后到最终命令输出前，不再制造同类事件，不重启、重新部署或修改 targets。完整检查使用默认 `300/900/3600` 秒（5/15/60 分钟）窗口，不用单一诊断窗口替代。
+
+管理员凭据从受控进程环境注入。脚本核对元数据类型、跨实例聚合、正增量、管理数据可见性、新鲜抓取及全过程版本/计数器稳定性，只输出检查布尔值和基线时间。原始事件区间须为 30–900 秒；详细读取顺序由[检查脚本](../../scripts/smoke_admin_metrics.py)及[测试](../../tests/test_internal_prometheus_smoke.py)维护。
+
+只运行不带两阶段参数的 smoke 可检查查询链路和静态聚合，不能证明本轮故障事件已反映到管理看板。guard 抓取后至命令输出前仍需保持实例安静。
+
+## 存储预算告警处置
 
 `PatentSearchPrometheusStorageBudgetHigh` 触发后：
 
@@ -266,7 +211,4 @@ Prometheus 推断为从零增长，因此缺少初始化轮次会在基线阶段
 3. 停止并禁用 `patent-search-prometheus.service`。
 4. 如需回退 Prometheus 版本，恢复旧配置和 current 链接；如需恢复 TSDB，保持服务停止
    后从对应冷备恢复，再检查属主、完整配置和规则。
-5. 不删除新旧版本目录、数据或回滚备份，直到验收记录确认无需再次恢复。
-
-回滚完成只说明恢复到部署前状态，不代表 Issue #29、#37、#49、#63 或生产级多实例
-观测已经完成。
+5. 保留新旧版本目录、数据及回滚备份，直到恢复检查完成且确认无需再次恢复。

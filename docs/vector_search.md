@@ -1,20 +1,9 @@
-# 向量与混合检索工程事实
+# 向量与混合检索
 
-本文定义向量与混合检索行为，公共 JSON 契约见[api.md](api.md)。代码支持、数据覆盖、Pipeline 安装和部署验收应分别确认。
+本文说明向量与混合检索的字段、查询流程、排序及运行配置。
+请求参数和响应格式见 [api.md](api.md)。使用前需完成向量字段配置和数据准备；多字段向量及混合检索还需安装 Search Pipeline。
 
-## 公共模式
-
-三种模式共用唯一入口 `POST /api/patent/search`：
-
-| mode | 必填 | 禁止 | 执行策略 |
-|---|---|---|---|
-| `boolean` | `q` | `semantic_text/vector_fields/top_k` | 保留现有 parser、AST 和 Boolean DSL。 |
-| `vector` | `semantic_text/vector_fields` | `q` | 单字段 k-NN；多字段 Hybrid Query + RRF。 |
-| `hybrid` | `q/semantic_text/vector_fields` | — | 一个 Boolean 分支加一个或多个 k-NN 分支，并集召回后 RRF。 |
-
-省略 `mode` 时默认 `boolean`，旧客户端无需增加字段。
-`semantic_text` 与 `q` 共用本次请求冻结的字符预算。非法模式组合、
-未注册/重复字段和窗口越界均在外部调用前拒绝，无关字段不会被静默忽略。
+三种模式的必填参数、禁止组合、排序、`top_k`、分页、返回字段及错误统一见 [API 契约](api.md#22-检索)。本文维护执行流程与索引配置。
 
 ## 字段注册与数据覆盖
 
@@ -26,15 +15,13 @@
 | `main_claim` | `MainClaimVector1024` | 1024 / `cosinesimil` |
 | `independent_claims` | `IndependentClaimsVector1024` | 1024 / `cosinesimil` |
 
-查询使用 `doubao-embedding-vision-250615` 原生 1024 维输出，不截断旧向量，也不回退查询旧 `*Vector` 字段。mapping 和数据覆盖需按[部署核对清单](ops/deployment_checklist.md#索引与向量覆盖)逐项确认，不能只看字段注册表。
+查询使用 `doubao-embedding-vision-250615` 原生 1024 维输出，不截断旧向量，也不回退查询旧 `*Vector` 字段。各字段的可用性取决于目标索引的 mapping 和搜索可见数据覆盖。
 
-数据空或只部分覆盖时，该字段可能返回少量或零候选，这不是程序错误。
-多字段受控 fixture 可以证明查询与融合路径可执行，但不能外推为首权/独权已全量，
-也不能替代数据全量后的相关性和容量验收。
+数据为空或仅部分覆盖时，该字段可能返回少量或零候选。应在目标数据集上检查查询结果的相关性，并根据实际数据规模测试查询容量。
 
 `vector` 最多选 5 个字段；`hybrid` 的 Boolean 分支占用一个
 OpenSearch 3.3 Hybrid 子查询名额，因此最多选 4 个字段。当前注册表只有
-3 项，通用逻辑不依赖这个当前数量。未提供公开 capabilities API。
+3 项。可选字段以本文注册表为准；服务未提供公开 capabilities API。
 
 ## 查询向量和请求 deadline
 
@@ -64,73 +51,35 @@ OpenSearch 3.3 Hybrid 子查询名额，因此最多选 4 个字段。当前注�
 `allow_partial_search_results=false`；`timed_out=true`、失败分片、缺失/失败 pipeline
 和查询错误都 fail closed，不返回部分成功或未融合排序。
 
-## 排序、`top_k` 和分页
+## 排序窗口与指标
 
-`relation/rank/relevance/score` 都按 `_score` 降序。`applicationDate`、
-`!applicationDate`、`documentDate`、`!documentDate` 分别按申请日/公开日升序或降序。
-日期排序仍先形成并融合候选，但最终顺序只由日期决定，不追加 `_score`
-作为二级排序；此时响应 `score` 允许为 `null`。
+`top_k` 同时控制 k-NN 的 `k`、Hybrid 的 `pagination_depth` 和有界计数；翻页不扩大候选窗口。日期排序在候选融合后执行，不追加分数作为二级排序。
 
-`top_k` 默认 100、最大 1000，是可排名和可访问的最终结果窗口。k-NN
-`k`、Hybrid `pagination_depth` 和 `track_total_hits` 的有界阈值由该窗口决定，
-不随页码变化。请求必须满足 `from + size <= top_k`；不能整除时不开放
-会跨过窗口的尾页。翻页时除 `page` 外的所有检索条件必须保持一致。
+查询阶段指标统一见[指标契约](ops/observability.md#指标契约)，避免把 OpenSearch 服务端 `took` 与客户端等待或完整 HTTP 耗时混用。
 
-Boolean `total` 继续表示完整命中数。语义模式的 `total` 是当前可访问的融合窗口，
-最大不超过 `top_k`；OpenSearch 返回 `hits.total.relation=gte` 时仍按这一有界语义投影。
-`total_pages/accessible_pages/next_page` 都按这一窗口计算。
+## Pipeline 配置与排障
 
-## 响应、错误和可观测性
-
-三种模式共用 `SearchResponse` 和 `records`。仅 `vector/hybrid` 增加
-`search_context`，其中只有 `mode`、公开字段名、`top_k`、固定
-`ranking_profile` 和 `sort`。不返回查询向量、分支原始分数、候选数或供应商信息。
-
-稳定错误仍使用 [api.md](api.md) 的统一信封。向量供应商拒绝/无效响应、
-OpenSearch 查询或 pipeline 失败为依赖失败；绝对 deadline 耗尽为超时。
-任何语义失败都不降级为 Boolean。
-
-两个阶段指标共用固定 label
-`stage,mode,vector_field_count,sort_type,ranking_profile,outcome`：
-
-- `patent_search_query_stage_calls_total`：已完成阶段计数；
-- `patent_search_query_stage_duration_seconds`：同一阶段的耗时直方图。
-
-`stage` 只有 `query_vector/opensearch/opensearch_took/end_to_end`。`opensearch`
-是 Repository 调用的客户端 wall time；`opensearch_took` 只记录成功响应中
-OpenSearch 返回的服务端执行时间；`end_to_end` 是通过 schema、鉴权和舱壁
-后的 `SearchService.search()` 时间。完整 ingress-to-response 时间继续使用
-`patent_search_http_request_duration_seconds`。`outcome` 只有
-`success/timeout/failure/rejected`。schema/鉴权/舱壁在 Service 之前发生，分别由
-既有 HTTP `status/code` 与 bulkhead 指标表达。
-
-指标和日志不允许用 `q`、`semantic_text`、向量值、精确字段组合、
-provider endpoint、模型路由、凭据或 request ID 做 label。更完整的指标口径见
-[ops/observability.md](ops/observability.md)。
-
-## Pipeline 发布与排障
-
-版本化定义位于 `deployment/opensearch/search_pipelines_v1.json`。它们必须在正式服务
-放量前按发布手册安装并精确 GET 回读；请求期永远不创建或修改共享 pipeline。
-部署时应核验安装状态，见[部署核对清单](ops/deployment_checklist.md)。提交定义文件不会自动安装 pipeline，也不会修改 mapping 或回填向量。
+版本化定义位于 `deployment/opensearch/search_pipelines_v1.json`。启用多字段向量或混合检索前，
+按部署手册安装并通过 GET 确认定义一致；查询请求不会创建或修改共享 pipeline。
+提交定义文件不会自动安装 pipeline，也不会修改 mapping 或回填向量。
 
 常见边界：
 
 - 单字段向量不依赖 Search Pipeline；
 - 多字段向量/混合在 profile 未安装或定义不一致时明确失败，不回退到原始分数；
 - `timed_out=true` 或任意失败分片不能作为完整成功返回；
-- “mapping 已存在”不等于“向量数据已覆盖”。
+- 字段 mapping 与向量数据覆盖情况均需检查。
 
-## 持续维护源表
+## 维护索引
 
-| 变更事实 | 代码唯一来源 | 必须同步的文档/测试 |
+| 维护内容 | 代码位置 | 相关文档/测试 |
 |---|---|---|
 | 公开向量字段、OS 字段、维度、距离、模型 | `app/mappings/query_field_mapping.py` | 本文数据表、OpenAPI/Console/MCP 契约测试、数据覆盖记录。 |
-| `top_k` 默认/上限与模式组合 | `app/schemas/search.py` | [api.md](api.md)、本文和 schema/分页测试。 |
+| `top_k` 默认/上限与模式组合 | `app/schemas/search.py` | [api.md](api.md) 和 schema/分页测试。 |
 | profile 选择、候选与排序 | `app/query/semantic_dsl_builder.py` | 本文、DSL/集成测试和性能矩阵。 |
-| RRF 权重与 pipeline 定义 | `deployment/opensearch/search_pipelines_v1.json` | 本文、回读测试、发布/回滚手册和性能矩阵。 |
-| 公共 total/分页/错误投影 | `app/services/search_service.py` | [api.md](api.md)、本文和服务/接入层测试。 |
-| 指标阶段与 label 枚举 | `app/core/metrics.py` | 本文、[ops/observability.md](ops/observability.md) 和低基数契约测试。 |
+| RRF 权重与 pipeline 定义 | `deployment/opensearch/search_pipelines_v1.json` | 本文、回读测试、部署/回滚手册和性能矩阵。 |
+| 公共 total/分页/错误投影 | `app/services/search_service.py` | [api.md](api.md) 和服务/接入层测试。 |
+| 指标阶段与 label 枚举 | `app/core/metrics.py` | [ops/observability.md](ops/observability.md) 和低基数契约测试。 |
 
 任何修改字段注册、`top_k`、权重、profile 或模式语义的 PR 都必须同步
-更新该表对应的文档与契约测试；聊天记录、PR 评论和本地临时文件不是长期事实源。
+更新该表对应的文档与契约测试。
